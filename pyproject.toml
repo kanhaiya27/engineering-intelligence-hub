@@ -1,0 +1,89 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.backends.legacy:build"
+
+[project]
+name = "engineering-intelligence-hub"
+version = "0.1.0"
+description = "Task-Aware Energy-Efficient RAG for Software Engineering"
+readme = "README.md"
+requires-python = ">=3.8"
+license = { text = "MIT" }
+authors = [{ name = "Avane" }]
+keywords = [
+  "RAG",
+  "software-engineering",
+  "energy-efficiency",
+  "green-AI",
+  "research",
+]
+classifiers = [
+  "Development Status :: 2 - Pre-Alpha",
+  "Intended Audience :: Science/Research",
+  "Programming Language :: Python :: 3.8",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+
+[project.optional-dependencies]
+dev = ["black", "isort", "mypy", "pytest", "pytest-asyncio", "pytest-cov"]
+
+[tool.black]
+line-length = 100
+target-version = ["py38"]
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  | experiments/results
+  | datasets
+)/
+'''
+
+[tool.isort]
+profile = "black"
+line_length = 100
+known_first_party = [
+  "core",
+  "ingestion",
+  "knowledge",
+  "retrieval",
+  "routing",
+  "generation",
+  "verification",
+  "sustainability",
+  "evaluation",
+  "experiments",
+  "benchmark",
+  "agents",
+  "apps",
+]
+
+[tool.mypy]
+python_version = "3.8"
+strict = false
+warn_return_any = true
+warn_unused_configs = true
+ignore_missing_imports = true
+exclude = ["experiments/results/", "datasets/"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+log_cli = true
+log_cli_level = "INFO"
+addopts = "--tb=short -q"
+
+[tool.coverage.run]
+source = [
+  "core",
+  "ingestion",
+  "knowledge",
+  "retrieval",
+  "routing",
+  "generation",
+  "verification",
+  "sustainability",
+  "evaluation",
+  "experiments",
+  "benchmark",
+]
+omit = ["tests/*", "scripts/*", "apps/*"]

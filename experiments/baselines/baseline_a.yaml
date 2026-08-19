@@ -1,0 +1,51 @@
+# ============================================================
+# Engineering Intelligence Hub — Baseline A Configuration
+# Baseline A: LLM only — no RAG, no retrieval
+#
+# This is the simplest baseline: the LLM answers using only
+# its pre-training knowledge, with no document retrieval.
+# Used to quantify the contribution of the retrieval component.
+# ============================================================
+
+experiment_id: "eih-baseline-a-YYYYMMDD"    # Replace date at runtime
+experiment_name: "Baseline A — LLM Only (No RAG)"
+experiment_type: baseline
+baseline_id: baseline_a
+description: >
+  Baseline A: LLM responds using only pre-training knowledge.
+  No retrieval, no quality gate, no adaptive routing.
+  Represents the simplest possible pipeline configuration.
+
+model_id: gpt-4o-mini
+model_provider: openai
+model_temperature: 0.1
+model_max_tokens: 2048
+
+retrieval_strategy_name: null   # No retrieval
+retrieval_top_k: null
+enable_reranking: false
+reranker_type: null
+
+routing_enabled: false
+routing_policy_name: null
+
+quality_gate_enabled: false
+quality_threshold: 0.0
+max_escalations: 0
+
+graph_retrieval_enabled: false
+
+benchmark_task_ids: []          # Run all APPROVED tasks
+benchmark_split: null
+
+sustainability_enabled: true
+carbon_region: uk_national_grid_2024
+
+ablation_flags: {}
+
+seed: 42
+num_runs: 1
+tags:
+  - baseline
+  - no-rag
+  - lm-only

@@ -1,0 +1,122 @@
+# ============================================================
+# Engineering Intelligence Hub — Retrieval Strategy Registry
+# configs/retrieval.yaml
+#
+# Named strategies loaded by RetrievalRouter.
+# Task-type → strategy mapping is in retrieval/router.py.
+#
+# Add new strategies here for ablation studies — reference them
+# in experiment configs by name.
+# ============================================================
+
+strategies:
+
+  # ----------------------------------------------------------
+  # Dense: Vector similarity only. Fast, no keyword matching.
+  # Use for: code_generation, test_generation (exact context)
+  # ----------------------------------------------------------
+  dense:
+    mode: dense
+    top_k: 5
+    score_threshold: 0.65
+    dense_weight: 1.0
+    sparse_weight: 0.0
+    enable_reranking: false
+    reranker_type: none
+    max_context_chunks: 5
+    include_graph_context: false
+
+  # ----------------------------------------------------------
+  # Dense fast: Reduced top_k for latency-critical paths.
+  # Use for: simple lookups, low-complexity tasks
+  # ----------------------------------------------------------
+  dense_fast:
+    mode: dense
+    top_k: 3
+    score_threshold: 0.70
+    dense_weight: 1.0
+    sparse_weight: 0.0
+    enable_reranking: false
+    reranker_type: none
+    max_context_chunks: 3
+    include_graph_context: false
+
+  # ----------------------------------------------------------
+  # Sparse: BM25 keyword only.
+  # Use for: incident retrieval, historical search
+  # ----------------------------------------------------------
+  sparse:
+    mode: sparse
+    top_k: 5
+    score_threshold: 0.0
+    dense_weight: 0.0
+    sparse_weight: 1.0
+    enable_reranking: false
+    reranker_type: none
+    max_context_chunks: 5
+    include_graph_context: false
+
+  # ----------------------------------------------------------
+  # Hybrid: Dense + BM25 fused (Reciprocal Rank Fusion).
+  # Default for most engineering tasks.
+  # ----------------------------------------------------------
+  hybrid:
+    mode: hybrid
+    top_k: 7
+    score_threshold: 0.60
+    dense_weight: 0.7
+    sparse_weight: 0.3
+    enable_reranking: false
+    reranker_type: none
+    max_context_chunks: 7
+    include_graph_context: false
+
+  # ----------------------------------------------------------
+  # Hybrid + reranking.
+  # Use for: high-criticality tasks, escalation paths.
+  # ----------------------------------------------------------
+  hybrid_reranked:
+    mode: hybrid
+    top_k: 10
+    score_threshold: 0.55
+    dense_weight: 0.7
+    sparse_weight: 0.3
+    enable_reranking: true
+    reranker_type: cross_encoder
+    reranker_top_n: 5
+    max_context_chunks: 5
+    include_graph_context: false
+
+  # ----------------------------------------------------------
+  # Graph-augmented hybrid.
+  # Use for: architecture Q&A, dependency analysis, impact analysis.
+  # Requires graph store to be running.
+  # ----------------------------------------------------------
+  graph_augmented:
+    mode: graph_augmented
+    top_k: 7
+    score_threshold: 0.60
+    dense_weight: 0.65
+    sparse_weight: 0.35
+    enable_reranking: false
+    reranker_type: none
+    max_context_chunks: 8
+    include_graph_context: true
+    graph_hop_depth: 2
+
+  # ----------------------------------------------------------
+  # Graph-augmented + reranking (strongest, highest latency).
+  # Reserved for CRITICAL criticality tasks or final escalation.
+  # ----------------------------------------------------------
+  graph_augmented_reranked:
+    mode: graph_augmented
+    top_k: 12
+    score_threshold: 0.50
+    dense_weight: 0.65
+    sparse_weight: 0.35
+    enable_reranking: true
+    reranker_type: cross_encoder
+    reranker_top_n: 6
+    max_context_chunks: 8
+    include_graph_context: true
+    graph_hop_depth: 2

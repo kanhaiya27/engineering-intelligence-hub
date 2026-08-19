@@ -1,0 +1,70 @@
+# ============================================================
+# Engineering Intelligence Hub — Default System Configuration
+# configs/default.yaml
+#
+# Override any value via environment variables prefixed EIH_
+# (e.g. EIH_LOG_LEVEL=DEBUG, EIH_API_PORT=9000)
+# ============================================================
+
+environment: development
+log_level: INFO
+json_logs: false
+project_name: "Engineering Intelligence Hub"
+version: "0.1.0"
+
+api:
+  host: "0.0.0.0"
+  port: 8000
+  reload: false
+  workers: 1
+  cors_origins:
+    - "*"
+
+model:
+  default_provider: openai
+  default_model_id: gpt-4o-mini
+  fallback_model_id: gpt-3.5-turbo
+  max_tokens: 2048
+  temperature: 0.1
+  request_timeout_seconds: 120
+  max_retries: 3
+
+retrieval:
+  default_strategy: hybrid
+  default_top_k: 5
+  similarity_threshold: 0.70
+  enable_reranking: false
+  max_context_chunks: 10
+
+quality:
+  default_quality_threshold: 0.75
+  max_escalation_attempts: 2
+  enable_code_compilation_check: false
+  enable_test_execution: false
+
+sustainability:
+  # UK national grid average 2024 — update per experiment region.
+  carbon_intensity_gco2_per_kwh: 233.0
+  cpu_tdp_watts: 45.0
+  gpu_tdp_watts: 60.0
+  enable_gpu_measurement: true
+  default_input_cost_per_1m_tokens: 0.15
+  default_output_cost_per_1m_tokens: 0.60
+
+experiment:
+  results_dir: "experiments/results"
+  log_every_call: true
+  experiment_id_prefix: "eih"
+
+vector_store:
+  provider: qdrant
+  host: localhost
+  port: 6333
+  collection_name: eih_knowledge
+  embedding_model: "BAAI/bge-small-en-v1.5"
+  embedding_dimension: 384
+
+graph_store:
+  provider: neo4j
+  uri: "bolt://localhost:7687"
+  username: neo4j

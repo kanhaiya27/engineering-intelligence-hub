@@ -1,0 +1,108 @@
+# ============================================================
+# Engineering Intelligence Hub — .gitignore
+# ============================================================
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+eggs/
+parts/
+var/
+sdist/
+develop-eggs/
+.installed.cfg
+lib/
+lib64/
+*.manifest
+*.spec
+
+# --- Virtual environments ---
+.venv/
+venv/
+env/
+ENV/
+.env/
+
+# --- Secrets / environment ---
+.env
+.env.*
+!.env.example
+*.secret
+secrets/
+
+# --- IDE / editor ---
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# --- Pytest / coverage ---
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+*.cover
+
+# --- MyPy ---
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# --- Jupyter ---
+.ipynb_checkpoints/
+*.ipynb
+
+# --- Experiment results (raw data — checked in via DVC or similar) ---
+experiments/results/**/*.jsonl
+experiments/results/**/*.json
+experiments/results/**/*.parquet
+!experiments/results/.gitkeep
+
+# --- Datasets (large files) ---
+datasets/**/*.jsonl
+datasets/**/*.parquet
+datasets/**/*.csv
+datasets/**/*.zip
+datasets/**/*.tar.gz
+!datasets/.gitkeep
+!datasets/registry.yaml
+!datasets/README.md
+
+# --- Model weights / embeddings ---
+*.bin
+*.safetensors
+*.pt
+*.ckpt
+*.pkl
+*.h5
+
+# --- Vector DB data directories ---
+.chromadb/
+qdrant_storage/
+.qdrant/
+
+# --- Neo4j data ---
+data/databases/
+data/transactions/
+
+# --- Logs ---
+logs/
+*.log
+!.gitkeep
+
+# --- OS ---
+desktop.ini
+
+# --- Build artifacts ---
+*.whl
+*.tar.gz
