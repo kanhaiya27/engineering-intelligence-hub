@@ -6,18 +6,46 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
-## [Unreleased]
-
-### Changed
-- Migrated primary virtual environment to Python 3.11.9 (`.venv311/`), preserving `.venv/` (Python 3.8.10) for reference.
-- Upgraded schema configurations from legacy `class Config` to modern Pydantic v2 `model_config = ConfigDict(use_enum_values=True)` across all schema and config modules.
-- Enhanced `.gitignore` with strict exclusion rules for model caches (`.cache/`, `model_cache/`, `hf_cache/`), raw experimental datasets, local databases, and temporary artifacts.
+## [0.2.0] - 2026-08-19 — Phase-1 Baseline RAG
 
 ### Added
-- `docs/environment.md` — Full hardware, CUDA, Python 3.11, Docker, and environment readiness specification.
+- **Repository Ingestion Engine**:
+  - `ingestion/loaders/file_loader.py` — Directory walker with exclusions and artifact classification.
+  - `ingestion/loaders/github_loader.py` — Cloner with pinned commit/tag checkouts, commit history, issues, PRs.
+  - `ingestion/processors/chunker.py` — Python AST `CodeAwareChunker` and heading-based `DocAwareChunker`.
+  - `ingestion/processors/normalizer.py` — BOM/line-ending normalization, SHA-256 deduplication.
+  - `ingestion/registry.py` — Registry parser for repository specifications.
+  - `datasets/registry.yaml` — Pinned repository specifications for `pallets/flask` (3.0.3) and `fastapi/fastapi` (0.111.0).
+- **GPU Embeddings & Vector Store**:
+  - `knowledge/vector/embeddings.py` — `BGEEmbeddingModel` on `BAAI/bge-small-en-v1.5` with CUDA / RTX 4050 GPU acceleration and batching.
+  - `knowledge/vector/qdrant.py` — Concrete `QdrantVectorStore` implementation with live Docker integration.
+  - `docker-compose.yml` — Upgraded Qdrant to `qdrant/qdrant:v1.13.2`.
+- **Hybrid Retrieval Subsystem**:
+  - `retrieval/dense.py` — Qdrant-backed semantic vector retriever.
+  - `retrieval/bm25.py` — BM25Plus sparse retriever with software-engineering code tokenization.
+  - `retrieval/hybrid.py` — Weighted score fusion with score normalization and metadata filtering.
+- **LLM Provider & Baseline RAG Pipeline**:
+  - `generation/providers/openai.py` — `OpenAIProvider` and offline `MockLLMProvider`.
+  - `generation/rag.py` — `BaselineRAGPipeline` with grounded reasoning, source citation, and refusal handling.
+- **Benchmark Suite**:
+  - `benchmark/data/meib_phase1_tasks.json` — 60 verified benchmark tasks across 6 SDLC stages.
+  - `benchmark/validator.py` — Quality validator and `CANDIDATE` -> `APPROVED` promotion manager.
+  - `benchmark/dataset.py` — Dataset filtering, loading, and analytical distributions.
+- **Evaluation Framework & Baselines**:
+  - `experiments/baselines/baseline_a.py` — `BaselineARunner` (LLM-only baseline).
+  - `experiments/baselines/baseline_b.py` — `BaselineBRunner` (Fixed RAG baseline).
+  - `evaluation/scorers/correctness.py`, `groundedness.py`, `relevance.py` — Specialized evaluators.
+  - `evaluation/suite.py` — `BaselineEvaluatorSuite`.
+- **REST API Endpoints**:
+  - `apps/api/routers/ingest.py` — `POST /ingest/repository`, `POST /ingest/file`.
+  - `apps/api/routers/retrieval.py` — `POST /retrieve`.
+  - `apps/api/routers/query.py` — `POST /query`.
+- **Documentation**:
+  - `docs/phase1_architecture.md`, `docs/ingestion.md`, `docs/retrieval.md`, `docs/benchmark.md`, `docs/evaluation.md`, `docs/sustainability_measurement.md`.
 
+---
 
-### Added
+## [0.1.0] - 2026-08-19 — Phase-0 Foundation
 
 #### Core
 - `core/config.py` — Pydantic v2 Settings with nested sub-configs (API, model, retrieval, quality, sustainability, experiment, secrets, vector store, graph store)

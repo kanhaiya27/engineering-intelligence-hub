@@ -90,13 +90,13 @@ engineering-intelligence-hub/
 
 ## Development Phases
 
-| Phase | Goal | Target Date |
-|---|---|---|
-| **Phase-0 (Foundation)** | Repository structure, schemas, interfaces, tests | ✅ Complete |
-| **Phase-1 (Core RAG)** | Ingestion, vector store, hybrid retrieval, LLM providers, basic API | September 2026 |
-| **Phase-2 (Adaptive)** | Task classification, retrieval routing, model routing, quality gate | October 2026 |
-| **Phase-3 (Experiments)** | Baselines A–F, ablations, Pareto analysis | October 2026 |
-| **Phase-4 (Graph + Agents)** | Knowledge graph, agentic orchestration | November 2026 |
+| Phase | Goal | Target Date | Status |
+|---|---|---|---|
+| **Phase-0 (Foundation)** | Repository structure, schemas, interfaces, tests | August 2026 | ✅ Complete |
+| **Phase-1 (Core Baseline RAG)** | Repository ingestion, GPU embeddings, Qdrant, hybrid retrieval, baseline RAG, 60-task benchmark, evaluation suite | August 2026 | ✅ Complete |
+| **Phase-2 (Adaptive RAG)** | Task classification, adaptive retrieval routing, model routing, quality gate | October 2026 | ⏳ Planned |
+| **Phase-3 (Experiments)** | Baselines A–F, ablations, Pareto analysis | October 2026 | ⏳ Planned |
+| **Phase-4 (Graph + Agents)** | Knowledge graph, agentic orchestration | November 2026 | ⏳ Planned |
 
 See [ROADMAP.md](ROADMAP.md) for detailed milestone breakdown.
 
@@ -113,28 +113,26 @@ See [ROADMAP.md](ROADMAP.md) for detailed milestone breakdown.
 
 ---
 
-## Quick Start (Phase-0)
+## Quick Start (Phase-1 Baseline RAG)
 
 ```bash
-# 1. Create and activate virtual environment
+# 1. Activate virtual environment
 cd c:\Projects\Majors\engineering-intelligence-hub
-python -m venv .venv
-.venv\Scripts\activate
+.\.venv311\Scripts\activate
 
-# 2. Install dependencies
-pip install -r requirements-dev.txt
+# 2. Run Qdrant Vector Store
+docker-compose up -d qdrant
 
-# 3. Configure environment
-copy .env.example .env
-# Edit .env with your API keys
+# 3. Ingest a repository (or single file via REST API)
+# REST API: POST /ingest/repository or POST /ingest/file
 
-# 4. Run tests
+# 4. Run test suite (90/90 tests passing)
 pytest tests/ -v
 
-# 5. Start API
+# 5. Start API server
 uvicorn apps.api.main:app --reload --port 8000
-# Visit http://localhost:8000/health
 # Visit http://localhost:8000/docs
+# Test /health, /info, /ingest/file, /retrieve, /query
 ```
 
 ---

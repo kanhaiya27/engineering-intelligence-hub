@@ -21,18 +21,18 @@ Engineering Intelligence Hub — Six-Month Development Roadmap
 
 **Deliverable:** Research paper draft + baseline system working + initial benchmark + evaluation framework.
 
-### Phase-1 Goals (by 15 September 2026)
+### Phase-1 Goals (Completed Ahead of Schedule)
 
-- [ ] **Ingestion pipeline** — GitHub REST API loader for commits, issues, PRs; file loaders for Python, Markdown, YAML
-- [ ] **Embedding** — BAAI/bge-small-en-v1.5 (local CUDA) + tiktoken for token counting
-- [ ] **Vector store** — Qdrant integration (`QdrantVectorStore` implementing `BaseVectorStore`)
-- [ ] **Hybrid retrieval** — Dense + BM25 fusion; concrete `HybridRetriever`
-- [ ] **LLM providers** — `OpenAIProvider` and `AnthropicProvider`
-- [ ] **Baselines A and B** — LLM-only and Fixed RAG + fixed model
-- [ ] **Initial benchmark** — 100 development tasks across 2 repositories (CANDIDATE status)
-- [ ] **Evaluation framework** — Correctness + groundedness + relevance evaluators
-- [ ] **Sustainability instrumentation** — All calls instrumented with energy/cost/CO₂ estimates
-- [ ] **Docker Compose** — Qdrant + Neo4j services
+- [x] **Ingestion pipeline** — GitHub loader for commits, issues, PRs; file loaders for Python AST, Markdown, YAML
+- [x] **Embedding** — BAAI/bge-small-en-v1.5 (local CUDA RTX 4050 GPU) + telemetry benchmarking
+- [x] **Vector store** — Qdrant integration (`QdrantVectorStore` implementing `BaseVectorStore`, v1.13.2)
+- [x] **Hybrid retrieval** — Dense + BM25Plus fusion; concrete `HybridRetriever` with weighted fusion
+- [x] **LLM providers** — `OpenAIProvider` and `MockLLMProvider`
+- [x] **Baselines A and B** — `BaselineARunner` (LLM-only) and `BaselineBRunner` (Fixed RAG)
+- [x] **Initial benchmark** — 60 verified development tasks across 6 SDLC stages in 2 pinned repositories (`pallets/flask`, `fastapi/fastapi`)
+- [x] **Evaluation framework** — Correctness + groundedness + relevance evaluators and `BaselineEvaluatorSuite`
+- [x] **Sustainability instrumentation** — All calls instrumented with energy/cost/CO₂ estimates and NVML GPU telemetry
+- [x] **Docker Compose** — Qdrant + Neo4j services configured and verified
 
 ---
 

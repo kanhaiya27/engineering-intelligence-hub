@@ -57,7 +57,35 @@ compatible.
 
 ---
 
-### RD-004 — Sustainability estimation approach (2026-08-19)
+### RD-005 — AST Code Chunker & Line Boundary Provenance (2026-08-19)
+
+**Decision:** Parse Python source code using `ast.parse` to extract semantic boundaries (`FunctionDef`, `AsyncFunctionDef`, `ClassDef`), recording 1-indexed `start_line` and `end_line`.
+**Rationale:** Standard arbitrary character/token chunkers slice across function signatures and loop bodies, destroying code syntax. Preserving AST boundaries ensures chunks remain syntactically coherent units of engineering knowledge.
+
+---
+
+### RD-006 — BM25Plus for Software Engineering Retrieval (2026-08-19)
+
+**Decision:** Use `BM25Plus` from `rank_bm25` rather than standard Robertson `BM25Okapi`.
+**Rationale:** `BM25Okapi` produces negative IDF values when terms appear in > 50% of documents (common in small repositories or targeted file searches). `BM25Plus` guarantees strictly positive IDF values ($> 0$), ensuring stable ranking across corpus sizes from $N=1$ to $N=100,000$.
+
+---
+
+### RD-007 — Dual-Tier Sustainability Measurement (2026-08-19)
+
+**Decision:** Formally partition sustainability accounting into Tier 1 (Direct NVIDIA NVML Hardware Power Sampling for local GPU models like BGE Small) and Tier 2 (TDP Proxy Modelling for cloud LLM APIs).
+**Rationale:** Cloud API providers do not expose real-time power draw. Reporting cloud energy without declaring it as an estimate breaches scientific honesty.
+
+---
+
+### RD-008 — Grounded RAG Citation & Hallucination Guardrails (2026-08-19)
+
+**Decision:** Enforce structured citation requirements and strict `SUPPORTED BY EVIDENCE` vs `INSUFFICIENT EVIDENCE` prompting in `BaselineRAGPipeline`.
+**Rationale:** Software engineering RAG systems must explicitly signal uncertainty or missing repository evidence rather than hallucinating APIs, parameter names, or configuration options.
+
+---
+
+### RD-009 — Sustainability estimation approach (2026-08-19)
 
 **Decision:** Use proxy-based estimates (TDP × utilisation × latency) for Phase-0/1.
 Attempt NVML measurement for local models. Defer RAPL/hardware-level measurement.
