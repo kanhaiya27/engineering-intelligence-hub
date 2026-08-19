@@ -158,6 +158,50 @@ criticality) to further refine strategy selection within the named set.
 
 ---
 
+### RD-008 — Rule-based Task Intelligence for Phase-2 M1 (2026-08-20)
+
+**Decision:** Implement rule-based classification and heuristic complexity/criticality estimation for M1.
+
+**Rationale:**
+- Fast, zero-inference-cost task routing.
+- Fully interpretable: no black-box routing errors.
+- Provides a stable, deterministic foundation before introducing learned routing in later phases.
+
+---
+
+### RD-009 — Provenance-Preserving Knowledge Graph Architecture (2026-08-20)
+
+**Decision:** Deterministic URIs (`func:{repo}:{commit}:{path}:{name}:{line}`) and mandatory provenance metadata (`commit_sha`, `start_line`, `end_line`) for all graph entities.
+
+**Rationale:**
+- Idempotent ingestion across multiple pipeline runs.
+- Prevents unverifiable facts in the graph context.
+- Enables precise line-level citation matching during verification.
+
+---
+
+### RD-010 — Heuristic Adaptive Retrieval Policies for Phase-2 M3 (2026-08-20)
+
+**Decision:** All task-type-to-strategy mappings and criticality escalations are explicitly labelled as baseline heuristic configurations.
+
+**Rationale:**
+- Establishes a concrete, runnable baseline (System C, System D).
+- Prevents premature novelty or optimality claims prior to controlled M5 evaluation.
+
+---
+
+### RD-011 — Deterministic Quality Verification & Bounded Escalation (2026-08-20)
+
+**Decision:** Implement four deterministic verification signals (Citation Grounding, Query Relevance, Evidence Coverage, Consistency) with configurable baseline weights (0.35, 0.25, 0.20, 0.20) and bounded retrieval escalation.
+
+**Rationale:**
+- **Reproducibility**: Deterministic verification ensures consistent experimental measurements without non-deterministic LLM judge hallucination or variance.
+- **Provenance Verification**: Validates citations directly against retrieved chunk file paths and line ranges.
+- **Bounded Resource Overhead**: Escalation is strictly capped (default max 2 attempts) to prevent latency/energy explosion.
+- **Fail-Safe Integrity**: When evidence is inadequate after escalation, the pipeline explicitly returns `INSUFFICIENT EVIDENCE` rather than delivering low-confidence hallucinations.
+
+---
+
 ## Open Research Questions
 
 1. How much does retrieval strategy choice affect quality vs. energy trade-offs

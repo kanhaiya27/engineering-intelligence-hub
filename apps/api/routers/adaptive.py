@@ -179,7 +179,7 @@ async def list_adaptive_strategies():
     For research transparency and experiment planning.
     """
     try:
-        from retrieval.policy import _TASK_TYPE_STRATEGY_MAP, _CRITICALITY_OVERRIDE_MAP
+        from retrieval.policy import _CRITICALITY_OVERRIDE_MAP, _TASK_TYPE_STRATEGY_MAP
         pipeline = _get_pipeline()
         strategies = pipeline.list_strategies()
 
@@ -198,7 +198,7 @@ async def list_adaptive_strategies():
             },
             "task_type_policy": _TASK_TYPE_STRATEGY_MAP,
             "criticality_override_policy": _CRITICALITY_OVERRIDE_MAP,
-            "experiment_modes": ["baseline_b", "system_c", "system_d"],
+            "experiment_modes": ["baseline_b", "system_c", "system_d", "system_e"],
             "note": (
                 "All policy mappings are initial heuristic configurations. "
                 "They will be validated and tuned in Phase-2 M5 controlled evaluation."
@@ -207,3 +207,152 @@ async def list_adaptive_strategies():
     except Exception as exc:
         logger.error(f"Failed to list strategies: {exc}")
         raise HTTPException(status_code=500, detail=str(exc))
+
+
+# ---------------------------------------------------------------------------
+# M4 Quality-Aware Query Endpoints
+# ---------------------------------------------------------------------------
+
+class QualityQueryRequest(BaseModel):
+    """Request for quality-gated engineering RAG query."""
+    query: str = Field(description="Engineering query or task description")
+    repository: Optional[str] = Field(default=None, description="Repository filter")
+    task_type: Optional[str] = Field(default=None, description="Optional task type override")
+    quality_threshold_override: Optional[float] = Field(
+        default=None,
+        description="Override task-specific quality threshold (0.0–1.0)",
+    )
+    experiment_mode: str = Field(
+        default="system_d",
+        description="Experiment mode (baseline_b, system_c, system_d)",
+    )
+    task_id: Optional[str] = Field(default=None, description="Tracking task ID")
+    skip_verification: bool = Field(default=False, description="Skip quality gate (ablation)")
+
+
+@router.post("/query")
+async def quality_aware_query(req: QualityQueryRequest):
+    """
+    Execute full quality-gated engineering RAG pipeline.
+
+    1. Classify task (M1)
+    2. Adaptive retrieval (M3)
+    3. LLM generation
+    4. Quality verification (M4)
+    5. Bounded escalation on failure -> Return verified answer or INSUFFICIENT EVIDENCE
+    """
+    try:
+        from generation.quality_rag import QualityAwareRAGPipeline
+        from retrieval.adaptive import ExperimentMode
+
+        classifier = _get_classifier()
+        task_id = req.task_id or f"api-quality-{id(req)}"
+
+        # 1. Classify
+        eng_req = EngTaskRequest(
+            task_id=task_id,
+            query=req.query,
+            repository=req.repository,
+            quality_threshold_override=req.quality_threshold_override,
+        )
+        classification = classifier.classify(eng_req)
+
+        if req.task_type:
+            try:
+                task_type_val = TaskType(req.task_type)
+                classification = TaskClassification(
+                    task_id=classification.task_id,
+                    task_type=task_type_val,
+                    sdlc_stage=classification.sdlc_stage,
+                    complexity=classification.complexity,
+                    criticality=classification.criticality,
+                    security_sensitivity=classification.security_sensitivity,
+                    quality_threshold=classification.quality_threshold,
+                    classifier_confidence=classification.classifier_confidence,
+                    reasoning=classification.reasoning,
+                )
+            except ValueError:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Unknown task_type: '{req.task_type}'",
+                )
+
+        try:
+            mode = ExperimentMode(req.experiment_mode)
+        except ValueError:
+            mode = ExperimentMode.SYSTEM_D
+
+        # 2. Execute QualityAwareRAGPipeline
+        pipeline = QualityAwareRAGPipeline(adaptive_pipeline=_get_pipeline())
+        response = pipeline.execute(
+            request=eng_req,
+            classification=classification,
+            experiment_mode=mode,
+            skip_verification=req.skip_verification,
+        )
+        return response
+
+    except HTTPException:
+        raise
+    except Exception as exc:
+        logger.error(f"Quality query failed: {exc}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(exc),
+        )
+
+
+@router.post("/verify", response_model=Dict[str, Any])
+async def verify_response_endpoint(req: Dict[str, Any]):
+    """
+    Run quality gate verification on an existing response and evidence.
+    """
+    try:
+        from verification.gate import QualityGate
+        from knowledge.schemas.tasks import EngTaskResponse
+
+        task_id = req.get("task_id", "adhoc-verify")
+        query = req.get("query", "")
+        answer = req.get("answer", "")
+        threshold = req.get("threshold", 0.75)
+        chunks = req.get("chunks", [])
+
+        eng_req = EngTaskRequest(task_id=task_id, query=query)
+        retrieval_res = RetrievalResult(
+            task_id=task_id,
+            strategy_used="verify_payload",
+            chunks=[RetrievedChunk(**c) for c in chunks],
+            total_retrieved=len(chunks),
+        )
+        eng_resp = EngTaskResponse(
+            task_id=task_id,
+            answer=answer,
+            retrieval=retrieval_res,
+        )
+
+        gate = QualityGate.default_gate()
+        report = gate.check(request=eng_req, response=eng_resp, threshold=threshold)
+
+        return {
+            "task_id": task_id,
+            "passed": report.passed,
+            "aggregated_score": report.aggregated_score,
+            "threshold_applied": report.threshold_applied,
+            "critical_failures": report.critical_failures,
+            "signals": [
+                {
+                    "signal_type": s.signal_type,
+                    "status": s.status,
+                    "score": s.score,
+                    "weight": s.weight,
+                    "rationale": s.rationale,
+                    "metadata": s.metadata,
+                }
+                for s in report.signals
+            ],
+        }
+
+    except Exception as exc:
+        logger.error(f"Verification endpoint failed: {exc}")
+        raise HTTPException(status_code=500, detail=str(exc))
+

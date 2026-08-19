@@ -9,6 +9,21 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 
 ### Added
+- **Phase-2 Quality-Aware Verification (`M4`)**:
+  - `verification/config.py`: `VerificationConfig` Pydantic model for configurable signal weights and escalation parameters.
+  - `verification/evaluators.py`: 4 deterministic evaluators (`CitationGroundingEvaluator`, `EvidenceCoverageEvaluator`, `QueryRelevanceEvaluator`, `EvidenceConsistencyEvaluator`).
+  - `verification/escalation.py`: `EscalationPolicy` implementing bounded progressive strategy escalation (top-k expansion -> graph depth -> reranking).
+  - `verification/gate.py`: `QualityGate.default_gate()` factory and task-specific threshold resolution.
+  - `generation/quality_rag.py`: `QualityAwareRAGPipeline` integrating generation, quality gate, bounded escalation, and fallback to `INSUFFICIENT EVIDENCE`.
+  - `apps/api/routers/adaptive.py`: Added `POST /adaptive/query` and `POST /adaptive/verify` endpoints.
+  - `docs/quality_verification.md`: Complete architecture and telemetry documentation.
+  - `tests/test_verification/test_m4_quality_gate.py`: 21 comprehensive unit & pipeline tests (125 total passing tests).
+- **Phase-2 Adaptive Retrieval Subsystem (`M3`)**:
+  - `retrieval/policy.py`: `AdaptiveRetrievalPolicy` mapping 21 SDLC task types to retrieval strategies with criticality escalation.
+  - `retrieval/graph_augmented.py`: `GraphAugmentedRetriever` with bounded graph neighborhood context injection.
+  - `retrieval/adaptive.py`: `AdaptiveRetrievalPipeline` supporting `BASELINE_B`, `SYSTEM_C`, and `SYSTEM_D` experiment modes.
+  - `configs/retrieval.yaml`: Added `hybrid_bm25`, `incident_sparse`, and `incident_graph` strategies.
+  - `tests/test_retrieval/test_m3_adaptive.py`: 25 adaptive retrieval tests.
 - **Phase-2 Engineering Knowledge Graph Foundation (`M2`)**:
   - `knowledge/graph/neo4j.py`: `Neo4jGraphStore` implementation with Bolt protocol connection, index constraints, and parameterized Cypher execution.
   - `knowledge/graph/in_memory.py`: `InMemoryGraphStore` implementation for fast, reliable unit tests without database dependencies.

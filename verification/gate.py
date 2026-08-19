@@ -79,6 +79,30 @@ class QualityGate:
         self.evaluators: List[BaseQualityEvaluator] = evaluators or []
         self.max_escalations = max_escalations
 
+    @classmethod
+    def default_gate(cls, config: Optional[Any] = None) -> "QualityGate":
+        """
+        Factory method: construct a QualityGate with the 4 standard M4 evaluators.
+
+        Weights are loaded from VerificationConfig (heuristic baseline defaults).
+        """
+        from verification.config import VerificationConfig
+        from verification.evaluators import (
+            CitationGroundingEvaluator,
+            EvidenceConsistencyEvaluator,
+            EvidenceCoverageEvaluator,
+            QueryRelevanceEvaluator,
+        )
+
+        cfg = config or VerificationConfig()
+        evaluators: List[BaseQualityEvaluator] = [
+            CitationGroundingEvaluator(weight=cfg.citation_grounding_weight),
+            QueryRelevanceEvaluator(weight=cfg.query_relevance_weight),
+            EvidenceCoverageEvaluator(weight=cfg.evidence_coverage_weight),
+            EvidenceConsistencyEvaluator(weight=cfg.evidence_consistency_weight),
+        ]
+        return cls(evaluators=evaluators, max_escalations=cfg.max_escalation_attempts)
+
     def add_evaluator(self, evaluator: BaseQualityEvaluator) -> None:
         """Register an additional evaluator."""
         self.evaluators.append(evaluator)

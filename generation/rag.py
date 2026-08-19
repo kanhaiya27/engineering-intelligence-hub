@@ -27,7 +27,6 @@ from knowledge.schemas.tasks import (
     TaskStatus,
 )
 from retrieval.base import BaseRetriever
-from retrieval.hybrid import HybridRetriever
 from retrieval.strategies import RetrievalMode, RetrievalStrategyConfig
 from sustainability.carbon.estimator import CarbonEstimator
 from sustainability.cost.estimator import CostEstimator
@@ -61,7 +60,12 @@ class BaselineRAGPipeline:
         cost_estimator: Optional[CostEstimator] = None,
         exp_logger: Optional[ExperimentLogger] = None,
     ) -> None:
-        self.retriever = retriever or HybridRetriever()
+        if retriever is not None:
+            self.retriever = retriever
+        else:
+            from retrieval.hybrid import HybridRetriever
+            self.retriever = HybridRetriever()
+
         if llm_provider:
             self.llm_provider = llm_provider
         elif settings.secrets.openai_api_key:

@@ -11,7 +11,10 @@ import os
 import time
 from typing import Any, Dict, List, Optional
 
-import openai
+try:
+    import openai
+except ImportError:
+    openai = None  # type: ignore[assignment]
 
 from core.config import settings
 from core.exceptions import (
@@ -40,14 +43,18 @@ class OpenAIProvider(BaseLLMProvider):
         self.api_key = api_key or settings.secrets.openai_api_key or os.getenv("OPENAI_API_KEY")
         self.base_url = base_url
         self.timeout_seconds = timeout_seconds or settings.model.request_timeout_seconds
-        self._client: Optional[openai.OpenAI] = None
+        self._client: Optional[Any] = None
 
     @property
     def provider_name(self) -> str:
         return "openai"
 
-    def _get_client(self) -> openai.OpenAI:
+    def _get_client(self) -> Any:
         if self._client is None:
+            if openai is None:
+                raise ProviderAuthenticationError(
+                    "openai package is not installed. Install with `pip install openai`."
+                )
             if not self.api_key:
                 raise ProviderAuthenticationError(
                     "OpenAI API key not configured. Set OPENAI_API_KEY environment variable.",
