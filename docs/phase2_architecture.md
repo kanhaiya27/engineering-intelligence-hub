@@ -1,0 +1,49 @@
+# Phase-2 Architecture: Engineering Intelligence Layer
+
+## Overview
+
+Phase-2 introduces task-aware adaptation to the Engineering Intelligence Hub. Instead of applying a static RAG pipeline to all engineering questions, the system dynamically analyzes the incoming task to calibrate retrieval strategy, context depth, and verification thresholds.
+
+```
+                    USER TASK (EngTaskRequest)
+                                ↓
+                        TASK ANALYZER (M1)
+                                ↓
+               ┌────────────────┼────────────────┐
+               ↓                ↓                ↓
+            SDLC Stage       Task Type       Complexity
+               ↓                ↓                ↓
+               └────────────────┼────────────────┘
+                                ↓
+                           CRITICALITY
+                                ↓
+                      QUALITY REQUIREMENT
+                                ↓
+                      RETRIEVAL POLICY (M3)
+                                ↓
+                ┌───────────────┼───────────────┐
+                ↓               ↓               ↓
+              Dense           BM25           Hybrid
+                │               │               │
+                └───────────────┼───────────────┘
+                                ↓
+                      Evidence Set + Graph (M2)
+                                ↓
+                           Generation
+                                ↓
+                       Verification (M4)
+                                ↓
+                        Quality Decision
+                                ↓
+                     PASS / ESCALATE / FAIL
+```
+
+---
+
+## Milestone Execution Order
+
+1. **M1 — Task Intelligence**: Rule-based `TaskClassifier`, heuristic complexity model, criticality & security risk assessment, minimum quality threshold determination. (✅ Complete)
+2. **M2 — Engineering Knowledge Graph Foundation**: Concrete graph store implementation (`BaseGraphStore` with Neo4j support), AST relation extraction (imports, functions, classes, modules), provenance tracking. (⏳ Next)
+3. **M3 — Adaptive Retrieval**: Task-aware retrieval policies mapping `TaskClassification` to tuned search parameters (top-k, weights, graph expansion).
+4. **M4 — Quality-Aware Verification**: Quality gate extension driven by task quality requirements, multi-signal evidence verification, and retrieval escalation paths.
+5. **M5 — Controlled Evaluation**: Comparative benchmarking across Baseline A (LLM Only), Baseline B (Fixed RAG), System C (Task-Aware Retrieval), and System D (Task-Aware + Graph).

@@ -38,13 +38,13 @@ Engineering Intelligence Hub — Six-Month Development Roadmap
 
 ## Milestone 3 — Major Implementation + Experiments (25 October 2026)
 
-### Phase-2 Goals
+### Phase-2 Goals (In Progress)
 
-- [ ] **Task classifier** — Rule-based + lightweight LLM-based classifier
-- [ ] **Adaptive retrieval router** — Full `RetrievalRouter` with YAML-driven strategy resolution
-- [ ] **Tier-based model router** — `TierBasedRouter` implementing `BaseModelRouter`
-- [ ] **Quality gate active** — Groundedness + relevance evaluators integrated
-- [ ] **Escalation logic** — Full PASS/ESCALATE/FAIL pipeline
+- [x] **Task Intelligence (M1)** — `RuleBasedTaskClassifier`, `HeuristicComplexityAnalyzer`, and `HeuristicCriticalityAnalyzer`
+- [ ] **Knowledge Graph Foundation (M2)** — Concrete `BaseGraphStore` with Neo4j support, AST code relation extraction, and provenance tracking
+- [ ] **Adaptive Retrieval (M3)** — Dynamic retrieval strategy selection driven by `TaskClassification`
+- [ ] **Quality-Aware Verification (M4)** — Quality gate driven by task criticality with retrieval escalation
+- [ ] **Controlled Evaluation (M5)** — Comparative evaluation of Baselines A, B, and Systems C, D
 - [ ] **Baselines C, D, E, F** — All six named baselines running
 - [ ] **Ablation studies** — Disable retrieval, disable routing, disable quality gate, vary thresholds
 - [ ] **Pareto analysis** — Quality vs energy/cost/latency Pareto frontier plots

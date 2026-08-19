@@ -85,6 +85,13 @@ compatible.
 
 ---
 
+### RD-009 — Rule-Based Task Intelligence & Transparent Heuristics (2026-08-20)
+
+**Decision:** Implement Phase-2 Task Intelligence using transparent rule-based lexical matching and heuristic scoring rather than a black-box machine learning classifier.
+**Rationale:** Establishing baseline task-aware routing requires interpretable, deterministic classification features. Claiming learned classification without establishing rule-based baselines would violate scientific rigor. Transparent heuristics for complexity and criticality allow controlled ablation studies across SDLC stages.
+
+---
+
 ### RD-009 — Sustainability estimation approach (2026-08-19)
 
 **Decision:** Use proxy-based estimates (TDP × utilisation × latency) for Phase-0/1.

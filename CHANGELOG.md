@@ -6,6 +6,20 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [Unreleased]
+
+### Added
+- **Phase-2 Task Intelligence Subsystem (`M1`)**:
+  - `intelligence/base.py`: Abstract `BaseTaskClassifier` interface.
+  - `intelligence/complexity.py`: `HeuristicComplexityAnalyzer` evaluating query length, architectural cues, deep reasoning cues, and multi-step patterns.
+  - `intelligence/criticality.py`: `HeuristicCriticalityAnalyzer` evaluating operational criticality, security sensitivity, and quality thresholds.
+  - `intelligence/classifier.py`: `RuleBasedTaskClassifier` mapping user prompts and hints to `SDLCStage`, `TaskType`, `ComplexityLevel`, and `CriticalityLevel`.
+  - `intelligence/__init__.py`: Exported package module.
+  - `tests/test_intelligence/`: Unit tests for task classifier, complexity, and criticality analyzers (8 tests passing).
+  - `docs/task_intelligence.md`, `docs/phase2_architecture.md`: Comprehensive design and reference documentation.
+
+---
+
 ## [0.2.0] - 2026-08-19 — Phase-1 Baseline RAG
 
 ### Added
