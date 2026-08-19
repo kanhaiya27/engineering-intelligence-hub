@@ -9,6 +9,15 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 
 ### Added
+- **Phase-2 Engineering Knowledge Graph Foundation (`M2`)**:
+  - `knowledge/graph/neo4j.py`: `Neo4jGraphStore` implementation with Bolt protocol connection, index constraints, and parameterized Cypher execution.
+  - `knowledge/graph/in_memory.py`: `InMemoryGraphStore` implementation for fast, reliable unit tests without database dependencies.
+  - `knowledge/graph/extractor.py`: `ASTGraphExtractor` extracting code entities (Module, Class, Function, Method, Test) and relationships (CONTAINS, IMPORTS, DEPENDS_ON, CALLS, TESTED_BY) with strict line-level provenance.
+  - `knowledge/graph/builder.py`: `EngineeringGraphBuilder` building and persisting repository-level knowledge graphs from source files, commits, pull requests, issues, and ADRs with deterministic idempotency.
+  - `knowledge/graph/queries.py`: Graph traversal and query helpers (`get_entity`, `get_neighborhood`, `find_dependencies`, `find_related_files`, `find_issue_commits`, `find_modified_files`, `get_subgraph`).
+  - `apps/api/routers/graph.py`: REST API endpoints for `/graph/health`, `/graph/entity/{id}`, and `/graph/neighbors/{id}`.
+  - `docs/knowledge_graph.md`: Comprehensive graph schema, provenance strategy, and reference documentation.
+  - Unit and API tests in `tests/test_knowledge/` and `tests/test_api/test_graph_endpoints.py` (all 104 tests green).
 - **Phase-2 Task Intelligence Subsystem (`M1`)**:
   - `intelligence/base.py`: Abstract `BaseTaskClassifier` interface.
   - `intelligence/complexity.py`: `HeuristicComplexityAnalyzer` evaluating query length, architectural cues, deep reasoning cues, and multi-step patterns.

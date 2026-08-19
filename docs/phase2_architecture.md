@@ -43,7 +43,7 @@ Phase-2 introduces task-aware adaptation to the Engineering Intelligence Hub. In
 ## Milestone Execution Order
 
 1. **M1 — Task Intelligence**: Rule-based `TaskClassifier`, heuristic complexity model, criticality & security risk assessment, minimum quality threshold determination. (✅ Complete)
-2. **M2 — Engineering Knowledge Graph Foundation**: Concrete graph store implementation (`BaseGraphStore` with Neo4j support), AST relation extraction (imports, functions, classes, modules), provenance tracking. (⏳ Next)
-3. **M3 — Adaptive Retrieval**: Task-aware retrieval policies mapping `TaskClassification` to tuned search parameters (top-k, weights, graph expansion).
+2. **M2 — Engineering Knowledge Graph Foundation**: Concrete graph store implementations (`Neo4jGraphStore`, `InMemoryGraphStore`), AST relation extraction (`ASTGraphExtractor`), provenance tracking, and pipeline builder (`EngineeringGraphBuilder`). (✅ Complete)
+3. **M3 — Adaptive Retrieval**: Task-aware retrieval policies mapping `TaskClassification` to tuned search parameters (top-k, weights, graph expansion). (⏳ Next)
 4. **M4 — Quality-Aware Verification**: Quality gate extension driven by task quality requirements, multi-signal evidence verification, and retrieval escalation paths.
 5. **M5 — Controlled Evaluation**: Comparative benchmarking across Baseline A (LLM Only), Baseline B (Fixed RAG), System C (Task-Aware Retrieval), and System D (Task-Aware + Graph).

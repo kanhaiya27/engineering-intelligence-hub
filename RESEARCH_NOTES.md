@@ -92,6 +92,13 @@ compatible.
 
 ---
 
+### RD-010 — Provenance-Preserving Knowledge Graph Architecture (2026-08-20)
+
+**Decision:** Maintain strict 1-indexed source code line numbers, commit SHAs, and deterministic identity keys across all knowledge graph nodes and edges.
+**Rationale:** Software engineering RAG systems must never hallucinate relationships or disconnected facts. Grounding graph nodes directly into AST syntax trees and verifiable version control commits enables deterministic neighborhood context injection for downstream adaptive retrieval (M3).
+
+---
+
 ### RD-009 — Sustainability estimation approach (2026-08-19)
 
 **Decision:** Use proxy-based estimates (TDP × utilisation × latency) for Phase-0/1.

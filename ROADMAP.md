@@ -41,7 +41,7 @@ Engineering Intelligence Hub — Six-Month Development Roadmap
 ### Phase-2 Goals (In Progress)
 
 - [x] **Task Intelligence (M1)** — `RuleBasedTaskClassifier`, `HeuristicComplexityAnalyzer`, and `HeuristicCriticalityAnalyzer`
-- [ ] **Knowledge Graph Foundation (M2)** — Concrete `BaseGraphStore` with Neo4j support, AST code relation extraction, and provenance tracking
+- [x] **Knowledge Graph Foundation (M2)** — Concrete `Neo4jGraphStore`, `InMemoryGraphStore`, `ASTGraphExtractor`, and `EngineeringGraphBuilder`
 - [ ] **Adaptive Retrieval (M3)** — Dynamic retrieval strategy selection driven by `TaskClassification`
 - [ ] **Quality-Aware Verification (M4)** — Quality gate driven by task criticality with retrieval escalation
 - [ ] **Controlled Evaluation (M5)** — Comparative evaluation of Baselines A, B, and Systems C, D
