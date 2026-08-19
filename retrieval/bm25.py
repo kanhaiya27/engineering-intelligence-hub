@@ -11,7 +11,7 @@ import re
 import time
 from typing import Any, Dict, List, Optional
 
-from rank_bm25 import BM25Okapi
+from rank_bm25 import BM25Plus
 
 from core.logging import get_logger
 from knowledge.schemas.artifacts import KnowledgeChunk
@@ -58,13 +58,13 @@ def code_aware_tokenize(text: str) -> List[str]:
 
 class BM25Retriever(BaseRetriever):
     """
-    In-memory BM25 retriever for software engineering knowledge.
+    In-memory BM25 retriever for software engineering knowledge using BM25Plus.
     """
 
     def __init__(self, chunks: Optional[List[KnowledgeChunk]] = None) -> None:
         self.chunks: List[KnowledgeChunk] = []
         self.corpus_tokens: List[List[str]] = []
-        self.bm25: Optional[BM25Okapi] = None
+        self.bm25: Optional[BM25Plus] = None
         if chunks:
             self.index_chunks(chunks)
 
@@ -75,9 +75,21 @@ class BM25Retriever(BaseRetriever):
     def index_chunks(self, chunks: List[KnowledgeChunk]) -> int:
         """Build or update BM25 index from chunks."""
         self.chunks = list(chunks)
-        self.corpus_tokens = [code_aware_tokenize(c.content) for c in self.chunks]
+        self.corpus_tokens = []
+        for c in self.chunks:
+            # Combine content with symbol name, file path, and repo for comprehensive matching
+            meta_parts = [
+                c.content,
+                c.metadata.get("symbol_name", ""),
+                c.metadata.get("file_path", ""),
+                c.metadata.get("section_title", ""),
+                c.repository,
+            ]
+            full_text = " ".join(p for p in meta_parts if p)
+            self.corpus_tokens.append(code_aware_tokenize(full_text))
+
         if self.corpus_tokens:
-            self.bm25 = BM25Okapi(self.corpus_tokens)
+            self.bm25 = BM25Plus(self.corpus_tokens)
         else:
             self.bm25 = None
         return len(self.chunks)
