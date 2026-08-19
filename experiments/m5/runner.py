@@ -416,3 +416,22 @@ class M5BenchmarkRunner:
             json.dump(processed_summary, f, indent=2)
 
         return processed_summary
+
+
+if __name__ == "__main__":
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Run Phase-2 M5 Controlled Benchmark")
+    parser.add_argument("--split", type=str, default="dev", choices=["dev", "val", "test"], help="Dataset split")
+    parser.add_argument("--trials", type=int, default=3, help="Number of trials per task")
+    parser.add_argument("--manifest", type=str, default=None, help="Path to custom experiment manifest JSON")
+    args = parser.parse_args()
+
+    custom_manifest = None
+    if args.manifest:
+        with open(args.manifest, "r", encoding="utf-8") as f:
+            custom_manifest = ExperimentManifest(**json.load(f))
+
+    benchmark_runner = M5BenchmarkRunner(manifest=custom_manifest)
+    res = benchmark_runner.run_split(split_name=args.split, trials_count=args.trials)
+    print(f"M5 benchmark run complete for split='{args.split}'. Evaluated {res['tasks_evaluated']} tasks.")
