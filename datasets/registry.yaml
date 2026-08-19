@@ -2,43 +2,76 @@
 # ==========================================================================
 # Engineering Intelligence Hub — Open-Source Repository Registry
 #
-# Target: 4–5 carefully selected repositories covering diverse SDLC domains.
-#
-# Selection criteria:
-#   - Permissive licence (MIT, Apache-2.0, BSD)
-#   - Rich commit history (>1 year)
-#   - Active issue tracker
-#   - Available tests
-#   - Non-trivial codebase (>10k LOC preferred)
-#   - Public/open — no proprietary data
+# Target: Carefully selected repositories covering diverse SDLC domains.
+# Pinned to specific tags/commits for reproducible research.
 #
 # Status legend:
 #   candidate  : Under consideration
 #   selected   : Confirmed for benchmark
 #   ingested   : Fully ingested into knowledge store
 #   deprecated : Removed from dataset
-#
 # ==========================================================================
 
-repositories: []
-# Example entry (uncomment and populate):
-# - repo_id: flask
-#   owner: pallets
-#   name: flask
-#   url: https://github.com/pallets/flask
-#   description: "Lightweight Python web framework"
-#   language: python
-#   licence: BSD-3-Clause
-#   status: candidate
-#   sdlc_coverage:
-#     - development
-#     - testing
-#     - maintenance
-#   tags:
-#     - web-framework
-#     - python
-#     - well-documented
-#   commit_count_approx: 3000
-#   issue_count_approx: 500
-#   date_added: "2026-08-19"
-#   notes: "Strong documentation, clear architecture, good issue/PR history"
+repositories:
+  - repo_id: flask
+    owner: pallets
+    name: flask
+    url: https://github.com/pallets/flask
+    description: "Lightweight WSGI Python web framework"
+    language: python
+    licence: BSD-3-Clause
+    domain: web-framework
+    selected_tag: "3.0.3"
+    selected_commit: "4aa68d5b4a0f443b7be86a4e3fae88a09cfc9d2f"
+    status: selected
+    sdlc_coverage:
+      - requirements
+      - architecture
+      - development
+      - testing
+      - code_review
+      - maintenance
+    tags:
+      - web-framework
+      - wsgi
+      - python
+      - well-documented
+      - test-rich
+    commit_count_approx: 4800
+    issue_count_approx: 5200
+    collection_timestamp: "2026-08-19T22:30:00Z"
+    selection_rationale: >
+      Clean WSGI architecture, high pytest test suite coverage, comprehensive Sphinx documentation,
+      rich issue/PR discussions, mature codebase ideal for code comprehension and SDLC RAG evaluation.
+
+  - repo_id: fastapi
+    owner: fastapi
+    name: fastapi
+    url: https://github.com/fastapi/fastapi
+    description: "Modern, high-performance web framework for building APIs with Python"
+    language: python
+    licence: MIT
+    domain: api-framework
+    selected_tag: "0.111.0"
+    selected_commit: "43594b29cba53d9e4823db942f9ef0052ad41c49"
+    status: selected
+    sdlc_coverage:
+      - requirements
+      - architecture
+      - development
+      - testing
+      - code_review
+      - maintenance
+    tags:
+      - api-framework
+      - async
+      - pydantic
+      - starlette
+      - python
+      - type-hints
+    commit_count_approx: 3200
+    issue_count_approx: 6000
+    collection_timestamp: "2026-08-19T22:30:00Z"
+    selection_rationale: >
+      Modern Python 3.10+ async design with extensive Pydantic and Starlette integration,
+      thorough multilingual documentation, large issue history, and comprehensive test suite.
