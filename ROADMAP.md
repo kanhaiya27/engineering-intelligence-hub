@@ -43,11 +43,11 @@ Engineering Intelligence Hub — Six-Month Development Roadmap
 - [x] **Task Intelligence (M1)** — `RuleBasedTaskClassifier`, `HeuristicComplexityAnalyzer`, and `HeuristicCriticalityAnalyzer`
 - [x] **Knowledge Graph Foundation (M2)** — Concrete `Neo4jGraphStore`, `InMemoryGraphStore`, `ASTGraphExtractor`, and `EngineeringGraphBuilder`
 - [x] **Adaptive Retrieval (M3)** — Dynamic retrieval strategy selection driven by `TaskClassification`, `AdaptiveRetrievalPolicy`, `GraphAugmentedRetriever`, `AdaptiveRetrievalPipeline`
-- [x] **Quality-Aware Verification (M4)** — Four-signal quality gate driven by task criticality with bounded retrieval escalation and `QualityAwareRAGPipeline`
-- [ ] **Controlled Evaluation (M5)** — Comparative evaluation of Baselines A, B, and Systems C, D, E
-- [ ] **Baselines C, D, E, F** — All named experimental configurations running
-- [ ] **Ablation studies** — Disable retrieval, disable routing, disable quality gate, vary thresholds
-- [ ] **Pareto analysis** — Quality vs energy/cost/latency Pareto frontier plots
+- [x] **Controlled Evaluation Framework (M5)** — Multi-system benchmark runner, frozen manifest, deterministic stratified splits (Dev/Val/Test), 3-tier metrics, failure taxonomy, and Pareto engine for Baselines A, B, and Systems C, D, E
+- [ ] **Full Test-Set Evaluation Execution** — Run final held-out test evaluation after dataset expansion / policy tuning
+- [ ] **Baselines C, D, E** — Comparative reporting across full benchmark splits
+- [ ] **Ablation studies** — Stepwise ablation deltas Delta(A->B), Delta(B->C), Delta(C->D), Delta(D->E)
+- [ ] **Pareto analysis** — Quality vs energy/cost/latency Pareto frontier generation
 - [ ] **Benchmark expanded** — ~400 tasks across 4–5 repositories, human-reviewed subset
 - [ ] **Updated research** — Incorporate empirical results
 

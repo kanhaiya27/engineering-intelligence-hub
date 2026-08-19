@@ -9,6 +9,17 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 
 ### Added
+- **Phase-2 Controlled Evaluation Framework (`M5`)**:
+  - `experiments/m5/manifest.py`: `ExperimentManifest`, `FrozenVariables`, and system definitions for Baselines A, B, and Systems C, D, E with SHA-256 configuration hashing.
+  - `experiments/m5/splits.py`: Stratified deterministic dataset partitioner creating frozen Dev (24 tasks, 40%), Val (12 tasks, 20%), and Held-Out Test (24 tasks, 40%) splits with Seed = 42.
+  - `experiments/m5/metrics.py`: Strict 3-tier metric schemas (`MEASURED`, `ESTIMATED`, `DERIVED`), trial aggregators, and quality-constrained energy efficiency validator.
+  - `experiments/m5/runner.py`: Multi-system benchmark runner with repeated trial logging ($N=3$), telemetry capture, and raw JSONL persistence.
+  - `experiments/m5/analysis.py`: Statistical paired differences, 4-step ablation transitions ($\Delta A\to B$, $\Delta B\to C$, $\Delta C\to D$, $\Delta D\to E$), SDLC breakdowns, and 2D Pareto efficiency frontiers.
+  - `experiments/m5/failure_tax.py`: 13-category failure taxonomy model and automated diagnostic classifier.
+  - `experiments/m5/human_eval.py`: 12-task stratified human annotation protocol with 5-dimension Likert rubric.
+  - `experiments/m5/reports.py`: Markdown and JSON comparison report generator.
+  - `docs/m5_controlled_evaluation.md`: Complete specification of the M5 controlled evaluation protocol.
+  - `tests/test_experiments/test_m5_runner.py`: 9 comprehensive tests for splits, manifest, metrics, taxonomy, Pareto, human eval, and runner execution (159 total passing tests).
 - **Phase-2 Quality-Aware Verification (`M4`)**:
   - `verification/config.py`: `VerificationConfig` Pydantic model for configurable signal weights and escalation parameters.
   - `verification/evaluators.py`: 4 deterministic evaluators (`CitationGroundingEvaluator`, `EvidenceCoverageEvaluator`, `QueryRelevanceEvaluator`, `EvidenceConsistencyEvaluator`).

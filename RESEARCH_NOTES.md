@@ -190,6 +190,20 @@ criticality) to further refine strategy selection within the named set.
 
 ---
 
+### RD-012: Phase-2 M5 Controlled Evaluation Protocol, Splits, and Quality-Constrained Efficiency
+- **Date**: 2026-08-20
+- **Context**: Evaluating 5 distinct system configurations (Baseline A, Baseline B, System C, System D, System E) on the 60-task benchmark across quality, efficiency, cost, energy, and carbon.
+- **Decision**:
+  1. Freeze the 60 Phase-1 tasks as `v1.0-phase1-60`.
+  2. Implement deterministic stratified splitting (Seed = 42) into Dev (24 tasks, 40%), Val (12 tasks, 20%), and Held-Out Test (24 tasks, 40%) balanced across 6 SDLC stages and 2 repositories.
+  3. Enforce the Quality Constraint: resource savings are only valid if answer quality meets or exceeds the task threshold; otherwise flagged as `INVALID SAVING`.
+  4. Categorize all telemetry under strict 3-tier provenance (`MEASURED`, `ESTIMATED`, `DERIVED`).
+  5. Structure evaluation into 4 sequential ablation transitions: Delta(A->B), Delta(B->C), Delta(C->D), Delta(D->E) and 2D Pareto frontiers.
+  6. Restrict current execution to Dev split verification with mocks, preserving the Held-Out Test set frozen.
+- **Impact**: Provides a scientifically rigorous, reproducible, and vendor-neutral evaluation foundation.
+
+---
+
 ### RD-011 — Deterministic Quality Verification & Bounded Escalation (2026-08-20)
 
 **Decision:** Implement four deterministic verification signals (Citation Grounding, Query Relevance, Evidence Coverage, Consistency) with configurable baseline weights (0.35, 0.25, 0.20, 0.20) and bounded retrieval escalation.
