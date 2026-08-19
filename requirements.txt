@@ -37,3 +37,20 @@ typer>=0.12.0
 # --- Data ---
 numpy>=1.24.0
 pandas>=2.0.0
+
+# --- Phase-1 ML / Embeddings ---
+torch>=2.2.0
+sentence-transformers>=3.0.0
+transformers>=4.40.0
+
+# --- Phase-1 Vector Store & Retrieval ---
+qdrant-client>=1.9.0
+rank-bm25>=0.2.2
+
+# --- Phase-1 LLM SDKs ---
+openai>=1.20.0
+
+# --- Phase-1 Telemetry & Parsing ---
+nvidia-ml-py>=12.535.133
+GitPython>=3.1.40
+pathspec>=0.12.0
