@@ -20,7 +20,7 @@ from typing import AsyncIterator
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from apps.api.routers import graph, health, ingest, query, retrieval
+from apps.api.routers import adaptive, graph, health, ingest, query, retrieval
 from core.config import settings
 from core.logging import configure_logging, get_logger
 
@@ -82,6 +82,7 @@ app.include_router(ingest.router, tags=["Ingestion"])
 app.include_router(retrieval.router, tags=["Retrieval"])
 app.include_router(query.router, tags=["Query"])
 app.include_router(graph.router, tags=["Knowledge Graph"])
+app.include_router(adaptive.router, tags=["Adaptive Retrieval (M3)"])
 
 
 # ---------------------------------------------------------------------------
