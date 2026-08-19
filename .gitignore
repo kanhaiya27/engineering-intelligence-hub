@@ -23,19 +23,29 @@ lib64/
 *.manifest
 *.spec
 
-# --- Virtual environments ---
+# --- Virtual environments (all naming variants) ---
 .venv/
+.venv311/
+.venv38/
+.venv-*/
 venv/
 env/
 ENV/
 .env/
 
 # --- Secrets / environment ---
+# CRITICAL: never commit API keys or .env files
 .env
 .env.*
 !.env.example
 *.secret
 secrets/
+api_keys.txt
+api_keys.json
+*_api_key.txt
+*_api_key.json
+credentials.json
+credentials.yaml
 
 # --- IDE / editor ---
 .vscode/
@@ -62,46 +72,84 @@ dmypy.json
 .ipynb_checkpoints/
 *.ipynb
 
-# --- Experiment results (raw data — checked in via DVC or similar) ---
+# --- Experiment results (raw data — exclude from git; use DVC or similar) ---
 experiments/results/**/*.jsonl
 experiments/results/**/*.json
 experiments/results/**/*.parquet
+experiments/results/**/*.csv
+experiments/results/**/*.npy
+experiments/results/**/*.npz
 !experiments/results/.gitkeep
 
-# --- Datasets (large files) ---
+# --- Datasets (large files — exclude raw, keep registry/schema) ---
 datasets/**/*.jsonl
 datasets/**/*.parquet
 datasets/**/*.csv
 datasets/**/*.zip
 datasets/**/*.tar.gz
+datasets/**/*.npy
+datasets/**/*.npz
 !datasets/.gitkeep
 !datasets/registry.yaml
 !datasets/README.md
 
-# --- Model weights / embeddings ---
+# --- Model weights / embeddings / binary outputs ---
 *.bin
 *.safetensors
 *.pt
+*.pth
 *.ckpt
 *.pkl
 *.h5
+*.npy
+*.npz
+
+# --- HuggingFace / model cache directories ---
+.cache/
+model_cache/
+model_weights/
+hf_cache/
+.huggingface/
+sentence_transformers/
+# Note: HF_HOME cache is typically at ~/.cache/huggingface (outside repo)
+# but guard local symlinks or copies:
+huggingface/hub/
 
 # --- Vector DB data directories ---
 .chromadb/
 qdrant_storage/
 .qdrant/
+chroma_db/
 
 # --- Neo4j data ---
 data/databases/
 data/transactions/
+
+# --- Local SQLite / DuckDB databases ---
+*.db
+*.sqlite
+*.sqlite3
+*.duckdb
 
 # --- Logs ---
 logs/
 *.log
 !.gitkeep
 
+# --- Scratch / temporary working directories ---
+tmp/
+scratch/
+.tmp/
+
+# --- Dashboard build outputs ---
+dashboard/dist/
+dashboard/.next/
+dashboard/node_modules/
+dashboard/build/
+
 # --- OS ---
 desktop.ini
+Thumbs.db
 
 # --- Build artifacts ---
 *.whl

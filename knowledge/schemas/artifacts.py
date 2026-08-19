@@ -16,7 +16,7 @@ from __future__ import annotations
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 # ---------------------------------------------------------------------------
@@ -111,8 +111,7 @@ class BaseArtifact(BaseModel):
         description="Arbitrary additional metadata for extension without schema changes",
     )
 
-    class Config:
-        use_enum_values = True
+    model_config = ConfigDict(use_enum_values=True)
 
 
 # ---------------------------------------------------------------------------
@@ -336,5 +335,4 @@ class KnowledgeChunk(BaseModel):
         default_factory=dict, description="Passthrough metadata from source artifact"
     )
 
-    class Config:
-        use_enum_values = True
+    model_config = ConfigDict(use_enum_values=True)

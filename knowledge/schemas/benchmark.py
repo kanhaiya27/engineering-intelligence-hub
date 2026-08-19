@@ -26,7 +26,7 @@ from __future__ import annotations
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from knowledge.schemas.tasks import (
     ComplexityLevel,
@@ -93,8 +93,7 @@ class SourceEvidence(BaseModel):
         description="Verbatim excerpt from the evidence artefact supporting the answer",
     )
 
-    class Config:
-        use_enum_values = True
+    model_config = ConfigDict(use_enum_values=True)
 
 
 class QualitySignalRequirements(BaseModel):
@@ -235,5 +234,4 @@ class BenchmarkTask(BaseModel):
             )
         return self
 
-    class Config:
-        use_enum_values = True
+    model_config = ConfigDict(use_enum_values=True)

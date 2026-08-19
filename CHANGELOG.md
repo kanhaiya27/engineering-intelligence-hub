@@ -8,7 +8,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
-## [0.1.0] — 2026-08-19 — Phase-0 Foundation
+### Changed
+- Migrated primary virtual environment to Python 3.11.9 (`.venv311/`), preserving `.venv/` (Python 3.8.10) for reference.
+- Upgraded schema configurations from legacy `class Config` to modern Pydantic v2 `model_config = ConfigDict(use_enum_values=True)` across all schema and config modules.
+- Enhanced `.gitignore` with strict exclusion rules for model caches (`.cache/`, `model_cache/`, `hf_cache/`), raw experimental datasets, local databases, and temporary artifacts.
+
+### Added
+- `docs/environment.md` — Full hardware, CUDA, Python 3.11, Docker, and environment readiness specification.
+
 
 ### Added
 
