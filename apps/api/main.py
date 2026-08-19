@@ -20,7 +20,7 @@ from typing import AsyncIterator
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from apps.api.routers import health
+from apps.api.routers import health, ingest, query, retrieval
 from core.config import settings
 from core.logging import configure_logging, get_logger
 
@@ -78,6 +78,9 @@ app.add_middleware(
 
 # --- Routers ---
 app.include_router(health.router, tags=["Health"])
+app.include_router(ingest.router, tags=["Ingestion"])
+app.include_router(retrieval.router, tags=["Retrieval"])
+app.include_router(query.router, tags=["Query"])
 
 
 # ---------------------------------------------------------------------------
