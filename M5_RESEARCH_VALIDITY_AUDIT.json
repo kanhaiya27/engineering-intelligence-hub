@@ -1,0 +1,62 @@
+{
+  "audit_title": "Phase-2 M5 Pre-Test Research-Validity Audit",
+  "timestamp": "2026-08-20T13:19:10Z",
+  "project": "Engineering Intelligence Hub (EIH)",
+  "overall_status": "YELLOW",
+  "decision_gate": "YELLOW — FIX SPECIFIC ISSUES BEFORE HELD-OUT TEST",
+  "scientific_validity_score": 68,
+  "held_out_test_touched": false,
+  "held_out_test_task_count": 24,
+  "critical_findings": [
+    {
+      "finding_id": "CF-01",
+      "area": "Quality Evaluation Pipeline",
+      "issue": "Correctness against ground truth (CorrectnessEvaluator) is omitted from composite_quality calculation in runner.py.",
+      "severity": "P0"
+    },
+    {
+      "finding_id": "CF-02",
+      "area": "Refusal Quality Scoring",
+      "issue": "INSUFFICIENT EVIDENCE refusal fallback is awarded 0.9625 quality and 100% Quality-Constrained Success, confusing refusal with correct task answer.",
+      "severity": "P0"
+    },
+    {
+      "finding_id": "CF-03",
+      "area": "Mock LLM Calibration",
+      "issue": "Dev and Validation calibration executed using static MockLLMProvider, producing identical text for Baselines A/B/C/D and mock energy differences.",
+      "severity": "P0"
+    }
+  ],
+  "p0_actions": [
+    {
+      "action_id": "P0-1",
+      "description": "Include task_correctness (40% weight) in composite_quality calculation in experiments/m5/runner.py.",
+      "target_file": "experiments/m5/runner.py"
+    },
+    {
+      "action_id": "P0-2",
+      "description": "Cap refusal quality score at 0.50 in verification/evaluators.py and prevent refusal from satisfying quality-constrained success on tasks with ground truth.",
+      "target_file": "verification/evaluators.py"
+    },
+    {
+      "action_id": "P0-3",
+      "description": "Execute live gpt-4o-mini parameter calibration on 12 Validation tasks before freezing final experiment manifest.",
+      "target_file": "experiments/m5/calibrate.py"
+    }
+  ],
+  "p1_actions": [
+    {
+      "action_id": "P1-1",
+      "description": "Increase trial repetitions from N=3 to N=5 for final Held-Out Test run to reduce API latency variance.",
+      "target_file": "experiments/m5/runner.py"
+    }
+  ],
+  "p2_actions": [
+    {
+      "action_id": "P2-1",
+      "description": "Expand benchmark dataset to 400 tasks across additional open-source repositories in Phase-3.",
+      "target_file": "benchmark/dataset.py"
+    }
+  ],
+  "recommendation": "Fix P0-1, P0-2, and P0-3 remediations, verify 159/159 tests pass, re-freeze final manifest, then proceed to Held-Out Test evaluation."
+}
