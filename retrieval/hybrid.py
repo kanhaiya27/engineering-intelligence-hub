@@ -31,7 +31,14 @@ class HybridRetriever(BaseRetriever):
         sparse_retriever: Optional[BM25Retriever] = None,
     ) -> None:
         self.dense_retriever = dense_retriever or DenseRetriever()
-        self.sparse_retriever = sparse_retriever or BM25Retriever()
+        # A default BM25 is pointed at the dense retriever's own store/collection
+        # so both halves index the same corpus. A bare BM25Retriever() would be
+        # permanently empty, making every "hybrid" result silently dense-only.
+        self.sparse_retriever = sparse_retriever or BM25Retriever(
+            vector_store=self.dense_retriever.vector_store,
+            collection_name=self.dense_retriever.collection_name,
+            autoload=True,
+        )
 
     @property
     def retriever_name(self) -> str:

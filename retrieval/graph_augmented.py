@@ -121,12 +121,13 @@ class GraphAugmentedRetriever(BaseRetriever):
         sparse_retriever: Optional[Any] = None,
         graph_store: Optional[BaseGraphStore] = None,
     ) -> None:
-        from retrieval.bm25 import BM25Retriever
-        from retrieval.dense import DenseRetriever
         from retrieval.hybrid import HybridRetriever
+        # Pass retrievers through as-is (possibly None) and let HybridRetriever
+        # apply its own defaults — it wires a corpus-backed BM25, which a bare
+        # BM25Retriever() here would not.
         self._hybrid = HybridRetriever(
-            dense_retriever=dense_retriever or DenseRetriever(),
-            sparse_retriever=sparse_retriever or BM25Retriever(),
+            dense_retriever=dense_retriever,
+            sparse_retriever=sparse_retriever,
         )
         self._graph_store: Optional[BaseGraphStore] = graph_store
 

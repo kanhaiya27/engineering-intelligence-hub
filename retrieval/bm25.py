@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import re
 import time
-from typing import Any, Dict, List, Optional
+from typing import Any, List, Optional
 
 from rank_bm25 import BM25Plus
 
@@ -61,16 +61,110 @@ class BM25Retriever(BaseRetriever):
     In-memory BM25 retriever for software engineering knowledge using BM25Plus.
     """
 
-    def __init__(self, chunks: Optional[List[KnowledgeChunk]] = None) -> None:
+    def __init__(
+        self,
+        chunks: Optional[List[KnowledgeChunk]] = None,
+        vector_store: Optional[Any] = None,
+        collection_name: Optional[str] = None,
+        autoload: bool = False,
+    ) -> None:
+        """
+        Build a BM25 index over knowledge chunks.
+
+        Corpus sources, in precedence order:
+          1. `chunks` passed directly (unit tests, explicit control)
+          2. `vector_store` + `collection_name` with `autoload=True` — pulls the
+             same corpus the dense index holds
+
+        WHY autoload EXISTS: ingestion persists chunks to Qdrant only. This index
+        lives in process memory with no persistence of its own, so a bare
+        `BM25Retriever()` is permanently empty. Every strategy with a non-zero
+        `sparse_weight` then silently degrades to dense-only, and the strategies
+        with `sparse_weight=1.0` (`sparse`, `incident_sparse`) return nothing at
+        all. Retrieval reported as "hybrid" must actually be hybrid.
+        """
         self.chunks: List[KnowledgeChunk] = []
         self.corpus_tokens: List[List[str]] = []
         self.bm25: Optional[BM25Plus] = None
+        self._vector_store = vector_store
+        self._collection_name = collection_name
+        self._autoload = autoload
+        self._load_attempted = False
+
         if chunks:
             self.index_chunks(chunks)
+            self._load_attempted = True
+
+    def _ensure_corpus(self) -> None:
+        """
+        Lazily populate the corpus on first retrieval.
+
+        Loading lazily rather than in __init__ keeps construction cheap and keeps
+        the hermetic test suite from reaching for Qdrant. The attempt is made at
+        most once, so a store that is down logs a single error instead of one per
+        query.
+        """
+        if self._load_attempted or not self._autoload:
+            return
+        self._load_attempted = True
+        if self._vector_store is not None and self._collection_name:
+            self.load_from_vector_store(self._vector_store, self._collection_name)
+
+    def refresh(self) -> int:
+        """Force a corpus reload — call after ingesting new content."""
+        self._load_attempted = True
+        return self.load_from_vector_store()
 
     @property
     def retriever_name(self) -> str:
         return "sparse"
+
+    @property
+    def is_populated(self) -> bool:
+        """True when the index holds a usable corpus."""
+        return self.bm25 is not None and len(self.chunks) > 0
+
+    def load_from_vector_store(
+        self,
+        vector_store: Optional[Any] = None,
+        collection_name: Optional[str] = None,
+    ) -> int:
+        """
+        Populate the index from the vector store's collection.
+
+        Returns the number of chunks indexed — 0 means the sparse half of hybrid
+        retrieval is inert, which is logged as an error rather than passing
+        quietly, since the failure is otherwise invisible in the results.
+        """
+        store = vector_store or self._vector_store
+        collection = collection_name or self._collection_name
+
+        if store is None or not collection:
+            logger.error(
+                "BM25 load_from_vector_store called without a store/collection. "
+                "Sparse retrieval will return nothing."
+            )
+            return 0
+
+        try:
+            chunks = store.scroll_all(collection_name=collection)
+        except Exception as exc:  # noqa: BLE001 - store unreachable or no scroll support
+            logger.error(
+                f"BM25 corpus load from '{collection}' failed: {exc}. "
+                "Sparse retrieval will return nothing and any 'hybrid' result "
+                "will in fact be dense-only."
+            )
+            return 0
+
+        indexed = self.index_chunks(chunks)
+        if indexed == 0:
+            logger.error(
+                f"BM25 corpus load from '{collection}' produced 0 chunks. "
+                "Collection is empty or not yet ingested."
+            )
+        else:
+            logger.info(f"BM25 indexed {indexed} chunks from collection '{collection}'.")
+        return indexed
 
     def index_chunks(self, chunks: List[KnowledgeChunk]) -> int:
         """Build or update BM25 index from chunks."""
@@ -102,6 +196,8 @@ class BM25Retriever(BaseRetriever):
         task_id: str = "adhoc",
     ) -> RetrievalResult:
         start_time = time.perf_counter()
+
+        self._ensure_corpus()
 
         if not self.bm25 or not self.chunks:
             return RetrievalResult(

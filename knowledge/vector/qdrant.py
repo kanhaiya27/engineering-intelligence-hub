@@ -14,12 +14,10 @@ Supports:
 from __future__ import annotations
 
 import uuid
-import warnings
 from typing import Any, Dict, List, Optional, Tuple
 
 from qdrant_client import QdrantClient
 from qdrant_client.http import models as qmodels
-from qdrant_client.http.exceptions import UnexpectedResponse
 
 from core.config import settings
 from core.logging import get_logger
@@ -282,6 +280,77 @@ class QdrantVectorStore(BaseVectorStore):
             output.append((chunk, float(scored_point.score)))
 
         return output
+
+    def scroll_all(
+        self,
+        collection_name: str,
+        batch_size: int = 1000,
+        repository: Optional[str] = None,
+    ) -> List[KnowledgeChunk]:
+        """
+        Return every chunk in a collection, without vectors.
+
+        Exists so the sparse (BM25) index can be built from the same corpus the
+        dense index holds. Ingestion writes chunks to Qdrant only; BM25 keeps its
+        index in process memory and has no persistence, so without this the sparse
+        half of hybrid retrieval is permanently empty and every "hybrid" result is
+        silently dense-only.
+
+        Vectors are excluded (`with_vectors=False`) — BM25 needs the text, not the
+        embeddings, and pulling 384-float vectors for the whole corpus is wasted
+        bandwidth and memory.
+
+        Note on scale: this materialises the full corpus in memory. That is fine at
+        the tens-of-thousands-of-chunks range this project operates in, and the
+        planned scalability study (10K -> 500K chunks) is precisely the experiment
+        that will establish where it stops being fine.
+        """
+        client = self._ensure_connected()
+
+        if not self.collection_exists(collection_name):
+            logger.warning(
+                f"Collection '{collection_name}' does not exist — returning no chunks."
+            )
+            return []
+
+        qfilter = self._build_filter({"repository": repository} if repository else None)
+
+        chunks: List[KnowledgeChunk] = []
+        offset = None
+        while True:
+            points, offset = client.scroll(
+                collection_name=collection_name,
+                limit=batch_size,
+                offset=offset,
+                with_payload=True,
+                with_vectors=False,
+                scroll_filter=qfilter,
+            )
+            for point in points:
+                payload = point.payload or {}
+                chunks.append(
+                    KnowledgeChunk(
+                        chunk_id=payload.get("chunk_id", str(point.id)),
+                        artifact_id=payload.get("artifact_id", ""),
+                        artifact_type=ArtifactType(payload.get("artifact_type", "source_code")),
+                        repository=payload.get("repository", ""),
+                        content=payload.get("content", ""),
+                        chunk_index=payload.get("chunk_index", 0),
+                        total_chunks=payload.get("total_chunks"),
+                        start_line=payload.get("start_line"),
+                        end_line=payload.get("end_line"),
+                        token_count=payload.get("token_count"),
+                        metadata=payload.get("metadata", {}),
+                    )
+                )
+            if offset is None:
+                break
+
+        logger.info(
+            f"Scrolled {len(chunks)} chunks from '{collection_name}'"
+            + (f" (repository={repository})" if repository else "")
+        )
+        return chunks
 
     def delete(self, collection_name: str, chunk_ids: List[str]) -> int:
         """Delete chunks by ID."""

@@ -26,7 +26,7 @@ from __future__ import annotations
 
 import time
 from enum import Enum
-from typing import TYPE_CHECKING, Any, Dict, Optional
+from typing import TYPE_CHECKING, Dict, Optional
 
 from core.config import settings
 from core.logging import get_logger
@@ -37,10 +37,7 @@ from retrieval.router import RetrievalRouter
 from retrieval.strategies import RetrievalMode, RetrievalStrategyConfig
 
 if TYPE_CHECKING:
-    from retrieval.bm25 import BM25Retriever
-    from retrieval.dense import DenseRetriever
-    from retrieval.graph_augmented import GraphAugmentedRetriever
-    from retrieval.hybrid import HybridRetriever
+    pass
 
 logger = get_logger(__name__)
 
@@ -91,9 +88,19 @@ class AdaptiveRetrievalPipeline:
         from retrieval.graph_augmented import GraphAugmentedRetriever
         from retrieval.hybrid import HybridRetriever
 
-        # Initialise retrievers (construction is cheap; connections are lazy)
+        # Initialise retrievers (construction is cheap; connections are lazy).
+        #
+        # BM25 is pointed at the SAME store and collection the dense retriever
+        # uses, so both halves of hybrid retrieval are guaranteed to index one
+        # corpus. Without this the sparse index stays empty and every "hybrid"
+        # result is silently dense-only. The load itself is lazy — it happens on
+        # first retrieval, not here.
         self._dense = DenseRetriever()
-        self._sparse = BM25Retriever()
+        self._sparse = BM25Retriever(
+            vector_store=self._dense.vector_store,
+            collection_name=self._dense.collection_name,
+            autoload=True,
+        )
         self._hybrid = HybridRetriever(
             dense_retriever=self._dense,
             sparse_retriever=self._sparse,
