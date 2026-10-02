@@ -23,18 +23,16 @@ Graceful Degradation:
 from __future__ import annotations
 
 import time
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set
+from typing import TYPE_CHECKING, Any, List, Optional, Set
 
 from core.logging import get_logger
-from knowledge.graph.base import BaseGraphStore, NodeLabel
+from knowledge.graph.base import BaseGraphStore
 from knowledge.schemas.tasks import RetrievedChunk, RetrievalResult, TaskClassification
 from retrieval.base import BaseRetriever
 from retrieval.strategies import RetrievalStrategyConfig
 
 if TYPE_CHECKING:
-    from retrieval.bm25 import BM25Retriever
-    from retrieval.dense import DenseRetriever
-    from retrieval.hybrid import HybridRetriever
+    pass
 
 logger = get_logger(__name__)
 
@@ -171,7 +169,16 @@ class GraphAugmentedRetriever(BaseRetriever):
                 "Falling back to hybrid retrieval without graph augmentation."
             )
 
-        # 3. Combine chunks — retrieved first, then bounded graph context
+        # 3. Combine chunks — retrieved first, then bounded graph context.
+        #
+        # Note on reranking: the hybrid stage above has already applied the
+        # cross-encoder when strategy.enable_reranking is set, so retrieved
+        # evidence arrives here in reranked order. Graph context chunks are
+        # deliberately EXEMPT from reranking — they are included for structural
+        # provenance (callers, imports, tested-by edges), not topical similarity
+        # to the query, so scoring them against the query would penalise exactly
+        # the structural context they exist to supply and would let the reranker
+        # discard the graph contribution the D-vs-C ablation is measuring.
         all_chunks = list(hybrid_result.chunks) + graph_chunks
 
         # 4. Respect max_context_chunks

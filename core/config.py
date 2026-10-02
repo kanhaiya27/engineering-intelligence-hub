@@ -17,12 +17,11 @@ Usage
 
 from __future__ import annotations
 
-import os
 from pathlib import Path
 from typing import Dict, List, Optional
 
 import yaml
-from pydantic import Field, validator
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # Root of the project (two levels above this file: core/ → project root)
@@ -87,6 +86,19 @@ class RetrievalSettings(BaseSettings):
     enable_reranking: bool = Field(default=False, description="Enable reranking by default")
     max_context_chunks: int = Field(
         default=10, description="Maximum chunks sent to generation"
+    )
+    reranker_model_id: str = Field(
+        default="cross-encoder/ms-marco-MiniLM-L-6-v2",
+        description="Cross-encoder checkpoint used by the reranking stage",
+    )
+    strict_reranking: bool = Field(
+        default=False,
+        description=(
+            "If True, a strategy requesting reranking that cannot run raises "
+            "RetrievalError instead of degrading to unreranked output. Enable for "
+            "final experiment runs so a skipped reranker cannot silently "
+            "invalidate results."
+        ),
     )
 
     model_config = SettingsConfigDict(env_prefix="EIH_RETRIEVAL_", extra="ignore")

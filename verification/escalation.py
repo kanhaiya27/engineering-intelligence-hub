@@ -20,7 +20,7 @@ from __future__ import annotations
 from typing import Optional
 
 from core.logging import get_logger
-from retrieval.strategies import RetrievalMode, RetrievalStrategyConfig
+from retrieval.strategies import RerankerType, RetrievalMode, RetrievalStrategyConfig
 from verification.config import VerificationConfig
 from verification.signals import QualityReport
 
@@ -103,7 +103,15 @@ class EscalationPolicy:
             )
 
         else:
-            # Step 3+: Maximal capability — graph augmented with reranking
+            # Step 3+: Maximal capability — graph augmented with cross-encoder reranking.
+            #
+            # reranker_type MUST be set here alongside enable_reranking. Setting
+            # only the flag inherits reranker_type="none" from the base strategy,
+            # which resolves to no implementation — the rung would report itself
+            # as reranked while performing no reranking at all. Widening top_k to
+            # 30 is only useful BECAUSE the cross-encoder then re-scores that
+            # wider pool down to reranker_top_n; without it, 30 loosely-fused
+            # chunks is worse context, not better.
             return current_strategy.model_copy(
                 update={
                     "strategy_name": f"{current_strategy.strategy_name}_esc_max",
@@ -111,6 +119,8 @@ class EscalationPolicy:
                     "include_graph_context": True,
                     "graph_hop_depth": min(3, graph_depth + 1),
                     "enable_reranking": True,
+                    "reranker_type": RerankerType.CROSS_ENCODER,
+                    "reranker_top_n": 10,
                     "top_k": 30,
                     "max_context_chunks": 20,
                     "score_threshold": 0.0,

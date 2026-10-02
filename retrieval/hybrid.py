@@ -8,13 +8,14 @@ Provides the primary baseline retrieval engine for Phase-1 engineering RAG.
 from __future__ import annotations
 
 import time
-from typing import Any, Dict, List, Optional
+from typing import Dict, List, Optional
 
 from core.logging import get_logger
 from knowledge.schemas.tasks import RetrievedChunk, RetrievalResult, TaskClassification
 from retrieval.base import BaseRetriever
 from retrieval.bm25 import BM25Retriever
 from retrieval.dense import DenseRetriever
+from retrieval.reranker import apply_reranking
 from retrieval.strategies import RetrievalStrategyConfig
 
 logger = get_logger(__name__)
@@ -107,9 +108,25 @@ class HybridRetriever(BaseRetriever):
         # Sort by fused score descending
         fused_scored_chunks.sort(key=lambda x: x[1], reverse=True)
 
-        # Truncate to top_k / max_context_chunks
-        max_chunks = min(strategy.top_k, strategy.max_context_chunks)
-        final_chunks = [item[0] for item in fused_scored_chunks[:max_chunks]]
+        # Build the candidate pool. When reranking is enabled the pool is the
+        # full top_k so the cross-encoder has something to re-order; truncating
+        # to max_context_chunks first would discard the very candidates
+        # reranking exists to promote. Without reranking, behaviour is
+        # unchanged from Phase-1.
+        if strategy.enable_reranking:
+            candidate_chunks = [item[0] for item in fused_scored_chunks[: strategy.top_k]]
+        else:
+            max_chunks = min(strategy.top_k, strategy.max_context_chunks)
+            candidate_chunks = [item[0] for item in fused_scored_chunks[:max_chunks]]
+
+        rerank_outcome = apply_reranking(
+            query=query,
+            chunks=candidate_chunks,
+            strategy=strategy,
+        )
+
+        # Final context cap always applies, reranked or not.
+        final_chunks = rerank_outcome.chunks[: strategy.max_context_chunks]
 
         latency_ms = (time.perf_counter() - start_time) * 1000.0
 
@@ -125,5 +142,6 @@ class HybridRetriever(BaseRetriever):
                 "sparse_weight": sparse_weight,
                 "dense_retrieved": len(dense_result.chunks),
                 "sparse_retrieved": len(sparse_result.chunks),
+                **rerank_outcome.as_metadata(),
             },
         )

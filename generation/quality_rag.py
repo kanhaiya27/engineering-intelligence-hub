@@ -270,9 +270,28 @@ class QualityAwareRAGPipeline:
             )
             carbon_est = self.carbon_estimator.estimate(energy_estimate=energy_est)
 
-            total_energy_joules += energy_est.energy_joules
+            # Reranking energy is a REAL local-GPU cost incurred during retrieval,
+            # not part of the API generation call. It must be added to the attempt's
+            # energy budget or the cross-encoder appears free and the quality-vs-energy
+            # Pareto frontier is systematically biased in favour of reranked
+            # strategies — the exact comparison this project exists to make.
+            rerank_energy_j = 0.0
+            if retrieval_result is not None:
+                rerank_energy_j = float(
+                    retrieval_result.metadata.get("reranker_energy_joules", 0.0) or 0.0
+                )
+
+            attempt_energy_j = energy_est.energy_joules + rerank_energy_j
+            attempt_co2e_g = carbon_est.co2e_grams
+            if rerank_energy_j > 0.0:
+                # Convert the reranking energy through the same grid intensity.
+                attempt_co2e_g += (rerank_energy_j / 3_600_000.0) * (
+                    self.carbon_estimator.carbon_intensity
+                )
+
+            total_energy_joules += attempt_energy_j
             total_cost_usd += cost_est.total_cost_usd
-            total_co2e_grams += carbon_est.co2e_grams
+            total_co2e_grams += attempt_co2e_g
 
             attempt_latency_ms = (time.perf_counter() - attempt_start_time) * 1000.0
 
@@ -287,9 +306,9 @@ class QualityAwareRAGPipeline:
                 input_tokens=attempt_input_tokens,
                 output_tokens=attempt_output_tokens,
                 latency_ms=round(attempt_latency_ms, 2),
-                energy_joules=energy_est.energy_joules,
+                energy_joules=attempt_energy_j,
                 cost_usd=cost_est.total_cost_usd,
-                co2e_grams=carbon_est.co2e_grams,
+                co2e_grams=attempt_co2e_g,
                 experiment_id=request.experiment_id,
                 created_at=datetime.datetime.utcnow().isoformat(),
             )
