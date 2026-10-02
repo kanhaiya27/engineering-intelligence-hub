@@ -17,7 +17,7 @@ See sustainability/base.py for full system boundary declaration.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from enum import Enum
 from typing import Optional
 
@@ -80,6 +80,26 @@ class EnergyEstimator:
         self.gpu_tdp_watts = gpu_tdp_watts
         self.pue_factor = pue_factor
         self._nvml_available = self._check_nvml()
+
+    @classmethod
+    def from_settings(cls, sustainability_settings: Optional[object] = None) -> "EnergyEstimator":
+        """
+        Build an estimator from `settings.sustainability`.
+
+        Use this at every production call site so the configured CPU/GPU TDP
+        values actually reach the estimator. The bare constructor hardcodes the
+        development laptop's figures (45 W / 60 W), which silently misreports
+        energy on any other machine.
+        """
+        if sustainability_settings is None:
+            from core.config import settings
+
+            sustainability_settings = settings.sustainability
+
+        return cls(
+            cpu_tdp_watts=getattr(sustainability_settings, "cpu_tdp_watts", 45.0),
+            gpu_tdp_watts=getattr(sustainability_settings, "gpu_tdp_watts", 60.0),
+        )
 
     @staticmethod
     def _check_nvml() -> bool:

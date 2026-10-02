@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import datetime
 import time
-from typing import Any, Dict, List, Optional
+from typing import List, Optional
 
 from core.config import settings
 from core.logging import get_logger
@@ -74,8 +74,11 @@ class BaselineRAGPipeline:
             self.llm_provider = MockLLMProvider()
 
         self.model_id = model_id or settings.model.default_model_id
-        self.energy_estimator = energy_estimator or EnergyEstimator()
-        self.carbon_estimator = carbon_estimator or CarbonEstimator()
+        # Estimators are built FROM SETTINGS, never bare-constructed: the bare
+        # constructors hardcode UK grid intensity and this laptop's TDP values,
+        # which would silently misreport energy and CO2e on any other setup.
+        self.energy_estimator = energy_estimator or EnergyEstimator.from_settings()
+        self.carbon_estimator = carbon_estimator or CarbonEstimator.from_settings()
         self.cost_estimator = cost_estimator or CostEstimator()
         self.exp_logger = exp_logger
 
