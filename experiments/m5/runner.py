@@ -16,11 +16,11 @@ from __future__ import annotations
 
 import datetime
 import json
-import time
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from core.logging import get_logger
+from benchmark.dataset import BenchmarkDataset
 from evaluation.scorers.correctness import CorrectnessEvaluator
 from experiments.m5.manifest import ExperimentManifest, SystemID
 from experiments.m5.metrics import TrialResult, compute_trial_aggregates
@@ -35,21 +35,22 @@ from knowledge.schemas.tasks import (
     EngTaskResponse,
     TaskClassification,
 )
-from retrieval.adaptive import AdaptiveRetrievalPipeline, ExperimentMode
+from retrieval.adaptive import ExperimentMode
 from retrieval.strategies import RetrievalMode, RetrievalStrategyConfig
-from verification.config import VerificationConfig
 from verification.evaluators import (
     CitationGroundingEvaluator,
     EvidenceConsistencyEvaluator,
     EvidenceCoverageEvaluator,
     QueryRelevanceEvaluator,
 )
-from verification.gate import QualityGate
 
 logger = get_logger(__name__)
 
 DEFAULT_RAW_DIR = Path("experiments/results/m5/raw")
 DEFAULT_PROCESSED_DIR = Path("experiments/results/m5/processed")
+
+M5_RAW_DIR = DEFAULT_RAW_DIR
+M5_PROCESSED_DIR = DEFAULT_PROCESSED_DIR
 
 
 class M5BenchmarkRunner:
@@ -61,30 +62,36 @@ class M5BenchmarkRunner:
         self,
         manifest: Optional[ExperimentManifest] = None,
         llm_provider: Optional[BaseLLMProvider] = None,
+        use_live_llm: bool = False,
         raw_output_dir: Optional[Path] = None,
         processed_output_dir: Optional[Path] = None,
     ) -> None:
         self.manifest = manifest or ExperimentManifest.create_default()
-        self.llm_provider = llm_provider
-        self.raw_dir = raw_output_dir or DEFAULT_RAW_DIR
-        self.processed_dir = processed_output_dir or DEFAULT_PROCESSED_DIR
+        self._manifest_hash = self.manifest.compute_hash()
 
+        if llm_provider:
+            self.llm_provider = llm_provider
+        elif use_live_llm:
+            from generation.providers.openai import OpenAIProvider
+            self.llm_provider = OpenAIProvider()
+        else:
+            self.llm_provider = MockLLMProvider()
+
+        self.raw_dir = raw_output_dir or M5_RAW_DIR
+        self.processed_dir = processed_output_dir or M5_PROCESSED_DIR
         self.raw_dir.mkdir(parents=True, exist_ok=True)
         self.processed_dir.mkdir(parents=True, exist_ok=True)
 
-        self._manifest_hash = self.manifest.compute_hash()
+        self.dataset = BenchmarkDataset()
+        self._correctness_eval = CorrectnessEvaluator()
+        self._citation_eval = CitationGroundingEvaluator()
+        self._relevance_eval = QueryRelevanceEvaluator()
+        self._coverage_eval = EvidenceCoverageEvaluator()
+        self._consistency_eval = EvidenceConsistencyEvaluator()
 
-        # Cached pipeline instances
         self._pipe_a: Optional[BaselineRAGPipeline] = None
         self._pipe_b: Optional[BaselineRAGPipeline] = None
         self._pipe_quality: Optional[QualityAwareRAGPipeline] = None
-
-        # Shared deterministic evaluators
-        self._correctness_eval = CorrectnessEvaluator()
-        self._citation_eval = CitationGroundingEvaluator(weight=0.35)
-        self._relevance_eval = QueryRelevanceEvaluator(weight=0.25)
-        self._coverage_eval = EvidenceCoverageEvaluator(weight=0.20)
-        self._consistency_eval = EvidenceConsistencyEvaluator(weight=0.20)
 
     def _get_pipeline_a(self, llm: BaseLLMProvider) -> BaselineRAGPipeline:
         if self._pipe_a is None or self._pipe_a.llm_provider != llm:
@@ -132,12 +139,10 @@ class M5BenchmarkRunner:
         )
 
         if system_id == SystemID.BASELINE_A.value:
-            # Baseline A: Zero retrieval
             pipe_a = self._get_pipeline_a(llm_provider)
             return pipe_a.execute(request=req, classification=clf, skip_retrieval=True)
 
         elif system_id == SystemID.BASELINE_B.value:
-            # Baseline B: Fixed Hybrid RAG (0.7/0.3, top_k=5)
             strat_b = RetrievalStrategyConfig(
                 strategy_name="hybrid",
                 mode=RetrievalMode.HYBRID,
@@ -150,7 +155,6 @@ class M5BenchmarkRunner:
             return pipe_b.execute(request=req, strategy=strat_b, classification=clf)
 
         elif system_id == SystemID.SYSTEM_C.value:
-            # System C: Task-Aware Adaptive (no graph, no gate)
             pipe_q = self._get_pipeline_quality(llm_provider)
             return pipe_q.execute(
                 request=req,
@@ -160,7 +164,6 @@ class M5BenchmarkRunner:
             )
 
         elif system_id == SystemID.SYSTEM_D.value:
-            # System D: Task-Aware + Graph (no gate)
             pipe_q = self._get_pipeline_quality(llm_provider)
             return pipe_q.execute(
                 request=req,
@@ -170,7 +173,6 @@ class M5BenchmarkRunner:
             )
 
         elif system_id == SystemID.SYSTEM_E.value:
-            # System E: Full Adaptive + Graph + Quality Gate & Bounded Escalation
             pipe_q = self._get_pipeline_quality(llm_provider)
             return pipe_q.execute(
                 request=req,
@@ -180,7 +182,7 @@ class M5BenchmarkRunner:
             )
 
         else:
-            raise ValueError(f"Unknown system_id: '{system_id}'")
+            raise ValueError(f"Unknown system_id '{system_id}'")
 
     def _evaluate_trial(
         self,
@@ -192,6 +194,7 @@ class M5BenchmarkRunner:
     ) -> TrialResult:
         """
         Compute all Measured, Estimated, and Derived metrics for one trial execution.
+        Enforces P0-1 (explicit ground-truth correctness weight) and P0-2 (refusal distinction).
         """
         req = EngTaskRequest(
             task_id=task.task_id,
@@ -214,7 +217,7 @@ class M5BenchmarkRunner:
             ground_truth=task.ground_truth,
             acceptable_alternatives=task.acceptable_alternatives,
         )
-        correctness = corr_metric.task_correctness if corr_metric and corr_metric.task_correctness is not None else 0.50
+        task_corr = corr_metric.task_correctness if corr_metric and corr_metric.task_correctness is not None else 0.50
 
         # 2. Quality Gate Signals
         cit_signals = self._citation_eval.evaluate(req, response)
@@ -233,14 +236,42 @@ class M5BenchmarkRunner:
             t = cit_signals[0].metadata.get("total_citations", 1)
             cit_valid_ratio = v / t
 
-        # Weighted Composite Quality: 35% citation + 25% relevance + 20% coverage + 20% consistency
+        # Weighted Composite Quality (P0-1): 40% Ground-Truth Correctness + 25% Citation Support + 15% Relevance + 10% Coverage + 10% Consistency
         composite_q = round(
-            (cit_score * 0.35) + (rel_score * 0.25) + (cov_score * 0.20) + (con_score * 0.20),
+            (task_corr * 0.40) + (cit_score * 0.25) + (rel_score * 0.15) + (cov_score * 0.10) + (con_score * 0.10),
             4,
         )
 
         thresh = task.expected_quality_threshold
-        passed = composite_q >= thresh
+        is_refusal = "INSUFFICIENT EVIDENCE" in (response.answer or "")
+        gt_exists = bool(task.ground_truth or task.acceptable_alternatives)
+
+        # Refusal & Success Classification (P0-2)
+        if is_refusal:
+            if gt_exists:
+                # Task required an answer, but system issued refusal -> UNFOUNDED_REFUSAL
+                success_type = "UNFOUNDED_REFUSAL"
+                qc_success = False
+                passed = False
+                refusal_score = 0.0
+            else:
+                # Task legitimately lacked ground truth evidence -> VALID_REFUSAL
+                success_type = "VALID_REFUSAL"
+                qc_success = True
+                passed = True
+                refusal_score = 0.50
+        else:
+            refusal_score = 0.0
+            passed = (composite_q >= thresh) and (task_corr >= thresh)
+            if passed:
+                success_type = "FACTUAL_SUCCESS"
+                qc_success = True
+            elif cit_score < 0.50:
+                success_type = "CITATION_FAILURE"
+                qc_success = False
+            else:
+                success_type = "QUALITY_FAILURE"
+                qc_success = False
 
         # Telemetry extraction
         lat = response.latency_ms or 50.0
@@ -286,16 +317,23 @@ class M5BenchmarkRunner:
             total_energy_joules=round(en_joules, 4),
             cost_usd=round(cost, 6),
             co2e_grams=round(co2e, 6),
-            correctness_score=round(correctness, 4),
+            task_correctness=round(task_corr, 4),
+            citation_grounding=round(cit_score, 4),
+            query_relevance=round(rel_score, 4),
+            evidence_coverage=round(cov_score, 4),
+            evidence_consistency=round(con_score, 4),
+            correctness_score=round(task_corr, 4),
             groundedness_score=round(cov_score, 4),
             relevance_score=round(rel_score, 4),
             consistency_score=round(con_score, 4),
             citation_validity_rate=round(cit_valid_ratio, 4),
-            refusal_correctness=1.0 if "INSUFFICIENT EVIDENCE" in response.answer else 1.0,
+            is_grounded_refusal=is_refusal,
+            grounded_refusal_score=refusal_score,
             composite_quality=composite_q,
             quality_threshold=thresh,
             passed_quality_gate=passed,
-            quality_constrained_success=passed,
+            success_type=success_type,
+            quality_constrained_success=qc_success,
             quality_per_joule=qpj,
             quality_per_dollar=qpd,
             quality_per_second=qps,

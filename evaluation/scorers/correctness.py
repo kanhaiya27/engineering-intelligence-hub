@@ -56,7 +56,7 @@ class CorrectnessEvaluator(BaseEvaluator):
         acceptable_alternatives: Optional[List[str]] = None,
     ) -> QualityMetrics:
         prediction = result.answer_text or ""
-        ref = ground_truth or result.ground_truth or ""
+        ref = ground_truth if ground_truth is not None else (getattr(result, "ground_truth", "") or "")
 
         best_score = 0.0
         if ref:

@@ -1,5 +1,31 @@
 # Phase-2 M5: Controlled Evaluation Calibration & Validation Report
 
+> [!CAUTION]
+> ## ⛔ NOT RESEARCH RESULTS — DO NOT CITE, QUOTE, OR COPY INTO THE PAPER
+>
+> **Every number in this document is a pipeline-plumbing artifact, not a measurement.**
+> It is retained ONLY as an audit trail of the M5 framework's first end-to-end execution.
+>
+> These runs are invalid as evidence for four independent reasons:
+>
+> 1. **Zero evidence was retrieved.** `chunks_retrieved_count` is 0 across all 360 dev
+>    trials. Qdrant held no ingested corpus, so Baseline B and Systems C/D/E were
+>    structurally identical to Baseline A. This is why A/B/C/D all score exactly
+>    0.5033 — they were the same system.
+> 2. **The generator was `MockLLMProvider`,** which emits fixed canned strings
+>    regardless of query or context. No live LLM was called.
+> 3. **System E's 0.9625 / 100% QC success is the refusal-scoring bug**, since fixed:
+>    it was rewarded for refusing to answer every task. See `M5_RESEARCH_VALIDITY_AUDIT.md` (P0-2).
+> 4. **CO2e used UK grid intensity (233 gCO2e/kWh)** while execution was in India
+>    (~713 gCO2e/kWh), understating emissions roughly 3x. Grid intensity is now
+>    configurable via `EIH_SUSTAINABILITY_CARBON_REGION`.
+>
+> Additionally, these runs predate the cross-encoder reranker, so any strategy
+> labelled `*_reranked` here performed **no reranking whatsoever**.
+>
+> **Valid results require:** a populated Qdrant index, a live LLM provider, and a
+> re-run under the current code. Until then this file states no findings.
+
 **Generated**: 2026-08-19 20:06:44 UTC  
 **Frozen Benchmark Version**: `v1.0-phase1-60`  
 **Frozen Manifest Fingerprint**: `1220f37d2798c4cf`  

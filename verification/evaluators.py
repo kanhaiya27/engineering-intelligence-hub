@@ -16,12 +16,11 @@ Signal weights are heuristic starting points for Phase-2 ablation.
 from __future__ import annotations
 
 import re
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any, Dict, List, Set
 
 from core.logging import get_logger
 from knowledge.schemas.tasks import EngTaskRequest, EngTaskResponse, RetrievedChunk
 from verification.base import BaseQualityEvaluator
-from verification.config import VerificationConfig
 from verification.signals import QualitySignal, SignalStatus, SignalType
 
 logger = get_logger(__name__)
@@ -117,10 +116,10 @@ class CitationGroundingEvaluator(BaseQualityEvaluator):
             return [
                 QualitySignal(
                     signal_type=SignalType.CITATION_SUPPORT,
-                    status=SignalStatus.PASSED,
-                    score=1.0,
+                    status=SignalStatus.PASSED if not chunks else SignalStatus.FAILED,
+                    score=0.50,
                     weight=self._weight,
-                    rationale="Properly identified insufficient evidence without fabricating citations.",
+                    rationale="Explicit refusal provided neutral citation credit without fabricating citations.",
                     evaluator_name=self.evaluator_name,
                     metadata={"insufficient_evidence_flag": True, "valid_refusal": True},
                 )
@@ -264,9 +263,9 @@ class EvidenceCoverageEvaluator(BaseQualityEvaluator):
                 QualitySignal(
                     signal_type=SignalType.GROUNDEDNESS,
                     status=SignalStatus.PASSED,
-                    score=1.0,
+                    score=0.50,
                     weight=self._weight,
-                    rationale="Refusal correctly covers the insufficient evidence state.",
+                    rationale="Refusal provides neutral groundedness credit.",
                     evaluator_name=self.evaluator_name,
                     metadata={"refusal": True},
                 )
@@ -393,8 +392,7 @@ class QueryRelevanceEvaluator(BaseQualityEvaluator):
 
         # Handle explicit refusal
         if "INSUFFICIENT EVIDENCE" in answer:
-            # If refusal mentions query keywords, it is a well-targeted refusal
-            score = 0.85 if keyword_recall >= 0.3 else 0.65
+            score = 0.50
         else:
             # Standard answer: score based on keyword match
             base_score = 0.4 + (keyword_recall * 0.6)
@@ -454,20 +452,30 @@ class EvidenceConsistencyEvaluator(BaseQualityEvaluator):
                 QualitySignal(
                     signal_type=SignalType.CORRECTNESS,
                     status=SignalStatus.PASSED,
-                    score=1.0,
+                    score=0.50,
                     weight=self._weight,
-                    rationale="No inconsistent assertions detected in refusal response.",
+                    rationale="Refusal provided neutral consistency credit.",
                     evaluator_name=self.evaluator_name,
                 )
             ]
 
-        # Simple deterministic assertion consistency checks:
-        # Check if answer falsely claims a file is missing when it is in chunks,
-        # or claims a symbol is not found when it is in chunks.
+        # Deterministic assertion consistency check.
+        #
+        # KNOWN LIMITATION — READ BEFORE REPORTING THIS SIGNAL AS EVIDENCE:
+        # Only ONE contradiction pattern is currently detected: the answer
+        # explicitly claiming a file is absent when that file IS among the
+        # retrieved chunks. The symbol-level check this evaluator's docstring
+        # implies was never implemented, and the literal phrase matched below is
+        # rare in practice, so this signal returns 1.0 for almost every real
+        # answer. It therefore contributes a near-constant 0.10 to composite
+        # quality and discriminates between systems only weakly.
+        #
+        # Do not describe this as "hallucination detection" in the paper. Genuine
+        # contradiction detection needs an NLI entailment model scoring each
+        # claim against its cited chunk; that is scoped but not yet built.
         contradictions: List[str] = []
 
         for chunk in chunks:
-            chunk_text = chunk.content.lower()
             source_file = (chunk.source_path or "").lower()
 
             # False non-existence claim

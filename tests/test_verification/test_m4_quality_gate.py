@@ -37,10 +37,9 @@ Test Coverage:
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional
+from typing import List, Optional
 from unittest.mock import MagicMock
 
-import pytest
 
 from generation.base import BaseLLMProvider, GenerationRequest, GenerationResponse
 from generation.quality_rag import QualityAwareRAGPipeline
@@ -56,7 +55,6 @@ from knowledge.schemas.tasks import (
     TaskStatus,
     TaskType,
 )
-from retrieval.adaptive import AdaptiveRetrievalPipeline, ExperimentMode
 from retrieval.strategies import RetrievalMode, RetrievalStrategyConfig
 from verification.config import VerificationConfig
 from verification.escalation import EscalationPolicy
@@ -209,7 +207,7 @@ class TestCitationGroundingEvaluator:
         signals = evaluator.evaluate(req, resp)
         sig = signals[0]
         assert sig.status == SignalStatus.PASSED
-        assert sig.score == 1.0
+        assert sig.score == 0.50
         assert sig.metadata.get("valid_refusal") is True
 
     def test_missing_citations_when_evidence_present_is_flagged(self):

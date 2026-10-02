@@ -58,19 +58,29 @@ class TrialResult(BaseModel):
     co2e_grams: float = Field(description="[ESTIMATED] Carbon footprint based on UK grid carbon intensity")
 
     # --- 3. QUALITY METRICS ---
-    correctness_score: float = Field(default=0.0, ge=0.0, le=1.0, description="Correctness against ground-truth answer")
-    groundedness_score: float = Field(default=0.0, ge=0.0, le=1.0, description="Lexical & evidence coverage score")
-    relevance_score: float = Field(default=0.0, ge=0.0, le=1.0, description="Query topical relevance score")
-    consistency_score: float = Field(default=1.0, ge=0.0, le=1.0, description="Consistency with retrieved evidence")
+    task_correctness: float = Field(default=0.0, ge=0.0, le=1.0, description="[MEASURED] Factual correctness against ground-truth answer (CorrectnessEvaluator)")
+    citation_grounding: float = Field(default=0.0, ge=0.0, le=1.0, description="[MEASURED] Citation validity and support score (CitationGroundingEvaluator)")
+    query_relevance: float = Field(default=0.0, ge=0.0, le=1.0, description="[MEASURED] Query keyword recall and relevance (QueryRelevanceEvaluator)")
+    evidence_coverage: float = Field(default=0.0, ge=0.0, le=1.0, description="[MEASURED] Evidence token coverage and chunk utilization (EvidenceCoverageEvaluator)")
+    evidence_consistency: float = Field(default=1.0, ge=0.0, le=1.0, description="[MEASURED] Contradiction and consistency score (EvidenceConsistencyEvaluator)")
+    correctness_score: float = Field(default=0.0, ge=0.0, le=1.0, description="Alias for task_correctness")
+    groundedness_score: float = Field(default=0.0, ge=0.0, le=1.0, description="Alias for evidence_coverage")
+    relevance_score: float = Field(default=0.0, ge=0.0, le=1.0, description="Alias for query_relevance")
+    consistency_score: float = Field(default=1.0, ge=0.0, le=1.0, description="Alias for evidence_consistency")
     citation_validity_rate: float = Field(default=1.0, ge=0.0, le=1.0, description="Ratio of valid citations")
-    refusal_correctness: float = Field(default=1.0, ge=0.0, le=1.0, description="Refusal precision when evidence is missing")
-    composite_quality: float = Field(ge=0.0, le=1.0, description="Overall weighted composite quality score")
+
+    # --- Refusal Metrics ---
+    is_grounded_refusal: bool = Field(default=False, description="True if response issued an explicit INSUFFICIENT EVIDENCE refusal")
+    grounded_refusal_score: float = Field(default=0.0, ge=0.0, le=1.0, description="Refusal precision score (0.50 neutral for missing evidence, 0.0 for unfounded refusal)")
+
+    composite_quality: float = Field(ge=0.0, le=1.0, description="Explicit weighted quality score = 40% correctness + 25% citation + 15% relevance + 10% coverage + 10% consistency")
     quality_threshold: float = Field(description="Task-specific quality requirement")
-    passed_quality_gate: bool = Field(description="True if composite_quality >= quality_threshold")
+    passed_quality_gate: bool = Field(description="True if quality and correctness criteria satisfied")
+    success_type: str = Field(default="QUALITY_FAILURE", description="Classification: FACTUAL_SUCCESS | VALID_REFUSAL | UNFOUNDED_REFUSAL | CITATION_FAILURE | QUALITY_FAILURE")
 
     # --- 4. DERIVED RESEARCH METRICS ---
     quality_constrained_success: bool = Field(
-        description="[DERIVED] True if system satisfied the quality constraint (quality >= threshold)"
+        description="[DERIVED] True if system satisfied quality and correctness requirements (composite_quality >= threshold and task_correctness >= threshold)"
     )
     quality_per_joule: float = Field(description="[DERIVED] Quality points per Joule of energy")
     quality_per_dollar: float = Field(description="[DERIVED] Quality points per USD of cost")
