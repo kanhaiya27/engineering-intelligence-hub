@@ -1,77 +1,595 @@
-# datasets/registry.yaml
-# ==========================================================================
-# Engineering Intelligence Hub — Open-Source Repository Registry
-#
-# Target: Carefully selected repositories covering diverse SDLC domains.
-# Pinned to specific tags/commits for reproducible research.
-#
-# Status legend:
-#   candidate  : Under consideration
-#   selected   : Confirmed for benchmark
-#   ingested   : Fully ingested into knowledge store
-#   deprecated : Removed from dataset
-# ==========================================================================
-
+corpus_version: v2.0-multilang
+default_collection: eih_knowledge
 repositories:
-  - repo_id: flask
-    owner: pallets
-    name: flask
-    url: https://github.com/pallets/flask
-    description: "Lightweight WSGI Python web framework"
-    language: python
-    licence: BSD-3-Clause
-    domain: web-framework
-    selected_tag: "3.0.3"
-    selected_commit: "4aa68d5b4a0f443b7be86a4e3fae88a09cfc9d2f"
-    status: selected
-    sdlc_coverage:
-      - requirements
-      - architecture
-      - development
-      - testing
-      - code_review
-      - maintenance
-    tags:
-      - web-framework
-      - wsgi
-      - python
-      - well-documented
-      - test-rich
-    commit_count_approx: 4800
-    issue_count_approx: 5200
-    collection_timestamp: "2026-08-19T22:30:00Z"
-    selection_rationale: >
-      Clean WSGI architecture, high pytest test suite coverage, comprehensive Sphinx documentation,
-      rich issue/PR discussions, mature codebase ideal for code comprehension and SDLC RAG evaluation.
+- repo_id: flask
+  owner: pallets
+  name: flask
+  url: https://github.com/pallets/flask
+  description: Lightweight WSGI Python web framework
+  language: python
+  licence: BSD-3-Clause
+  domain: web-framework
+  selected_tag: 3.0.3
+  selected_commit: c12a5d874c5a014495eb2db8a73f40037bc813ac
+  status: ingested
+  wave: 1
+  benchmark_alignment:
+  - swe-bench
+  - eih-swe
+  sdlc_coverage:
+  - requirements
+  - architecture
+  - development
+  - testing
+  - code_review
+  - maintenance
+  tags:
+  - web-framework
+  - wsgi
+  - python
+  - well-documented
+  - test-rich
+  selection_rationale: 'Clean WSGI architecture, high pytest coverage, comprehensive Sphinx docs, rich
+    issue/PR discussions. Origin repository for MEIB v1.0 pilot tasks.
 
-  - repo_id: fastapi
-    owner: fastapi
-    name: fastapi
-    url: https://github.com/fastapi/fastapi
-    description: "Modern, high-performance web framework for building APIs with Python"
-    language: python
-    licence: MIT
-    domain: api-framework
-    selected_tag: "0.111.0"
-    selected_commit: "43594b29cba53d9e4823db942f9ef0052ad41c49"
-    status: selected
-    sdlc_coverage:
-      - requirements
-      - architecture
-      - development
-      - testing
-      - code_review
-      - maintenance
-    tags:
-      - api-framework
-      - async
-      - pydantic
-      - starlette
-      - python
-      - type-hints
-    commit_count_approx: 3200
-    issue_count_approx: 6000
-    collection_timestamp: "2026-08-19T22:30:00Z"
-    selection_rationale: >
-      Modern Python 3.10+ async design with extensive Pydantic and Starlette integration,
-      thorough multilingual documentation, large issue history, and comprehensive test suite.
+    '
+- repo_id: fastapi
+  owner: fastapi
+  name: fastapi
+  url: https://github.com/fastapi/fastapi
+  description: Modern async Python API framework
+  language: python
+  licence: MIT
+  domain: api-framework
+  selected_tag: 0.111.0
+  selected_commit: 1c3e6918750ccb3f20ea260e9a4238ce2c0e5f63
+  status: ingested
+  wave: 1
+  benchmark_alignment:
+  - eih-swe
+  sdlc_coverage:
+  - requirements
+  - architecture
+  - development
+  - testing
+  - code_review
+  - maintenance
+  tags:
+  - api-framework
+  - async
+  - pydantic
+  - starlette
+  - type-hints
+  selection_rationale: 'Modern async design with deep Pydantic/Starlette integration. Dependency injection
+    graph makes it the strongest repository for architecture and dependency-analysis task types.
+
+    '
+- repo_id: requests
+  owner: psf
+  name: requests
+  url: https://github.com/psf/requests
+  description: HTTP library for Python
+  language: python
+  licence: Apache-2.0
+  domain: http-client
+  selected_tag: v2.32.3
+  selected_commit: 0e322af87745eff34caffe4df68456ebc20d9068
+  status: ingested
+  wave: 1
+  benchmark_alignment:
+  - swe-bench
+  sdlc_coverage:
+  - development
+  - testing
+  - maintenance
+  tags:
+  - http
+  - small
+  - widely-used
+  selection_rationale: "SWE-bench repository. Small and self-contained \u2014 useful as a control for\
+    \ corpus-size effects on retrieval quality.\n"
+- repo_id: pytest
+  owner: pytest-dev
+  name: pytest
+  url: https://github.com/pytest-dev/pytest
+  description: Python testing framework
+  language: python
+  licence: MIT
+  domain: testing-framework
+  selected_tag: 8.3.2
+  selected_commit: bbcec9c46509c417ef58e4849847b4aa43f4591e
+  status: ingested
+  wave: 1
+  benchmark_alignment:
+  - swe-bench
+  sdlc_coverage:
+  - testing
+  - development
+  - maintenance
+  tags:
+  - testing
+  - fixtures
+  - plugins
+  selection_rationale: 'SWE-bench repository and the strongest source for TESTING-stage task types (test
+    generation, failure diagnosis, coverage analysis).
+
+    '
+- repo_id: sphinx
+  owner: sphinx-doc
+  name: sphinx
+  url: https://github.com/sphinx-doc/sphinx
+  description: Documentation generator
+  language: python
+  licence: BSD-2-Clause
+  domain: documentation-tooling
+  selected_tag: v7.4.7
+  selected_commit: 0d912c85fd3ec385432fe707f6a0678425d1e841
+  status: ingested
+  wave: 1
+  benchmark_alignment:
+  - swe-bench
+  sdlc_coverage:
+  - requirements
+  - development
+  - maintenance
+  tags:
+  - documentation
+  - rst
+  - extensions
+  selection_rationale: 'SWE-bench repository. Documentation-heavy, exercising the RST/Markdown ingestion
+    path far more than code-centric repositories do.
+
+    '
+- repo_id: pylint
+  owner: pylint-dev
+  name: pylint
+  url: https://github.com/pylint-dev/pylint
+  description: Python static analyser
+  language: python
+  licence: GPL-2.0
+  domain: static-analysis
+  selected_tag: v3.2.6
+  selected_commit: da1956664d6be3d008a90ad3f72bdd9d8a7ecfaa
+  status: ingested
+  wave: 1
+  benchmark_alignment:
+  - swe-bench
+  sdlc_coverage:
+  - code_review
+  - development
+  - maintenance
+  tags:
+  - static-analysis
+  - linting
+  - ast
+  licence_note: "GPL-2.0 \u2014 copyleft. Safe to ingest and analyse. Do NOT redistribute derived chunks\
+    \ or verbatim excerpts in published artifacts without licence review.\n"
+  selection_rationale: 'SWE-bench repository and the natural source for CODE_REVIEW-stage tasks (defect
+    detection, maintainability, risk identification).
+
+    '
+- repo_id: django
+  owner: django
+  name: django
+  url: https://github.com/django/django
+  language: python
+  licence: BSD-3-Clause
+  domain: web-framework
+  selected_tag: 5.0.8
+  selected_commit: null
+  status: candidate
+  wave: 2
+  benchmark_alignment:
+  - swe-bench
+  sdlc_coverage:
+  - architecture
+  - development
+  - testing
+  - code_review
+  - maintenance
+  tags:
+  - large
+  - orm
+  - batteries-included
+  selection_rationale: "SWE-bench repository. Large and highly modular \u2014 the primary source of cross-file\
+    \ and architectural task types, and the main scalability step.\n"
+- repo_id: scikit-learn
+  owner: scikit-learn
+  name: scikit-learn
+  url: https://github.com/scikit-learn/scikit-learn
+  language: python
+  licence: BSD-3-Clause
+  domain: machine-learning
+  selected_tag: 1.5.1
+  selected_commit: null
+  status: candidate
+  wave: 2
+  benchmark_alignment:
+  - swe-bench
+  sdlc_coverage:
+  - development
+  - testing
+  - maintenance
+  tags:
+  - scientific
+  - cython
+  - large
+- repo_id: matplotlib
+  owner: matplotlib
+  name: matplotlib
+  url: https://github.com/matplotlib/matplotlib
+  language: python
+  licence: PSF-2.0
+  domain: visualisation
+  selected_tag: v3.9.1
+  selected_commit: null
+  status: candidate
+  wave: 2
+  benchmark_alignment:
+  - swe-bench
+  sdlc_coverage:
+  - development
+  - testing
+  - maintenance
+  tags:
+  - large
+  - plotting
+- repo_id: sympy
+  owner: sympy
+  name: sympy
+  url: https://github.com/sympy/sympy
+  language: python
+  licence: BSD-3-Clause
+  domain: symbolic-math
+  selected_tag: 1.13.2
+  selected_commit: null
+  status: candidate
+  wave: 2
+  benchmark_alignment:
+  - swe-bench
+  sdlc_coverage:
+  - development
+  - testing
+  tags:
+  - very-large
+  - mathematics
+- repo_id: astropy
+  owner: astropy
+  name: astropy
+  url: https://github.com/astropy/astropy
+  language: python
+  licence: BSD-3-Clause
+  domain: scientific
+  selected_tag: v6.1.2
+  selected_commit: null
+  status: candidate
+  wave: 2
+  benchmark_alignment:
+  - swe-bench
+  sdlc_coverage:
+  - development
+  - testing
+  - maintenance
+  tags:
+  - scientific
+  - large
+- repo_id: xarray
+  owner: pydata
+  name: xarray
+  url: https://github.com/pydata/xarray
+  language: python
+  licence: Apache-2.0
+  domain: data-structures
+  selected_tag: v2024.07.0
+  selected_commit: null
+  status: candidate
+  wave: 2
+  benchmark_alignment:
+  - swe-bench
+  sdlc_coverage:
+  - development
+  - testing
+  tags:
+  - scientific
+  - n-dimensional
+- repo_id: gson
+  owner: google
+  name: gson
+  url: https://github.com/google/gson
+  language: java
+  licence: Apache-2.0
+  domain: serialisation
+  selected_tag: gson-parent-2.11.0
+  selected_commit: null
+  status: candidate
+  wave: 3
+  benchmark_alignment:
+  - defects4j
+  - stackrepoqa
+  sdlc_coverage:
+  - development
+  - testing
+  - maintenance
+  tags:
+  - json
+  - defects4j-project
+- repo_id: commons-lang
+  owner: apache
+  name: commons-lang
+  url: https://github.com/apache/commons-lang
+  language: java
+  licence: Apache-2.0
+  domain: utility-library
+  selected_tag: rel/commons-lang-3.15.0
+  selected_commit: null
+  status: candidate
+  wave: 3
+  benchmark_alignment:
+  - defects4j
+  - stackrepoqa
+  sdlc_coverage:
+  - development
+  - testing
+  - maintenance
+  tags:
+  - defects4j-project
+  - utilities
+- repo_id: jackson-databind
+  owner: FasterXML
+  name: jackson-databind
+  url: https://github.com/FasterXML/jackson-databind
+  language: java
+  licence: Apache-2.0
+  domain: serialisation
+  selected_tag: jackson-databind-2.17.2
+  selected_commit: null
+  status: candidate
+  wave: 3
+  benchmark_alignment:
+  - defects4j
+  - stackrepoqa
+  sdlc_coverage:
+  - development
+  - testing
+  - code_review
+  - maintenance
+  tags:
+  - defects4j-project
+  - json
+  - cve-history
+  selection_rationale: 'Also carries a substantial published CVE history, making it a natural bridge to
+    the security/criticality slice (Big-Vul, PrimeVul).
+
+    '
+- repo_id: jsoup
+  owner: jhy
+  name: jsoup
+  url: https://github.com/jhy/jsoup
+  language: java
+  licence: MIT
+  domain: html-parsing
+  selected_tag: jsoup-1.18.1
+  selected_commit: null
+  status: candidate
+  wave: 3
+  benchmark_alignment:
+  - defects4j
+  - stackrepoqa
+  sdlc_coverage:
+  - development
+  - testing
+  tags:
+  - defects4j-project
+  - parsing
+- repo_id: mockito
+  owner: mockito
+  name: mockito
+  url: https://github.com/mockito/mockito
+  language: java
+  licence: MIT
+  domain: testing-framework
+  selected_tag: v5.12.0
+  selected_commit: null
+  status: candidate
+  wave: 3
+  benchmark_alignment:
+  - defects4j
+  - stackrepoqa
+  sdlc_coverage:
+  - testing
+  - development
+  tags:
+  - defects4j-project
+  - mocking
+- repo_id: express
+  owner: expressjs
+  name: express
+  url: https://github.com/expressjs/express
+  language: javascript
+  licence: MIT
+  domain: web-framework
+  selected_tag: 4.19.2
+  selected_commit: null
+  status: candidate
+  wave: 4
+  benchmark_alignment:
+  - multi-swe-bench
+  sdlc_coverage:
+  - development
+  - testing
+  - architecture
+  tags:
+  - middleware
+  - small
+  selection_rationale: "Direct JavaScript counterpart to Flask/FastAPI \u2014 enables a controlled cross-language\
+    \ comparison on the same architectural concept (web routing and middleware), which is a cleaner RQ6\
+    \ test than comparing unlike domains.\n"
+- repo_id: axios
+  owner: axios
+  name: axios
+  url: https://github.com/axios/axios
+  language: javascript
+  licence: MIT
+  domain: http-client
+  selected_tag: v1.7.4
+  selected_commit: null
+  status: candidate
+  wave: 4
+  benchmark_alignment:
+  - multi-swe-bench
+  sdlc_coverage:
+  - development
+  - testing
+  tags:
+  - http
+  - promises
+  selection_rationale: "JavaScript counterpart to psf/requests \u2014 same controlled-comparison logic.\n"
+- repo_id: typescript
+  owner: microsoft
+  name: TypeScript
+  url: https://github.com/microsoft/TypeScript
+  language: typescript
+  licence: Apache-2.0
+  domain: compiler
+  selected_tag: v5.5.4
+  selected_commit: null
+  status: candidate
+  wave: 4
+  benchmark_alignment:
+  - multi-swe-bench
+  sdlc_coverage:
+  - architecture
+  - development
+  - testing
+  tags:
+  - very-large
+  - compiler
+  selection_rationale: 'Very large. Serves as the upper rung of the scalability ladder and the hardest
+    cross-file reasoning case in the corpus.
+
+    '
+- repo_id: gin
+  owner: gin-gonic
+  name: gin
+  url: https://github.com/gin-gonic/gin
+  language: go
+  licence: MIT
+  domain: web-framework
+  selected_tag: v1.10.0
+  selected_commit: null
+  status: candidate
+  wave: 4
+  benchmark_alignment:
+  - multi-swe-bench
+  sdlc_coverage:
+  - development
+  - testing
+  - architecture
+  tags:
+  - http
+  - middleware
+  selection_rationale: "Go counterpart to Flask/Express \u2014 third point on the same controlled web-framework\
+    \ comparison.\n"
+- repo_id: cobra
+  owner: spf13
+  name: cobra
+  url: https://github.com/spf13/cobra
+  language: go
+  licence: Apache-2.0
+  domain: cli-framework
+  selected_tag: v1.8.1
+  selected_commit: null
+  status: candidate
+  wave: 4
+  benchmark_alignment:
+  - multi-swe-bench
+  sdlc_coverage:
+  - development
+  - testing
+  tags:
+  - cli
+  - small
+- repo_id: serde
+  owner: serde-rs
+  name: serde
+  url: https://github.com/serde-rs/serde
+  language: rust
+  licence: MIT
+  domain: serialisation
+  selected_tag: v1.0.208
+  selected_commit: null
+  status: candidate
+  wave: 4
+  benchmark_alignment:
+  - multi-swe-bench
+  sdlc_coverage:
+  - development
+  - testing
+  tags:
+  - macros
+  - traits
+  selection_rationale: "Rust counterpart to Gson/Jackson \u2014 serialisation comparison across languages.\n"
+- repo_id: clap
+  owner: clap-rs
+  name: clap
+  url: https://github.com/clap-rs/clap
+  language: rust
+  licence: MIT
+  domain: cli-framework
+  selected_tag: v4.5.16
+  selected_commit: null
+  status: candidate
+  wave: 4
+  benchmark_alignment:
+  - multi-swe-bench
+  sdlc_coverage:
+  - development
+  - testing
+  tags:
+  - cli
+  - derive-macros
+  selection_rationale: "Rust counterpart to Cobra \u2014 CLI-framework comparison across languages.\n"
+- repo_id: nlohmann-json
+  owner: nlohmann
+  name: json
+  url: https://github.com/nlohmann/json
+  language: cpp
+  licence: MIT
+  domain: serialisation
+  selected_tag: v3.11.3
+  selected_commit: null
+  status: candidate
+  wave: 4
+  benchmark_alignment:
+  - multi-swe-bench
+  sdlc_coverage:
+  - development
+  - testing
+  tags:
+  - header-only
+  - templates
+- repo_id: zstd
+  owner: facebook
+  name: zstd
+  url: https://github.com/facebook/zstd
+  language: c
+  licence: BSD-3-Clause
+  domain: compression
+  selected_tag: v1.5.6
+  selected_commit: null
+  status: candidate
+  wave: 4
+  benchmark_alignment:
+  - multi-swe-bench
+  - big-vul
+  - primevul
+  sdlc_coverage:
+  - development
+  - testing
+  - maintenance
+  tags:
+  - systems
+  - performance
+  - memory-safety
+  selection_rationale: "C systems code with a real memory-safety surface \u2014 the natural corpus anchor\
+    \ for the security/criticality slice (RQ4).\n"
