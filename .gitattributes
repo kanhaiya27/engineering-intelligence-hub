@@ -1,0 +1,3 @@
+# Normalize all text files to LF in the repository and working tree, so the
+# two development laptops (and any Linux CI) see identical bytes.
+* text=auto eol=lf
