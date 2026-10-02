@@ -12,7 +12,7 @@ They will be empirically validated and ablated in Phase-2 M5 evaluation.
 
 from __future__ import annotations
 
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 from pydantic import BaseModel, ConfigDict, Field
 

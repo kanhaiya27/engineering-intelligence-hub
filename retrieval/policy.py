@@ -20,20 +20,17 @@ Policy Families:
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from typing import Any, Dict, Optional
+from dataclasses import dataclass
+from typing import Dict, Optional
 
-import yaml
 
 from core.logging import get_logger
 from knowledge.schemas.tasks import (
-    ComplexityLevel,
     CriticalityLevel,
-    SDLCStage,
     TaskClassification,
     TaskType,
 )
-from retrieval.strategies import RetrievalMode, RetrievalStrategyConfig
+from retrieval.strategies import RetrievalStrategyConfig
 
 logger = get_logger(__name__)
 

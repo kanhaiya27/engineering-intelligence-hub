@@ -24,7 +24,6 @@ class BaseTaskClassifier(ABC):
     @abstractmethod
     def classifier_name(self) -> str:
         """Human-readable identifier for this classifier implementation."""
-        pass
 
     @abstractmethod
     def classify(self, request: EngTaskRequest) -> TaskClassification:
@@ -41,4 +40,3 @@ class BaseTaskClassifier(ABC):
         TaskClassification
             Structured classification driving downstream retrieval, routing, and verification.
         """
-        pass

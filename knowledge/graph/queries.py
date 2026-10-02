@@ -7,7 +7,7 @@ and dependency queries on top of BaseGraphStore.
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Dict, List, Optional, Set, Tuple
 
 from core.logging import get_logger
 from knowledge.graph.base import BaseGraphStore, GraphEdge, GraphNode, NodeLabel, RelationshipType

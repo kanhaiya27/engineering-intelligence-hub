@@ -4,10 +4,10 @@ FastAPI Router for Knowledge Retrieval
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional
+from typing import Optional
 
 from fastapi import APIRouter, HTTPException, status
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 from core.logging import get_logger
 from knowledge.schemas.tasks import RetrievalResult

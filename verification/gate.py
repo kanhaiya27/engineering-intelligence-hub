@@ -20,9 +20,9 @@ response merely to save resources. Escalation is mandatory on failure.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import List, Optional
+from typing import Any, List, Optional
 
-from core.exceptions import EscalationExhaustedError, QualityGateError
+from core.exceptions import EscalationExhaustedError
 from core.logging import get_logger
 from knowledge.schemas.tasks import EngTaskRequest, EngTaskResponse
 from verification.base import BaseQualityEvaluator

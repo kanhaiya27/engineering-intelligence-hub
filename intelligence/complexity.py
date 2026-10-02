@@ -19,7 +19,7 @@ Heuristic Signals Analyzed:
 from __future__ import annotations
 
 import re
-from typing import List, Optional, Set, Tuple
+from typing import List, Optional, Tuple
 
 from core.logging import get_logger
 from knowledge.schemas.tasks import ComplexityLevel, SDLCStage, TaskType

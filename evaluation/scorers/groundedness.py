@@ -8,7 +8,7 @@ retrieved context and contains verifiable source citations.
 from __future__ import annotations
 
 import re
-from typing import List, Optional
+from typing import Optional
 
 from core.logging import get_logger
 from evaluation.base import BaseEvaluator

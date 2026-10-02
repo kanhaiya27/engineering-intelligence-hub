@@ -2,7 +2,6 @@
 Tests for HeuristicComplexityAnalyzer and HeuristicCriticalityAnalyzer
 """
 
-import pytest
 
 from intelligence.complexity import HeuristicComplexityAnalyzer
 from intelligence.criticality import HeuristicCriticalityAnalyzer

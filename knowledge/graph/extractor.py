@@ -8,7 +8,7 @@ syntactic relationships (CONTAINS, IMPORTS, CALLS, TESTED_BY) from Python AST.
 from __future__ import annotations
 
 import ast
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import List, Tuple
 
 from core.logging import get_logger
 from knowledge.graph.base import GraphEdge, GraphNode, NodeLabel, RelationshipType

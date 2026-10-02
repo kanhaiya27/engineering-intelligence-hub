@@ -7,7 +7,7 @@ for the Master Engineering Intelligence Benchmark.
 
 from __future__ import annotations
 
-from typing import List, Optional
+from typing import List
 
 from benchmark import BaseBenchmarkValidator
 from core.exceptions import InvalidBenchmarkTaskError

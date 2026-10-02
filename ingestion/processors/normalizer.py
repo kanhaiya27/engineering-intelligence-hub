@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import hashlib
 import re
-from typing import Any, Dict, Iterator, List, Optional, Set
+from typing import Iterator, List, Optional, Set
 
 from core.logging import get_logger
 from ingestion.processors.chunker import UniversalChunker

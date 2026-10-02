@@ -9,7 +9,6 @@ from generation.rag import BaselineRAGPipeline
 from knowledge.schemas.artifacts import ArtifactType, KnowledgeChunk
 from knowledge.schemas.tasks import EngTaskRequest, TaskStatus
 from retrieval.bm25 import BM25Retriever
-from retrieval.strategies import RetrievalMode, RetrievalStrategyConfig
 
 
 @pytest.fixture

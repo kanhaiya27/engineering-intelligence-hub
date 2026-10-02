@@ -11,17 +11,22 @@ New endpoints:
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Dict, Optional
 
 from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel, Field
 
 from core.logging import get_logger
-from knowledge.schemas.tasks import EngTaskRequest, RetrievalResult, TaskClassification, TaskType
+from knowledge.schemas.tasks import (
+    EngTaskRequest,
+    RetrievalResult,
+    RetrievedChunk,
+    TaskClassification,
+    TaskType,
+)
 
 if TYPE_CHECKING:
-    from intelligence.classifier import RuleBasedTaskClassifier
-    from retrieval.adaptive import AdaptiveRetrievalPipeline, ExperimentMode
+    pass
 
 logger = get_logger(__name__)
 

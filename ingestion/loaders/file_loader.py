@@ -27,7 +27,6 @@ from knowledge.schemas.artifacts import (
     BaseArtifact,
     ProgrammingLanguage,
     SourceFile,
-    TestCase,
 )
 
 logger = get_logger(__name__)

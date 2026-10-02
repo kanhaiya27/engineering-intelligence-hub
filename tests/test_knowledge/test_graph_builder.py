@@ -4,16 +4,13 @@ Tests for EngineeringGraphBuilder and Knowledge Graph Query Utilities
 
 import pytest
 
-from knowledge.graph.base import NodeLabel, RelationshipType
+from knowledge.graph.base import NodeLabel
 from knowledge.graph.builder import EngineeringGraphBuilder
 from knowledge.graph.in_memory import InMemoryGraphStore
 from knowledge.graph.queries import (
-    find_dependencies,
     find_issue_commits,
     find_modified_files,
-    find_related_files,
     get_entity,
-    get_neighborhood,
     get_subgraph,
 )
 from knowledge.schemas.artifacts import (

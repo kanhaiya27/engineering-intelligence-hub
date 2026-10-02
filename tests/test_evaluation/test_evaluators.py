@@ -2,7 +2,6 @@
 Tests for CorrectnessEvaluator, GroundednessEvaluator, RelevanceEvaluator, and BaselineEvaluatorSuite
 """
 
-import pytest
 
 from evaluation.metrics import ExperimentResult
 from evaluation.scorers.correctness import CorrectnessEvaluator

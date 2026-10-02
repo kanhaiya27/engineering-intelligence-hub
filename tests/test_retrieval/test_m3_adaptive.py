@@ -12,10 +12,9 @@ Tests cover:
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional, Tuple
-from unittest.mock import MagicMock, patch
+from typing import Dict, List, Optional, Tuple
+from unittest.mock import MagicMock
 
-import pytest
 
 from knowledge.graph.base import BaseGraphStore, GraphEdge, GraphNode, NodeLabel
 from knowledge.schemas.tasks import (
@@ -31,7 +30,6 @@ from retrieval.adaptive import AdaptiveRetrievalPipeline, ExperimentMode
 from retrieval.graph_augmented import GraphAugmentedRetriever
 from retrieval.policy import (
     AdaptiveRetrievalPolicy,
-    _CRITICALITY_OVERRIDE_MAP,
     _TASK_TYPE_STRATEGY_MAP,
 )
 from retrieval.router import RetrievalRouter

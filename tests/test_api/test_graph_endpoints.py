@@ -3,7 +3,6 @@ Tests for Knowledge Graph REST API Endpoints
 """
 
 from fastapi.testclient import TestClient
-import pytest
 
 from apps.api.main import app
 from apps.api.routers.graph import get_graph_store

@@ -7,13 +7,10 @@ SDLC breakdowns, Pareto curves, ablation deltas, and failure distributions.
 
 from __future__ import annotations
 
-import json
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from experiments.m5.analysis import (
-    AblationDelta,
-    ParetoPoint,
     compute_ablation_deltas,
     compute_pareto_frontier,
     compute_system_summary,

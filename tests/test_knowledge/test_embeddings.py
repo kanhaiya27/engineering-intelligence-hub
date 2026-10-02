@@ -2,8 +2,6 @@
 Tests for BGEEmbeddingModel
 """
 
-import pytest
-import torch
 
 from knowledge.schemas.artifacts import ArtifactType, KnowledgeChunk
 from knowledge.vector.embeddings import BGEEmbeddingModel

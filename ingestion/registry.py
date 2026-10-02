@@ -6,7 +6,7 @@ Registry for creating and discovering ingestion sources.
 
 from __future__ import annotations
 
-from typing import Any, Callable, Dict, Optional, Type
+from typing import Any, Dict, Optional, Type
 
 from ingestion.base import BaseIngestionSource
 from ingestion.loaders.file_loader import FileIngestionSource

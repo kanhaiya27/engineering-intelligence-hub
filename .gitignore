@@ -124,6 +124,26 @@ chroma_db/
 # --- Neo4j data ---
 data/databases/
 data/transactions/
+neo4j_data/
+neo4j_logs/
+neo4j_import/
+
+# --- DB snapshots / dumps (share out-of-band, e.g. C:\EIH_share, never via git) ---
+*.snapshot
+*.dump
+qdrant_snapshots/
+snapshots/
+
+# --- Cloned corpus repositories (scripts/ingest_corpus.py cache; nested git repos) ---
+.corpus_cache/
+
+# --- Local LLM weights (Ollama / llama.cpp) ---
+*.gguf
+*.onnx
+models/
+
+# --- Large raw experiment outputs ---
+experiments/results/**/raw/
 
 # --- Local SQLite / DuckDB databases ---
 *.db

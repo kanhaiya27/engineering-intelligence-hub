@@ -15,7 +15,6 @@ from evaluation.metrics import (
     EfficiencyMetrics,
     EngineeringOutcomeMetrics,
     ExperimentResult,
-    QualityMetrics,
 )
 from evaluation.suite import BaselineEvaluatorSuite
 from experiments.config import ExperimentConfig

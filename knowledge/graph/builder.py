@@ -8,7 +8,7 @@ connecting source code structures, Git commits, issues, PRs, and tests.
 from __future__ import annotations
 
 import time
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 from core.logging import get_logger
 from knowledge.graph.base import (
@@ -27,7 +27,6 @@ from knowledge.schemas.artifacts import (
     Issue,
     PullRequest,
     SourceFile,
-    TestCase,
 )
 
 logger = get_logger(__name__)

@@ -14,9 +14,7 @@ Evaluation Dimensions (1 to 5 Likert Scale):
 
 from __future__ import annotations
 
-import json
-from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Dict, List, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 

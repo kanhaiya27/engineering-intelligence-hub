@@ -6,7 +6,6 @@ import pytest
 
 from intelligence.classifier import RuleBasedTaskClassifier
 from knowledge.schemas.tasks import (
-    ComplexityLevel,
     CriticalityLevel,
     EngTaskRequest,
     SDLCStage,

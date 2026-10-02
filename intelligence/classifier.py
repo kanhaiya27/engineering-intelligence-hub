@@ -7,19 +7,15 @@ criticality, security sensitivity, and minimum required quality threshold.
 
 from __future__ import annotations
 
-import re
-from typing import Dict, List, Optional, Tuple
+from typing import List, Optional, Tuple
 
 from core.logging import get_logger
 from intelligence.base import BaseTaskClassifier
 from intelligence.complexity import HeuristicComplexityAnalyzer
 from intelligence.criticality import HeuristicCriticalityAnalyzer
 from knowledge.schemas.tasks import (
-    ComplexityLevel,
-    CriticalityLevel,
     EngTaskRequest,
     SDLCStage,
-    SecuritySensitivity,
     TaskClassification,
     TaskType,
 )

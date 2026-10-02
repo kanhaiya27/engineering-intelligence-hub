@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 
 from sustainability.cost.estimator import CostEstimator
-from sustainability.carbon.estimator import CarbonEstimator, CARBON_INTENSITIES_GCO2_PER_KWH
+from sustainability.carbon.estimator import CarbonEstimator
 from sustainability.energy.estimator import EnergyEstimator, EnergyEstimationMethod
 
 

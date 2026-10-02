@@ -2,9 +2,8 @@
 Tests for CodeAwareChunker, DocAwareChunker, and ArtifactNormalizer
 """
 
-import pytest
 
-from ingestion.processors.chunker import CodeAwareChunker, DocAwareChunker, UniversalChunker
+from ingestion.processors.chunker import CodeAwareChunker, DocAwareChunker
 from ingestion.processors.normalizer import ArtifactNormalizer
 from knowledge.schemas.artifacts import ArtifactType, BaseArtifact, ProgrammingLanguage, SourceFile
 

@@ -30,14 +30,11 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import List
 
 import pytest
 
 from experiments.m5.analysis import (
-    compute_ablation_deltas,
     compute_pareto_frontier,
-    compute_system_summary,
 )
 from experiments.m5.failure_tax import (
     FailureCategory,
@@ -57,7 +54,6 @@ from experiments.m5.runner import M5BenchmarkRunner
 from experiments.m5.splits import (
     BENCHMARK_TASKS_PATH,
     create_stratified_splits,
-    load_or_create_splits,
 )
 from generation.base import BaseLLMProvider, GenerationRequest, GenerationResponse
 from knowledge.schemas.benchmark import BenchmarkTask

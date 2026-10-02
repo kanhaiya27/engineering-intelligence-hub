@@ -2,8 +2,6 @@
 Tests for Benchmark Lifecycle, Validator, and Dataset Manager
 """
 
-from pathlib import Path
-import pytest
 
 from benchmark.dataset import BenchmarkDataset
 from benchmark.validator import BenchmarkValidator
@@ -19,7 +17,6 @@ from knowledge.schemas.tasks import (
     ComplexityLevel,
     CriticalityLevel,
     SDLCStage,
-    SecuritySensitivity,
     TaskType,
 )
 

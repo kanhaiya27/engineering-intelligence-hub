@@ -16,7 +16,6 @@ try:
 except ImportError:  # pragma: no cover
     _NEO4J_AVAILABLE = False
 
-from core.config import settings
 from core.exceptions import GraphStoreConnectionError
 from core.logging import get_logger
 from knowledge.graph.base import BaseGraphStore, GraphEdge, GraphNode

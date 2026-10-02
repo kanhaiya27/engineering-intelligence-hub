@@ -13,7 +13,6 @@ have concrete implementations.
 
 from __future__ import annotations
 
-import platform
 from contextlib import asynccontextmanager
 from typing import AsyncIterator
 

@@ -20,14 +20,12 @@ from typing import Any, Dict, List, Optional
 from core.logging import get_logger
 from experiments.m5.analysis import (
     compute_ablation_deltas,
-    compute_pareto_frontier,
     compute_system_summary,
 )
-from experiments.m5.calibrate import CalibrationEvaluator, get_standard_candidates
-from experiments.m5.failure_tax import FailureDiagnosis, diagnose_trial_failure
-from experiments.m5.manifest import ExperimentManifest, FrozenVariables, SystemID
+from experiments.m5.calibrate import CalibrationEvaluator
+from experiments.m5.failure_tax import diagnose_trial_failure
+from experiments.m5.manifest import ExperimentManifest, SystemID
 from experiments.m5.metrics import TrialResult
-from experiments.m5.reports import generate_markdown_report
 from experiments.m5.runner import M5BenchmarkRunner
 from generation.base import BaseLLMProvider
 from generation.providers.openai import MockLLMProvider
