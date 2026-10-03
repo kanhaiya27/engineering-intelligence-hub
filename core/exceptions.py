@@ -47,6 +47,10 @@ class GraphStoreError(EIHException):
     """Raised when graph store operations fail."""
 
 
+class GraphStoreConnectionError(GraphStoreError):
+    """Raised when connecting to the graph database fails."""
+
+
 # ---------------------------------------------------------------------------
 # Retrieval
 # ---------------------------------------------------------------------------

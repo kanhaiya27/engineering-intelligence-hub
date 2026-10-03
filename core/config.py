@@ -17,12 +17,11 @@ Usage
 
 from __future__ import annotations
 
-import os
 from pathlib import Path
 from typing import Dict, List, Optional
 
 import yaml
-from pydantic import Field, validator
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # Root of the project (two levels above this file: core/ → project root)
@@ -88,6 +87,19 @@ class RetrievalSettings(BaseSettings):
     max_context_chunks: int = Field(
         default=10, description="Maximum chunks sent to generation"
     )
+    reranker_model_id: str = Field(
+        default="cross-encoder/ms-marco-MiniLM-L-6-v2",
+        description="Cross-encoder checkpoint used by the reranking stage",
+    )
+    strict_reranking: bool = Field(
+        default=False,
+        description=(
+            "If True, a strategy requesting reranking that cannot run raises "
+            "RetrievalError instead of degrading to unreranked output. Enable for "
+            "final experiment runs so a skipped reranker cannot silently "
+            "invalidate results."
+        ),
+    )
 
     model_config = SettingsConfigDict(env_prefix="EIH_RETRIEVAL_", extra="ignore")
 
@@ -115,11 +127,26 @@ class QualitySettings(BaseSettings):
 class SustainabilitySettings(BaseSettings):
     """Sustainability measurement configuration."""
 
-    # Carbon intensity in gCO2e per kWh — UK national grid average (2024).
-    # IMPORTANT: Override per experiment with region-specific values.
+    # Region whose grid carbon intensity applies to THIS experiment run.
+    # Must name a key in sustainability.carbon.estimator.CARBON_INTENSITIES_GCO2_PER_KWH,
+    # or "custom" to use carbon_intensity_gco2_per_kwh directly.
+    #
+    # IMPORTANT (research validity): carbon intensity is location-dependent and
+    # varies by more than an order of magnitude between grids (France ~56,
+    # UK ~233, India ~713 gCO2e/kWh). Reporting CO2e without stating the region
+    # is not a defensible result. Set this to where inference ACTUALLY ran, and
+    # disclose the value in the report.
+    carbon_region: str = Field(
+        default="custom",
+        description="Grid region key for CO2e, or 'custom' to use the explicit intensity below",
+    )
     carbon_intensity_gco2_per_kwh: float = Field(
-        default=233.0,
-        description="Grid carbon intensity in gCO2e/kWh — UK average 2024",
+        default=713.0,
+        description=(
+            "Grid carbon intensity in gCO2e/kWh used when carbon_region='custom'. "
+            "Defaults to the India national grid average (2023), matching the "
+            "project's actual execution location."
+        ),
     )
     # TDP proxy for energy estimation when GPU power is unavailable.
     cpu_tdp_watts: float = Field(

@@ -21,33 +21,33 @@ Engineering Intelligence Hub — Six-Month Development Roadmap
 
 **Deliverable:** Research paper draft + baseline system working + initial benchmark + evaluation framework.
 
-### Phase-1 Goals (by 15 September 2026)
+### Phase-1 Goals (Completed Ahead of Schedule)
 
-- [ ] **Ingestion pipeline** — GitHub REST API loader for commits, issues, PRs; file loaders for Python, Markdown, YAML
-- [ ] **Embedding** — BAAI/bge-small-en-v1.5 (local CUDA) + tiktoken for token counting
-- [ ] **Vector store** — Qdrant integration (`QdrantVectorStore` implementing `BaseVectorStore`)
-- [ ] **Hybrid retrieval** — Dense + BM25 fusion; concrete `HybridRetriever`
-- [ ] **LLM providers** — `OpenAIProvider` and `AnthropicProvider`
-- [ ] **Baselines A and B** — LLM-only and Fixed RAG + fixed model
-- [ ] **Initial benchmark** — 100 development tasks across 2 repositories (CANDIDATE status)
-- [ ] **Evaluation framework** — Correctness + groundedness + relevance evaluators
-- [ ] **Sustainability instrumentation** — All calls instrumented with energy/cost/CO₂ estimates
-- [ ] **Docker Compose** — Qdrant + Neo4j services
+- [x] **Ingestion pipeline** — GitHub loader for commits, issues, PRs; file loaders for Python AST, Markdown, YAML
+- [x] **Embedding** — BAAI/bge-small-en-v1.5 (local CUDA RTX 4050 GPU) + telemetry benchmarking
+- [x] **Vector store** — Qdrant integration (`QdrantVectorStore` implementing `BaseVectorStore`, v1.13.2)
+- [x] **Hybrid retrieval** — Dense + BM25Plus fusion; concrete `HybridRetriever` with weighted fusion
+- [x] **LLM providers** — `OpenAIProvider` and `MockLLMProvider`
+- [x] **Baselines A and B** — `BaselineARunner` (LLM-only) and `BaselineBRunner` (Fixed RAG)
+- [x] **Initial benchmark** — 60 verified development tasks across 6 SDLC stages in 2 pinned repositories (`pallets/flask`, `fastapi/fastapi`)
+- [x] **Evaluation framework** — Correctness + groundedness + relevance evaluators and `BaselineEvaluatorSuite`
+- [x] **Sustainability instrumentation** — All calls instrumented with energy/cost/CO₂ estimates and NVML GPU telemetry
+- [x] **Docker Compose** — Qdrant + Neo4j services configured and verified
 
 ---
 
 ## Milestone 3 — Major Implementation + Experiments (25 October 2026)
 
-### Phase-2 Goals
+### Phase-2 Goals (In Progress)
 
-- [ ] **Task classifier** — Rule-based + lightweight LLM-based classifier
-- [ ] **Adaptive retrieval router** — Full `RetrievalRouter` with YAML-driven strategy resolution
-- [ ] **Tier-based model router** — `TierBasedRouter` implementing `BaseModelRouter`
-- [ ] **Quality gate active** — Groundedness + relevance evaluators integrated
-- [ ] **Escalation logic** — Full PASS/ESCALATE/FAIL pipeline
-- [ ] **Baselines C, D, E, F** — All six named baselines running
-- [ ] **Ablation studies** — Disable retrieval, disable routing, disable quality gate, vary thresholds
-- [ ] **Pareto analysis** — Quality vs energy/cost/latency Pareto frontier plots
+- [x] **Task Intelligence (M1)** — `RuleBasedTaskClassifier`, `HeuristicComplexityAnalyzer`, and `HeuristicCriticalityAnalyzer`
+- [x] **Knowledge Graph Foundation (M2)** — Concrete `Neo4jGraphStore`, `InMemoryGraphStore`, `ASTGraphExtractor`, and `EngineeringGraphBuilder`
+- [x] **Adaptive Retrieval (M3)** — Dynamic retrieval strategy selection driven by `TaskClassification`, `AdaptiveRetrievalPolicy`, `GraphAugmentedRetriever`, `AdaptiveRetrievalPipeline`
+- [x] **Controlled Evaluation Framework (M5)** — Multi-system benchmark runner, frozen manifest, deterministic stratified splits (Dev/Val/Test), 3-tier metrics, failure taxonomy, and Pareto engine for Baselines A, B, and Systems C, D, E
+- [ ] **Full Test-Set Evaluation Execution** — Run final held-out test evaluation after dataset expansion / policy tuning
+- [ ] **Baselines C, D, E** — Comparative reporting across full benchmark splits
+- [ ] **Ablation studies** — Stepwise ablation deltas Delta(A->B), Delta(B->C), Delta(C->D), Delta(D->E)
+- [ ] **Pareto analysis** — Quality vs energy/cost/latency Pareto frontier generation
 - [ ] **Benchmark expanded** — ~400 tasks across 4–5 repositories, human-reviewed subset
 - [ ] **Updated research** — Incorporate empirical results
 

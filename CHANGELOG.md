@@ -8,16 +8,93 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
-### Changed
-- Migrated primary virtual environment to Python 3.11.9 (`.venv311/`), preserving `.venv/` (Python 3.8.10) for reference.
-- Upgraded schema configurations from legacy `class Config` to modern Pydantic v2 `model_config = ConfigDict(use_enum_values=True)` across all schema and config modules.
-- Enhanced `.gitignore` with strict exclusion rules for model caches (`.cache/`, `model_cache/`, `hf_cache/`), raw experimental datasets, local databases, and temporary artifacts.
+### Added
+- **Phase-2 Controlled Evaluation Framework (`M5`)**:
+  - `experiments/m5/manifest.py`: `ExperimentManifest`, `FrozenVariables`, and system definitions for Baselines A, B, and Systems C, D, E with SHA-256 configuration hashing.
+  - `experiments/m5/splits.py`: Stratified deterministic dataset partitioner creating frozen Dev (24 tasks, 40%), Val (12 tasks, 20%), and Held-Out Test (24 tasks, 40%) splits with Seed = 42.
+  - `experiments/m5/metrics.py`: Strict 3-tier metric schemas (`MEASURED`, `ESTIMATED`, `DERIVED`), trial aggregators, and quality-constrained energy efficiency validator.
+  - `experiments/m5/runner.py`: Multi-system benchmark runner with repeated trial logging ($N=3$), telemetry capture, and raw JSONL persistence.
+  - `experiments/m5/analysis.py`: Statistical paired differences, 4-step ablation transitions ($\Delta A\to B$, $\Delta B\to C$, $\Delta C\to D$, $\Delta D\to E$), SDLC breakdowns, and 2D Pareto efficiency frontiers.
+  - `experiments/m5/failure_tax.py`: 13-category failure taxonomy model and automated diagnostic classifier.
+  - `experiments/m5/human_eval.py`: 12-task stratified human annotation protocol with 5-dimension Likert rubric.
+  - `experiments/m5/reports.py`: Markdown and JSON comparison report generator.
+  - `docs/m5_controlled_evaluation.md`: Complete specification of the M5 controlled evaluation protocol.
+  - `tests/test_experiments/test_m5_runner.py`: 9 comprehensive tests for splits, manifest, metrics, taxonomy, Pareto, human eval, and runner execution (159 total passing tests).
+- **Phase-2 Quality-Aware Verification (`M4`)**:
+  - `verification/config.py`: `VerificationConfig` Pydantic model for configurable signal weights and escalation parameters.
+  - `verification/evaluators.py`: 4 deterministic evaluators (`CitationGroundingEvaluator`, `EvidenceCoverageEvaluator`, `QueryRelevanceEvaluator`, `EvidenceConsistencyEvaluator`).
+  - `verification/escalation.py`: `EscalationPolicy` implementing bounded progressive strategy escalation (top-k expansion -> graph depth -> reranking).
+  - `verification/gate.py`: `QualityGate.default_gate()` factory and task-specific threshold resolution.
+  - `generation/quality_rag.py`: `QualityAwareRAGPipeline` integrating generation, quality gate, bounded escalation, and fallback to `INSUFFICIENT EVIDENCE`.
+  - `apps/api/routers/adaptive.py`: Added `POST /adaptive/query` and `POST /adaptive/verify` endpoints.
+  - `docs/quality_verification.md`: Complete architecture and telemetry documentation.
+  - `tests/test_verification/test_m4_quality_gate.py`: 21 comprehensive unit & pipeline tests (125 total passing tests).
+- **Phase-2 Adaptive Retrieval Subsystem (`M3`)**:
+  - `retrieval/policy.py`: `AdaptiveRetrievalPolicy` mapping 21 SDLC task types to retrieval strategies with criticality escalation.
+  - `retrieval/graph_augmented.py`: `GraphAugmentedRetriever` with bounded graph neighborhood context injection.
+  - `retrieval/adaptive.py`: `AdaptiveRetrievalPipeline` supporting `BASELINE_B`, `SYSTEM_C`, and `SYSTEM_D` experiment modes.
+  - `configs/retrieval.yaml`: Added `hybrid_bm25`, `incident_sparse`, and `incident_graph` strategies.
+  - `tests/test_retrieval/test_m3_adaptive.py`: 25 adaptive retrieval tests.
+- **Phase-2 Engineering Knowledge Graph Foundation (`M2`)**:
+  - `knowledge/graph/neo4j.py`: `Neo4jGraphStore` implementation with Bolt protocol connection, index constraints, and parameterized Cypher execution.
+  - `knowledge/graph/in_memory.py`: `InMemoryGraphStore` implementation for fast, reliable unit tests without database dependencies.
+  - `knowledge/graph/extractor.py`: `ASTGraphExtractor` extracting code entities (Module, Class, Function, Method, Test) and relationships (CONTAINS, IMPORTS, DEPENDS_ON, CALLS, TESTED_BY) with strict line-level provenance.
+  - `knowledge/graph/builder.py`: `EngineeringGraphBuilder` building and persisting repository-level knowledge graphs from source files, commits, pull requests, issues, and ADRs with deterministic idempotency.
+  - `knowledge/graph/queries.py`: Graph traversal and query helpers (`get_entity`, `get_neighborhood`, `find_dependencies`, `find_related_files`, `find_issue_commits`, `find_modified_files`, `get_subgraph`).
+  - `apps/api/routers/graph.py`: REST API endpoints for `/graph/health`, `/graph/entity/{id}`, and `/graph/neighbors/{id}`.
+  - `docs/knowledge_graph.md`: Comprehensive graph schema, provenance strategy, and reference documentation.
+  - Unit and API tests in `tests/test_knowledge/` and `tests/test_api/test_graph_endpoints.py` (all 104 tests green).
+- **Phase-2 Task Intelligence Subsystem (`M1`)**:
+  - `intelligence/base.py`: Abstract `BaseTaskClassifier` interface.
+  - `intelligence/complexity.py`: `HeuristicComplexityAnalyzer` evaluating query length, architectural cues, deep reasoning cues, and multi-step patterns.
+  - `intelligence/criticality.py`: `HeuristicCriticalityAnalyzer` evaluating operational criticality, security sensitivity, and quality thresholds.
+  - `intelligence/classifier.py`: `RuleBasedTaskClassifier` mapping user prompts and hints to `SDLCStage`, `TaskType`, `ComplexityLevel`, and `CriticalityLevel`.
+  - `intelligence/__init__.py`: Exported package module.
+  - `tests/test_intelligence/`: Unit tests for task classifier, complexity, and criticality analyzers (8 tests passing).
+  - `docs/task_intelligence.md`, `docs/phase2_architecture.md`: Comprehensive design and reference documentation.
+
+---
+
+## [0.2.0] - 2026-08-19 — Phase-1 Baseline RAG
 
 ### Added
-- `docs/environment.md` — Full hardware, CUDA, Python 3.11, Docker, and environment readiness specification.
+- **Repository Ingestion Engine**:
+  - `ingestion/loaders/file_loader.py` — Directory walker with exclusions and artifact classification.
+  - `ingestion/loaders/github_loader.py` — Cloner with pinned commit/tag checkouts, commit history, issues, PRs.
+  - `ingestion/processors/chunker.py` — Python AST `CodeAwareChunker` and heading-based `DocAwareChunker`.
+  - `ingestion/processors/normalizer.py` — BOM/line-ending normalization, SHA-256 deduplication.
+  - `ingestion/registry.py` — Registry parser for repository specifications.
+  - `datasets/registry.yaml` — Pinned repository specifications for `pallets/flask` (3.0.3) and `fastapi/fastapi` (0.111.0).
+- **GPU Embeddings & Vector Store**:
+  - `knowledge/vector/embeddings.py` — `BGEEmbeddingModel` on `BAAI/bge-small-en-v1.5` with CUDA / RTX 4050 GPU acceleration and batching.
+  - `knowledge/vector/qdrant.py` — Concrete `QdrantVectorStore` implementation with live Docker integration.
+  - `docker-compose.yml` — Upgraded Qdrant to `qdrant/qdrant:v1.13.2`.
+- **Hybrid Retrieval Subsystem**:
+  - `retrieval/dense.py` — Qdrant-backed semantic vector retriever.
+  - `retrieval/bm25.py` — BM25Plus sparse retriever with software-engineering code tokenization.
+  - `retrieval/hybrid.py` — Weighted score fusion with score normalization and metadata filtering.
+- **LLM Provider & Baseline RAG Pipeline**:
+  - `generation/providers/openai.py` — `OpenAIProvider` and offline `MockLLMProvider`.
+  - `generation/rag.py` — `BaselineRAGPipeline` with grounded reasoning, source citation, and refusal handling.
+- **Benchmark Suite**:
+  - `benchmark/data/meib_phase1_tasks.json` — 60 verified benchmark tasks across 6 SDLC stages.
+  - `benchmark/validator.py` — Quality validator and `CANDIDATE` -> `APPROVED` promotion manager.
+  - `benchmark/dataset.py` — Dataset filtering, loading, and analytical distributions.
+- **Evaluation Framework & Baselines**:
+  - `experiments/baselines/baseline_a.py` — `BaselineARunner` (LLM-only baseline).
+  - `experiments/baselines/baseline_b.py` — `BaselineBRunner` (Fixed RAG baseline).
+  - `evaluation/scorers/correctness.py`, `groundedness.py`, `relevance.py` — Specialized evaluators.
+  - `evaluation/suite.py` — `BaselineEvaluatorSuite`.
+- **REST API Endpoints**:
+  - `apps/api/routers/ingest.py` — `POST /ingest/repository`, `POST /ingest/file`.
+  - `apps/api/routers/retrieval.py` — `POST /retrieve`.
+  - `apps/api/routers/query.py` — `POST /query`.
+- **Documentation**:
+  - `docs/phase1_architecture.md`, `docs/ingestion.md`, `docs/retrieval.md`, `docs/benchmark.md`, `docs/evaluation.md`, `docs/sustainability_measurement.md`.
 
+---
 
-### Added
+## [0.1.0] - 2026-08-19 — Phase-0 Foundation
 
 #### Core
 - `core/config.py` — Pydantic v2 Settings with nested sub-configs (API, model, retrieval, quality, sustainability, experiment, secrets, vector store, graph store)

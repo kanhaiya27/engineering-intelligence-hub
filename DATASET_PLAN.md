@@ -32,19 +32,19 @@ Engineering Intelligence Hub — Benchmark Dataset Strategy
 
 ---
 
-## Candidate Repositories (to be finalised)
+## Phase-1 Pinned Repositories (Finalised)
 
-The following are candidate repositories under consideration. **None are confirmed yet.**
+The following open-source repositories are pinned and registered in `datasets/registry.yaml`:
 
-| Repository | Language | Domain | Approximate LOC | Licence |
-|---|---|---|---|---|
-| pallets/flask | Python | Web framework | ~20k | BSD-3-Clause |
-| django/django | Python | Web framework | ~200k | BSD-3-Clause |
-| fastapi/fastapi | Python | API framework | ~15k | MIT |
-| ansible/ansible | Python | DevOps | ~300k | GPL-3.0 |
-| pandas-dev/pandas | Python | Data science | ~200k | BSD-3-Clause |
+| Repository | Language | Domain | Pinned Tag | Pinned Commit SHA | Licence | Status |
+|---|---|---|---|---|---|---|
+| **pallets/flask** | Python | WSGI Web framework | `3.0.3` | `4aa68d5a153fd780b43f769fa5afcaadcf973cb3` | BSD-3-Clause | Pinned & Ingested |
+| **fastapi/fastapi** | Python | ASGI API framework | `0.111.0` | `43594b291d9ccf5309320e8b15d0eaef32f30737` | MIT | Pinned & Ingested |
 
-**Selection will be finalised in Phase-1 (September 2026).**
+**Candidate Repositories for Phase-2/3 Expansion:**
+- `django/django` (Web framework)
+- `tiangolo/sqlmodel` (ORM)
+- `pandas-dev/pandas` (Data science)
 
 Criteria for final selection:
 - Representativeness across SDLC stages

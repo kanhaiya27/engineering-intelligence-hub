@@ -19,7 +19,7 @@ import yaml
 from core.exceptions import InvalidRetrievalStrategyError
 from core.logging import get_logger
 from knowledge.schemas.tasks import TaskClassification, TaskType
-from retrieval.strategies import RetrievalMode, RetrievalStrategyConfig
+from retrieval.strategies import RetrievalStrategyConfig
 
 logger = get_logger(__name__)
 

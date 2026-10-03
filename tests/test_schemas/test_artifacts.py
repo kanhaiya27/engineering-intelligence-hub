@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import pytest
 
 from knowledge.schemas.artifacts import (
     ArtifactType,
@@ -12,9 +11,7 @@ from knowledge.schemas.artifacts import (
     IssueStatus,
     KnowledgeChunk,
     ProgrammingLanguage,
-    PullRequest,
     SourceFile,
-    TestCase,
     IncidentReport,
     ArchitectureDecision,
 )

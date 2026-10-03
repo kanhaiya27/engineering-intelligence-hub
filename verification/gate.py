@@ -20,9 +20,9 @@ response merely to save resources. Escalation is mandatory on failure.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import List, Optional
+from typing import Any, List, Optional
 
-from core.exceptions import EscalationExhaustedError, QualityGateError
+from core.exceptions import EscalationExhaustedError
 from core.logging import get_logger
 from knowledge.schemas.tasks import EngTaskRequest, EngTaskResponse
 from verification.base import BaseQualityEvaluator
@@ -78,6 +78,30 @@ class QualityGate:
     ) -> None:
         self.evaluators: List[BaseQualityEvaluator] = evaluators or []
         self.max_escalations = max_escalations
+
+    @classmethod
+    def default_gate(cls, config: Optional[Any] = None) -> "QualityGate":
+        """
+        Factory method: construct a QualityGate with the 4 standard M4 evaluators.
+
+        Weights are loaded from VerificationConfig (heuristic baseline defaults).
+        """
+        from verification.config import VerificationConfig
+        from verification.evaluators import (
+            CitationGroundingEvaluator,
+            EvidenceConsistencyEvaluator,
+            EvidenceCoverageEvaluator,
+            QueryRelevanceEvaluator,
+        )
+
+        cfg = config or VerificationConfig()
+        evaluators: List[BaseQualityEvaluator] = [
+            CitationGroundingEvaluator(weight=cfg.citation_grounding_weight),
+            QueryRelevanceEvaluator(weight=cfg.query_relevance_weight),
+            EvidenceCoverageEvaluator(weight=cfg.evidence_coverage_weight),
+            EvidenceConsistencyEvaluator(weight=cfg.evidence_consistency_weight),
+        ]
+        return cls(evaluators=evaluators, max_escalations=cfg.max_escalation_attempts)
 
     def add_evaluator(self, evaluator: BaseQualityEvaluator) -> None:
         """Register an additional evaluator."""

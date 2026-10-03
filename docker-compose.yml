@@ -21,7 +21,7 @@ services:
   # Dashboard: http://localhost:6333/dashboard
   # ----------------------------------------------------------
   qdrant:
-    image: qdrant/qdrant:v1.9.2
+    image: qdrant/qdrant:v1.15.1
     container_name: eih-qdrant
     restart: unless-stopped
     ports:

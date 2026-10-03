@@ -105,6 +105,55 @@ strategies:
     graph_hop_depth: 2
 
   # ----------------------------------------------------------
+  # BM25-heavy hybrid: for code review / defect tasks where
+  # exact keyword matching (symbol names, error codes) is critical.
+  # (Heuristic config — tuned in Phase-2 M5 evaluation)
+  # ----------------------------------------------------------
+  hybrid_bm25:
+    mode: hybrid
+    top_k: 7
+    score_threshold: 0.50
+    dense_weight: 0.4
+    sparse_weight: 0.6
+    enable_reranking: false
+    reranker_type: none
+    max_context_chunks: 7
+    include_graph_context: false
+
+  # ----------------------------------------------------------
+  # Incident sparse: keyword-dominant retrieval for incident
+  # and historical log search.
+  # (Heuristic config — tuned in Phase-2 M5 evaluation)
+  # ----------------------------------------------------------
+  incident_sparse:
+    mode: sparse
+    top_k: 8
+    score_threshold: 0.0
+    dense_weight: 0.0
+    sparse_weight: 1.0
+    enable_reranking: false
+    reranker_type: none
+    max_context_chunks: 6
+    include_graph_context: false
+
+  # ----------------------------------------------------------
+  # Incident graph: sparse-heavy + graph context for root-cause
+  # and error analysis (incident → commit → file provenance).
+  # (Heuristic config — tuned in Phase-2 M5 evaluation)
+  # ----------------------------------------------------------
+  incident_graph:
+    mode: graph_augmented
+    top_k: 8
+    score_threshold: 0.0
+    dense_weight: 0.3
+    sparse_weight: 0.7
+    enable_reranking: false
+    reranker_type: none
+    max_context_chunks: 8
+    include_graph_context: true
+    graph_hop_depth: 2
+
+  # ----------------------------------------------------------
   # Graph-augmented + reranking (strongest, highest latency).
   # Reserved for CRITICAL criticality tasks or final escalation.
   # ----------------------------------------------------------

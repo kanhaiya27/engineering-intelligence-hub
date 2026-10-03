@@ -110,6 +110,33 @@ class CarbonEstimator:
 
         self.region = region
 
+    @classmethod
+    def from_settings(cls, sustainability_settings: Optional[object] = None) -> "CarbonEstimator":
+        """
+        Build an estimator from `settings.sustainability`.
+
+        Every production call site MUST use this rather than `CarbonEstimator()`.
+        The bare constructor silently applies the UK default, which previously
+        made `EIH_SUSTAINABILITY_CARBON_INTENSITY_GCO2_PER_KWH` a dead config
+        key: the value was read into settings and then never reached the
+        estimator, so CO2e was reported against the wrong grid regardless of
+        what the operator configured.
+        """
+        if sustainability_settings is None:
+            from core.config import settings
+
+            sustainability_settings = settings.sustainability
+
+        region = getattr(sustainability_settings, "carbon_region", DEFAULT_REGION)
+        if region == "custom":
+            return cls(
+                region="custom",
+                custom_intensity_gco2_kwh=getattr(
+                    sustainability_settings, "carbon_intensity_gco2_per_kwh"
+                ),
+            )
+        return cls(region=region)
+
     @property
     def carbon_intensity(self) -> float:
         """Current carbon intensity in gCO2e/kWh."""
