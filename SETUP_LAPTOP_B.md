@@ -137,6 +137,10 @@ curl.exe -X POST "http://localhost:6333/collections/eih_knowledge/snapshots/uplo
 curl.exe -s http://localhost:6333/collections/eih_knowledge
 ```
 
+The snapshot was taken on Qdrant v1.13.2 and has been verified to restore into
+v1.15.1 (the version in `docker-compose.yml`): 48,046 points, status green.
+Expected SHA256: `a5b20b44e797b678f43ffee1d5ef23259550549acc1b1585c6d5bc38c3cbced7`.
+
 **Alternative (no snapshot):** rebuild from source on your own GPU — slower
 (~6 min embedding + clone time) but fully independent:
 
@@ -149,7 +153,18 @@ tag moved; the snapshot guarantees an identical corpus to Laptop A.
 
 ### 8b. Neo4j graph (only if `C:\EIH_share\neo4j.dump` exists)
 
-The dump can only be loaded into a **stopped** database:
+As of 2026-10-03 **no dump is shared**: the graph on Laptop A holds only a 2-node
+test fixture, so skip this step — your empty graph is equivalent. Once the
+knowledge graph is populated for real, Laptop A exports it with:
+
+```powershell
+docker compose stop neo4j
+docker run --rm -v engineering-intelligence-hub_neo4j_data:/data -v C:/EIH_share:/dumps `
+  neo4j:5.18-community neo4j-admin database dump neo4j --to-path=/dumps
+docker compose start neo4j
+```
+
+and Laptop B loads it. The dump can only be loaded into a **stopped** database:
 
 ```powershell
 docker compose stop neo4j

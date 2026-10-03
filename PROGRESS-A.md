@@ -17,6 +17,9 @@ measured (with numbers only if actually measured), what is blocked.
   dumps, model weights).
 - Test suite: **176 passed, 2 skipped** (the 2 need Docker Qdrant running).
 - Added collaboration docs: `CLAUDE.md`, `SETUP_LAPTOP_B.md`, `docs/WORKFLOW.md`.
+- Exported Qdrant `eih_knowledge` (48,046 points) to `C:\EIH_share\eih_knowledge.snapshot`
+  (169 MB, SHA256 `a5b20b44…cbced7`); restore verified into a clean Qdrant v1.15.1.
+  No Neo4j dump: the graph holds only a 2-node test fixture.
 
 **State of the system**
 - Implemented: ingestion, BGE embeddings (GPU), Qdrant, BM25 (corpus-backed),
@@ -33,6 +36,11 @@ measured (with numbers only if actually measured), what is blocked.
 - [ ] P0-3: re-run validation calibration with a live local LLM; re-freeze manifest.
 - [ ] Decide `max_escalation_attempts` 2 → 3 (reranking rung unreachable at 2).
 - [ ] Record `machine_id` automatically in experiment logs.
+- [ ] Laptop A's existing `eih-qdrant` container (and its volume data) is still
+      Qdrant **v1.13.2**, while `docker-compose.yml` pins v1.15.1. Do NOT run
+      `docker compose up` on it blindly (that jumps two minor versions on the stored
+      data); use `docker start eih-qdrant` for now, then either upgrade via 1.14.x
+      or recreate the volume from `C:\EIH_share\eih_knowledge.snapshot`.
 - [ ] First real Mode R / Mode Q run of Systems A–E (dev split only).
 
 **Blocked / decisions needed**
