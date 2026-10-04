@@ -8,6 +8,24 @@ measured (with numbers only if actually measured), what is blocked.
 
 ---
 
+## 2026-10-05 (later) — Two-laptop git sync guard
+
+Branch `chore/git-sync-guard`.
+
+**Done**
+- PR #4 (Phase 1a) merged to `master` (`a29ccfa`).
+- `scripts/git_sync_guard.py` + hooks in `.claude/settings.json`: at session start Claude fetches
+  and reports what the other laptop merged; code edits are blocked while a must-pull change
+  (`[must-pull]` tag or any shared-file change) is missing. 6 end-to-end tests on throwaway repos.
+- CLAUDE.md session routine rewritten around the guard; WORK_PLAN §6 updated.
+
+**Must pull** — this change itself is `[must-pull]`: Laptop B must `git pull` on master, then
+restart Claude Code (or open `/hooks`) and approve the project hooks when asked.
+
+**Next** — Phase 1b on `feat/local-inference-routing` once the 7B decision is made.
+
+---
+
 ## 2026-10-05 — Phase 1a: local inference audit, energy meter, VRAM study
 
 Branch `feat/local-inference` (task A1 in `docs/WORK_PLAN.md`).
