@@ -32,10 +32,18 @@ services:
     environment:
       QDRANT__SERVICE__GRPC_PORT: 6334
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:6333/healthz"]
+      # The qdrant image ships without curl, wget or nc, so a curl healthcheck
+      # always reports "unhealthy". Use bash's /dev/tcp to GET /readyz (all
+      # shards loaded) and require an HTTP 200 status line.
+      test:
+        - CMD
+        - bash
+        - -c
+        - 'exec 3<>/dev/tcp/127.0.0.1/6333 && printf "GET /readyz HTTP/1.0\r\n\r\n" >&3 && timeout 5 head -n 1 <&3 | grep -q " 200 "'
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 20s
 
   # ----------------------------------------------------------
   # Neo4j — Graph Store
