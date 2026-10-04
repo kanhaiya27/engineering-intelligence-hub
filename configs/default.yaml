@@ -2,8 +2,9 @@
 # Engineering Intelligence Hub — Default System Configuration
 # configs/default.yaml
 #
-# Override any value via environment variables prefixed EIH_
-# (e.g. EIH_LOG_LEVEL=DEBUG, EIH_API_PORT=9000)
+# NOTE: this file is NOT loaded at runtime (nothing calls core.config._load_yaml_defaults).
+# The authoritative defaults are in core/config.py; override them with EIH_* variables
+# in .env. Values below are kept in sync for reference only.
 # ============================================================
 
 environment: development
@@ -21,11 +22,11 @@ api:
     - "*"
 
 model:
-  default_provider: openai
-  default_model_id: gpt-4o-mini
-  fallback_model_id: gpt-3.5-turbo
+  default_provider: ollama
+  default_model_id: qwen2.5-coder:7b
+  fallback_model_id: qwen2.5-coder:3b
   max_tokens: 2048
-  temperature: 0.1
+  temperature: 0.0
   request_timeout_seconds: 120
   max_retries: 3
 
