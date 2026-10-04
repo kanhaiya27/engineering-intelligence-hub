@@ -89,6 +89,20 @@ local `.env`. Results from the two laptops are **not directly comparable** for
 energy unless the machine is controlled for — never mix them in one table
 without a `machine_id` column.
 
+### Local model ladder (Ollama) — pinned by digest
+
+Every result must cite the digest of the model that produced it. Recorded on Laptop A
+on 2026-10-04 with Ollama 0.35.1 (`curl http://localhost:11434/api/tags`):
+
+| Tier | Ollama tag | Params / quant | Size (bytes) | Digest (sha256) |
+|---|---|---|---|---|
+| small | `qwen2.5-coder:1.5b` | 1.5B Q4_K_M | 986,062,089 | `d7372fd828518a4d38b1eb196c673c31a85f2ed302b3d1e406c4c2d1b64a0668` |
+| medium | `qwen2.5-coder:3b` | 3.1B Q4_K_M | 1,929,912,626 | `f72c60cabf6237b07f6e632b2c48d533cef25eda2efbd34bed21c5e9c01e6225` |
+| large | `qwen2.5-coder:7b` | 7.6B Q4_K_M | 4,683,087,561 | `dae161e27b0e90dd1856c8bb3209201fd6736d8eb66298e75ed87571486f4364` |
+
+If `ollama pull` ever changes a digest, the model changed: results from different
+digests are not comparable. Laptop B must show the same digests before its runs count.
+
 ## Two-laptop setup
 
 - Code is shared through GitHub (private repo `kanhaiya27/engineering-intelligence-hub`).
