@@ -285,6 +285,13 @@ class Settings(BaseSettings):
         default="development",
         description="Runtime environment: development | testing | production",
     )
+    machine_id: str = Field(
+        default="unknown",
+        description=(
+            "Which development machine produced a result (laptop-a | laptop-b), "
+            "from EIH_MACHINE_ID. Recorded in every result file's provenance."
+        ),
+    )
     log_level: str = Field(default="INFO", description="Root log level")
     json_logs: bool = Field(default=False, description="Enable JSON-serialised logs")
     project_name: str = Field(
