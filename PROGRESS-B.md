@@ -52,6 +52,38 @@ measured (with numbers only if actually measured), what is blocked.
 
 ---
 
+## 2026-10-05 — B2: Qdrant healthcheck fixed
+
+**Heads-up (shared file):** `docker-compose.yml`, Qdrant healthcheck only. Neo4j untouched.
+
+**Done**
+- `fix/compose-qdrant-healthcheck` (WORK_PLAN B2): the qdrant image has no
+  curl/wget/nc, so the curl healthcheck always failed. Replaced it with a bash
+  `/dev/tcp` GET of `/readyz` that requires HTTP 200; added `start_period: 20s`.
+- Pulled master: confirmed the `.env` fix, since settings now load laptop-b values
+  (GPU TDP 115 W, CPU 45 W, custom carbon region) instead of code defaults.
+
+**Measured** (laptop-b)
+- Check tested in the running container: exit 0 on `/readyz`, exit 1 on a 404
+  path and on a closed port.
+- After `docker compose up -d qdrant` (same image v1.15.1, same volume):
+  `healthy` within ~6 s; `eih_knowledge` 48,046 points, green (same as before).
+- Full suite on this branch: 201 passed.
+
+**Next**
+- [ ] WORK_PLAN B1: retrieval ground-truth labels. Open question on the 24
+      held-out test tasks vs CLAUDE.md rule 3 (see below).
+
+**Blocked / questions for A**
+- B1 asks for labels on all 60 tasks, but 24 are the held-out test split, which
+  CLAUDE.md rule 3 says must not be inspected. Agree a protocol before B touches them.
+- F1 (found 2026-10-04, unpushed branch `feat/api-contract`): escalated strategies
+  (`*_esc1`, `*_esc2_graph`, `*_esc_max`) are not in the registry and silently fall
+  back to `hybrid`, so escalation never strengthens retrieval. Verified by execution.
+  Relevant to A2 (escalation 2→3).
+
+---
+
 ## 2026-10-04 — Laptop B setup complete
 
 **Done**
