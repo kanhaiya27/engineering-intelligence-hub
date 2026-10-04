@@ -26,3 +26,16 @@ def test_machine_id_setting_reads_env(monkeypatch):
 
     monkeypatch.setenv("EIH_MACHINE_ID", "laptop-z")
     assert Settings().machine_id == "laptop-z"
+
+
+def test_untracked_files_do_not_mark_tree_dirty(monkeypatch):
+    seen = {}
+
+    def fake_git(*args):
+        seen["status_args"] = args if args[0] == "status" else seen.get("status_args")
+        return "" if args[0] == "status" else "x"
+
+    monkeypatch.setattr(provenance, "_git", fake_git)
+    info = provenance.git_info()
+    assert "--untracked-files=no" in seen["status_args"]
+    assert info["dirty"] is False

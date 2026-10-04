@@ -39,7 +39,10 @@ def _git(*args: str) -> Optional[str]:
 
 
 def git_info() -> Dict[str, Any]:
-    status = _git("status", "--porcelain")
+    # "dirty" means tracked files differ from the commit. Untracked files are
+    # excluded: a run's own freshly written result files must not mark the
+    # code that produced them as uncommitted.
+    status = _git("status", "--porcelain", "--untracked-files=no")
     return {
         "sha": _git("rev-parse", "HEAD"),
         "branch": _git("rev-parse", "--abbrev-ref", "HEAD"),
