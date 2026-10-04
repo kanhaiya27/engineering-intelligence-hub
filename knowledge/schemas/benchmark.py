@@ -235,3 +235,103 @@ class BenchmarkTask(BaseModel):
         return self
 
     model_config = ConfigDict(use_enum_values=True)
+
+
+# ---------------------------------------------------------------------------
+# Retrieval ground truth (EIH-SWE schema v2 "R" fields, dataset spec §5)
+# ---------------------------------------------------------------------------
+#
+# Stored in a separate labels file (benchmark/data/retrieval_labels_v1.json),
+# keyed by task_id, so adding labels never rewrites the frozen task file.
+
+
+class RetrievalLabelStatus(str, Enum):
+    DRAFT = "draft"        # resolved against the pinned source, awaiting human check
+    VERIFIED = "verified"  # a named human reviewer confirmed every span
+    FLAGGED = "flagged"    # no valid evidence exists in the corpus; see notes
+
+
+class RequiredEvidence(BaseModel):
+    """One span of the pinned repository that a correct answer depends on."""
+
+    file: str = Field(description="Repo-relative POSIX path at the pinned commit")
+    start_line: int = Field(ge=1)
+    end_line: int = Field(ge=1)
+    symbol: Optional[str] = Field(
+        default=None, description="Qualified symbol or doc section heading"
+    )
+    why: str = Field(min_length=1, description="Why this span is needed")
+    span_sha256: str = Field(
+        description="sha256 of the span's text, so drift in the source is detectable"
+    )
+    chunk_ids: List[str] = Field(
+        default_factory=list,
+        description="Indexed chunks overlapping this span at label time",
+    )
+
+    @model_validator(mode="after")
+    def _ordered(self) -> "RequiredEvidence":
+        if self.end_line < self.start_line:
+            raise ValueError("end_line must be >= start_line")
+        if self.file.startswith("/") or "\\" in self.file or ".." in self.file.split("/"):
+            raise ValueError("file must be a repo-relative POSIX path")
+        return self
+
+
+class RetrievalGroundTruth(BaseModel):
+    """Retrieval labels for one task (relevant files, symbols and line spans)."""
+
+    task_id: str
+    split: str = Field(description="dev | val (test labels are created separately)")
+    repository: str
+    commit_sha: str = Field(pattern=r"^[0-9a-f]{40}$")
+    relevant_files: List[str]
+    alternative_files: List[str] = Field(
+        default_factory=list,
+        description="Near-identical variants (e.g. *_py310.py doc examples); "
+        "retrieving one counts the same as its primary file",
+    )
+    relevant_symbols: List[str] = Field(default_factory=list)
+    required_evidence: List[RequiredEvidence] = Field(default_factory=list)
+    graph_paths: List[str] = Field(
+        default_factory=list, description="Filled once the knowledge graph exists"
+    )
+    expected_citations: List[str] = Field(default_factory=list)
+    label_status: RetrievalLabelStatus
+    annotator: str
+    verified_by: Optional[str] = None
+    ground_truth_issue: Optional[str] = Field(
+        default=None,
+        description="Problem found in the task's existing ground_truth/evidence "
+        "while labelling; the task file itself is not changed",
+    )
+    notes: Optional[str] = None
+
+    @model_validator(mode="after")
+    def _consistent(self) -> "RetrievalGroundTruth":
+        if self.split == "test":
+            raise ValueError("test-split labels are created under the blind protocol only")
+        if self.label_status == RetrievalLabelStatus.FLAGGED:
+            if not self.notes:
+                raise ValueError("a flagged label must explain why in notes")
+        elif not self.required_evidence:
+            raise ValueError("draft/verified labels need at least one evidence span")
+        if self.label_status == RetrievalLabelStatus.VERIFIED and not self.verified_by:
+            raise ValueError("verified labels need verified_by")
+        evidence_files = {e.file for e in self.required_evidence}
+        if not evidence_files <= set(self.relevant_files):
+            raise ValueError("every evidence file must be listed in relevant_files")
+        return self
+
+    model_config = ConfigDict(use_enum_values=True)
+
+
+class RetrievalLabelSet(BaseModel):
+    """The labels file: provenance header plus one entry per task."""
+
+    labels_version: str
+    benchmark_version: str
+    created_at: str
+    label_protocol: str
+    repositories: Dict[str, str] = Field(description="repository -> pinned commit SHA")
+    labels: List[RetrievalGroundTruth]

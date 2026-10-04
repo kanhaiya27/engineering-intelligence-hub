@@ -103,6 +103,14 @@ Each task is one branch and one PR into `master`. Do them in order. Dates are ta
 
 ## 6. GitHub routine (both laptops)
 
+**Claude runs this for you** (CLAUDE.md "Session routine"). Open Claude in the project and say
+the start prompt; say "done for today" to finish. A guard hook (`scripts/git_sync_guard.py`)
+checks GitHub at every session start and **blocks code edits while the other laptop has merged
+a must-pull change you don't have** (a commit tagged `[must-pull]` or any shared-file change).
+After merging a PR, message the other person "merged <branch>" — and "MUST PULL" if it was tagged.
+
+The manual equivalent:
+
 Start of work:
 ```powershell
 cd C:\Projects\Majors\engineering-intelligence-hub      # Laptop B: her clone path
