@@ -27,6 +27,12 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 # Root of the project (two levels above this file: core/ → project root)
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
+# Every settings group reads the project .env file. Nested groups are built via
+# default_factory, so they do NOT inherit env_file from the top-level Settings:
+# without passing it to each group, every EIH_<GROUP>_* line in .env was silently
+# ignored (only real OS environment variables were read).
+ENV_FILE = str(PROJECT_ROOT / ".env")
+
 
 def _load_yaml_defaults() -> Dict:
     """Load YAML defaults from configs/default.yaml, silently ignoring missing file."""
@@ -48,7 +54,9 @@ class APISettings(BaseSettings):
         default=["*"], description="Allowed CORS origins"
     )
 
-    model_config = SettingsConfigDict(env_prefix="EIH_API_", extra="ignore")
+    model_config = SettingsConfigDict(
+        env_prefix="EIH_API_", env_file=ENV_FILE, env_file_encoding="utf-8", extra="ignore"
+    )
 
 
 class ModelSettings(BaseSettings):
@@ -70,7 +78,9 @@ class ModelSettings(BaseSettings):
     )
     max_retries: int = Field(default=3, description="Maximum retries on transient errors")
 
-    model_config = SettingsConfigDict(env_prefix="EIH_MODEL_", extra="ignore")
+    model_config = SettingsConfigDict(
+        env_prefix="EIH_MODEL_", env_file=ENV_FILE, env_file_encoding="utf-8", extra="ignore"
+    )
 
 
 class RetrievalSettings(BaseSettings):
@@ -101,7 +111,9 @@ class RetrievalSettings(BaseSettings):
         ),
     )
 
-    model_config = SettingsConfigDict(env_prefix="EIH_RETRIEVAL_", extra="ignore")
+    model_config = SettingsConfigDict(
+        env_prefix="EIH_RETRIEVAL_", env_file=ENV_FILE, env_file_encoding="utf-8", extra="ignore"
+    )
 
 
 class QualitySettings(BaseSettings):
@@ -121,7 +133,9 @@ class QualitySettings(BaseSettings):
         default=False, description="Execute generated tests as quality signal"
     )
 
-    model_config = SettingsConfigDict(env_prefix="EIH_QUALITY_", extra="ignore")
+    model_config = SettingsConfigDict(
+        env_prefix="EIH_QUALITY_", env_file=ENV_FILE, env_file_encoding="utf-8", extra="ignore"
+    )
 
 
 class SustainabilitySettings(BaseSettings):
@@ -168,7 +182,9 @@ class SustainabilitySettings(BaseSettings):
         default=0.60, description="Default output token cost USD/1M"
     )
 
-    model_config = SettingsConfigDict(env_prefix="EIH_SUSTAINABILITY_", extra="ignore")
+    model_config = SettingsConfigDict(
+        env_prefix="EIH_SUSTAINABILITY_", env_file=ENV_FILE, env_file_encoding="utf-8", extra="ignore"
+    )
 
 
 class ExperimentSettings(BaseSettings):
@@ -185,7 +201,9 @@ class ExperimentSettings(BaseSettings):
         default="eih", description="Prefix for auto-generated experiment IDs"
     )
 
-    model_config = SettingsConfigDict(env_prefix="EIH_EXPERIMENT_", extra="ignore")
+    model_config = SettingsConfigDict(
+        env_prefix="EIH_EXPERIMENT_", env_file=ENV_FILE, env_file_encoding="utf-8", extra="ignore"
+    )
 
 
 class LLMProviderSecrets(BaseSettings):
@@ -205,7 +223,7 @@ class LLMProviderSecrets(BaseSettings):
     )
 
     model_config = SettingsConfigDict(
-        env_file=str(PROJECT_ROOT / ".env"),
+        env_file=ENV_FILE,
         env_file_encoding="utf-8",
         extra="ignore",
     )
@@ -228,7 +246,9 @@ class VectorStoreSettings(BaseSettings):
         default=384, description="Embedding vector dimension"
     )
 
-    model_config = SettingsConfigDict(env_prefix="EIH_VECTOR_", extra="ignore")
+    model_config = SettingsConfigDict(
+        env_prefix="EIH_VECTOR_", env_file=ENV_FILE, env_file_encoding="utf-8", extra="ignore"
+    )
 
 
 class GraphStoreSettings(BaseSettings):
@@ -239,7 +259,9 @@ class GraphStoreSettings(BaseSettings):
     username: str = Field(default="neo4j", description="Graph store username")
     password: Optional[str] = Field(default=None, validation_alias="EIH_GRAPH_PASSWORD")
 
-    model_config = SettingsConfigDict(env_prefix="EIH_GRAPH_", extra="ignore")
+    model_config = SettingsConfigDict(
+        env_prefix="EIH_GRAPH_", env_file=ENV_FILE, env_file_encoding="utf-8", extra="ignore"
+    )
 
 
 class Settings(BaseSettings):
@@ -262,6 +284,13 @@ class Settings(BaseSettings):
     environment: str = Field(
         default="development",
         description="Runtime environment: development | testing | production",
+    )
+    machine_id: str = Field(
+        default="unknown",
+        description=(
+            "Which development machine produced a result (laptop-a | laptop-b), "
+            "from EIH_MACHINE_ID. Recorded in every result file's provenance."
+        ),
     )
     log_level: str = Field(default="INFO", description="Root log level")
     json_logs: bool = Field(default=False, description="Enable JSON-serialised logs")
@@ -286,7 +315,7 @@ class Settings(BaseSettings):
 
     model_config = SettingsConfigDict(
         env_prefix="EIH_",
-        env_file=str(PROJECT_ROOT / ".env"),
+        env_file=ENV_FILE,
         env_file_encoding="utf-8",
         extra="ignore",
     )

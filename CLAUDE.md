@@ -52,7 +52,8 @@ RAG → **C** + task-aware adaptive retrieval → **D** + knowledge graph → **
 quality gate & bounded escalation — reporting a quality/latency/energy/cost/CO₂e
 Pareto frontier. Headline metric: **CO₂e per *successful* task**.
 
-Key documents: `docs/PROJECT_REPORT.md` (status and methodology),
+Key documents: **`docs/WORK_PLAN.md` (who does what, phase status, task queues per
+laptop — check it before starting any task)**, `docs/PROJECT_REPORT.md` (status and methodology),
 `docs/MASTER_DATASET_SPECIFICATION.md` (datasets, evaluation modes R/Q/P),
 `M5_RESEARCH_VALIDITY_AUDIT.md`, `RESEARCH_NOTES.md` (decision log), `ROADMAP.md`.
 
@@ -89,6 +90,20 @@ local `.env`. Results from the two laptops are **not directly comparable** for
 energy unless the machine is controlled for — never mix them in one table
 without a `machine_id` column.
 
+### Local model ladder (Ollama) — pinned by digest
+
+Every result must cite the digest of the model that produced it. Recorded on Laptop A
+on 2026-10-04 with Ollama 0.35.1 (`curl http://localhost:11434/api/tags`):
+
+| Tier | Ollama tag | Params / quant | Size (bytes) | Digest (sha256) |
+|---|---|---|---|---|
+| small | `qwen2.5-coder:1.5b` | 1.5B Q4_K_M | 986,062,089 | `d7372fd828518a4d38b1eb196c673c31a85f2ed302b3d1e406c4c2d1b64a0668` |
+| medium | `qwen2.5-coder:3b` | 3.1B Q4_K_M | 1,929,912,626 | `f72c60cabf6237b07f6e632b2c48d533cef25eda2efbd34bed21c5e9c01e6225` |
+| large | `qwen2.5-coder:7b` | 7.6B Q4_K_M | 4,683,087,561 | `dae161e27b0e90dd1856c8bb3209201fd6736d8eb66298e75ed87571486f4364` |
+
+If `ollama pull` ever changes a digest, the model changed: results from different
+digests are not comparable. Laptop B must show the same digests before its runs count.
+
 ## Two-laptop setup
 
 - Code is shared through GitHub (private repo `kanhaiya27/engineering-intelligence-hub`).
@@ -117,10 +132,25 @@ uvicorn apps.api.main:app --reload --port 8000   # http://localhost:8000/docs
 · `sustainability/` energy, cost, carbon · `experiments/m5/` controlled evaluation ·
 `benchmark/` tasks + splits · `apps/api/` FastAPI · `scripts/` drivers · `docs/`.
 
-## Current state (2026-10-03)
+## Current state (2026-10-05)
 
-Phase-2 M1–M5 implemented; P0-1/P0-2 audit fixes applied; wave-1 corpus ingested.
-**No real System A–E comparison has been run yet.** Next: local model ladder
-(Ollama, Qwen2.5-Coder 1.5B/3B/7B) and routing wiring, P0-3 live calibration,
-EIH-SWE annotation. Deadline: experiments complete 25 Oct 2026; final 15 Nov 2026.
-See `PROGRESS-A.md`.
+Phase-2 M1–M5 implemented; P0-1/P0-2 audit fixes applied; wave-1 corpus ingested
+(48,046 chunks). Phase 1a done on Laptop A: `.env` settings bug fixed, NVML energy
+meter, run provenance, measured VRAM study (`experiments/results/phase1/machine_A/`).
+**No real System A–E comparison has been run yet.** Next per `docs/WORK_PLAN.md`:
+Laptop A → Phase 1b (OllamaProvider + routing); Laptop B → retrieval labels for the
+60 tasks, Qdrant healthcheck fix, knowledge-graph population. Deadlines: experiments
+complete 25 Oct 2026; final 15 Nov 2026.
+
+## Measurement rules learned the hard way (Laptop A, RTX 4050, driver 617.14)
+
+- Energy = NVML energy counter read **only at start and end** of a block. Polling GPU
+  power (or the counter) during a measurement inflates the reading by 9–100+ W.
+  Use `sustainability/energy/nvml_meter.py`; never write a new power-polling loop.
+- The counter updates in ~100 ms steps: energy for operations shorter than a few
+  seconds is not measurable per call — measure batches.
+- Idle power is ~3–6 W only while some process holds a CUDA context; with none it sits
+  at ~27–31 W (P0). Report **gross** energy as the headline; "net of idle" only with a
+  settled P8 baseline.
+- 7B (Q4_K_M) runs 82% on GPU at num_ctx 4096 (Ollama's own estimate), even alone.
+- The laptop throttles at 84–87 °C; long runs need cooldowns and logged temperatures.

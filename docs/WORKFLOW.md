@@ -3,6 +3,9 @@
 How two developers (Laptop A, Laptop B) share one private GitHub repository
 without overwriting each other's work or mixing up results.
 
+**Which tasks each laptop does, in what order, and the phase status:**
+[docs/WORK_PLAN.md](WORK_PLAN.md). This file covers the rules.
+
 ## 1. Branches
 
 | Branch | Purpose |
@@ -68,11 +71,12 @@ CO₂e from them are **not comparable** unless the machine is recorded.
   `EIH_MACHINE_ID=laptop-a` (or `laptop-b`).
 - Every results directory, report and table must state its `machine_id`, plus the
   GPU model, PyTorch/CUDA versions and carbon region.
-- Name result folders `experiments/results/<experiment>/<machine_id>/...`.
+- Name result folders `experiments/results/<study>/machine_A/` or `.../machine_B/`.
 - Never combine runs from both machines in one comparison without a
   `machine_id` column; a final A–E comparison runs all systems on **one** machine.
-- Until the experiment logger writes `machine_id` automatically (open TODO in
-  `PROGRESS-A.md`), add it to the run's manifest/notes by hand.
+  **Only Laptop A produces headline results**; Laptop B runs are development runs.
+- Every result file embeds `experiments.provenance.collect_provenance()`: machine_id,
+  GPU, torch/CUDA versions, Ollama model digests and the git SHA.
 
 ## 6. Data that is NOT in git
 

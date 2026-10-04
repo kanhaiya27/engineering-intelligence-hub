@@ -532,7 +532,9 @@ rebuttal to the objection "your system saved energy by giving worse answers".
 | Sustainability instrumentation (NVML energy, cost, region-aware CO₂e) | Complete |
 | Controlled evaluation framework (manifest, splits, metrics, failure taxonomy, Pareto engine) | Complete |
 | REST API (FastAPI) | Complete |
-| Automated test suite | **178 tests passing, 0 skipped** |
+| Automated test suite | **200 tests passing** (2026-10-05, Laptop A, Qdrant running) |
+| Local model ladder (Ollama, Qwen2.5-Coder 1.5B/3B/7B Q4_K_M, pinned by digest) | Installed and measured (§10.7); not yet wired into the pipeline |
+| Run provenance (machine_id, GPU, software versions, model digests, git SHA) | Complete (2026-10-05) |
 
 ### 10.2 Corpus ingestion (measured)
 
@@ -575,8 +577,14 @@ Using `cross-encoder/ms-marco-MiniLM-L-6-v2` on an NVIDIA RTX 4050 Laptop GPU:
 | Quantity | Value |
 |---|---|
 | Warm reranking latency | 6–10 ms |
-| Warm reranking energy (NVML-measured) | 0.07–0.13 J |
+| Warm reranking energy | ~~0.07–0.13 J~~ **withdrawn — see note** |
 | Model cold-start (excluded from per-query cost) | ~12.6 s, reported separately |
+
+> **Note (2026-10-05).** The reranking energy figure above was one instantaneous GPU power
+> reading multiplied by a 6–10 ms latency. Later measurement (§10.7) showed that on this
+> laptop the NVML energy counter updates in ~100 ms steps and that polling GPU power
+> perturbs the counter, so per-call energy for millisecond operations is not measurable
+> this way. The figure is withdrawn until it is re-measured over batches of reranking calls.
 
 Functional validation: on a query about Flask's debug configuration key, score
 fusion ranked an irrelevant installation instruction first; the cross-encoder
@@ -613,7 +621,44 @@ measurement derived from it is reported.
 Architecture diagram ingestion (OCR/vision); incident report loaders; AST-aware
 chunking for non-Python languages (currently sliding-window fallback); model routing
 (module implemented but not yet wired into the pipeline); multi-turn conversation;
-dashboard; Mode P patch-generation harness.
+dashboard; Mode P patch-generation harness; knowledge-graph population for the corpus
+(the graph code is complete but the graph is empty, so System D cannot yet differ from C).
+
+### 10.7 Local inference: VRAM, throughput and energy (measured, Laptop A)
+
+RTX 4050 Laptop GPU (6 GB), driver 617.14, Ollama 0.35.1, git `215a482`. Each warm call:
+~1,338 prompt tokens, 128 output tokens, num_ctx 4096, temperature 0, seed 42; n = 5,
+co-resident with BGE-small and the cross-encoder. Energy is GPU board only, from the NVML
+energy counter read at call start and end. Raw data and caveats:
+`experiments/results/phase1/machine_A/vram_study.{json,md}`.
+
+| Model (Q4_K_M) | Share on GPU | Device peak | Decode | Warm call | GPU energy per call |
+|---|---|---|---|---|---|
+| Qwen2.5-Coder 1.5B | 100% | 1,920 MiB | 131 tok/s | 3.5 s | 105.7 ± 10.3 J |
+| Qwen2.5-Coder 3B | 100% | 2,870 MiB | 76 tok/s | 4.4 s | 174.2 ± 10.7 J |
+| Qwen2.5-Coder 7B | **82%** (3,992 of 4,886 MiB) | 4,806 MiB | 22 tok/s | 9.0 s | 390.1 ± 8.9 J |
+
+Per output token, the 7B model costs about 3.7× the energy of the 1.5B model, which is the
+headroom task-aware routing can exploit if the smaller models meet the quality threshold.
+That conditional is the subject of RQ4 and has not yet been tested.
+
+**Measurement findings that affect the methodology.**
+1. *Observer effect.* On this driver, querying the GPU during a measurement changes the
+   energy the counter reports: over idle windows, reading power every 250 ms raised the
+   counter-derived power from 31 W to 40 W, and reading the counter itself every 50 ms
+   raised it to 130–137 W (`nvml_observer_probe.json`). The meter therefore reads the
+   counter only at the start and end of a measurement and never polls power. An earlier
+   run that polled power was discarded.
+2. *Resolution.* The counter advances in ~100 ms steps, so only multi-second windows are
+   measured per call; short operations must be measured in batches.
+3. *Idle baseline.* With no CUDA context held, this GPU idled at ~27–31 W at P0; with a
+   context held it settled to P8 at ~3–6 W. Gross energy is reported as the headline;
+   idle-subtracted figures are used only with a settled P8 baseline.
+4. *Thermals.* 3B and 7B runs reached 84–87 °C with software thermal slowdown and power
+   capping reported. Throughput was stable within runs; long runs log temperature.
+5. *Configuration defect.* A fifth silent defect of the §10.5 class was found: none of the
+   nested settings groups read the `.env` file, so TDP, carbon-region, quality and graph
+   settings placed there were ignored. Fixed with regression tests.
 
 ---
 
