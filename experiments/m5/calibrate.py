@@ -30,7 +30,7 @@ from experiments.m5.analysis import compute_system_summary
 from experiments.m5.manifest import ExperimentManifest, SystemID
 from experiments.m5.runner import M5BenchmarkRunner
 from generation.base import BaseLLMProvider
-from generation.providers.openai import MockLLMProvider
+from generation.providers.factory import build_provider
 
 logger = get_logger(__name__)
 
@@ -112,7 +112,7 @@ class CalibrationEvaluator:
         llm_provider: Optional[BaseLLMProvider] = None,
         output_dir: Optional[Path] = None,
     ) -> None:
-        self.llm_provider = llm_provider or MockLLMProvider()
+        self.llm_provider = llm_provider or build_provider()
         self.output_dir = output_dir or CALIBRATION_DIR
         self.output_dir.mkdir(parents=True, exist_ok=True)
 

@@ -50,7 +50,16 @@ def test_api_ingest_and_retrieve_file():
     assert "task_id" in ret_data
 
 
+@pytest.mark.integration
 def test_api_query_endpoint():
+    # End-to-end through the real default provider (local Ollama, 7B). Before the
+    # provider factory this silently used MockLLMProvider; it now exercises the
+    # real model, so it is skipped with a visible reason when Ollama is down.
+    from generation.providers.factory import build_provider
+
+    ollama = build_provider("ollama")
+    if not ollama.is_available():
+        pytest.skip(f"Ollama is not reachable at {ollama.base_url} (start the Ollama app)")
     query_payload = {
         "task_id": "api-task-001",
         "query": "Explain how routing works in Flask",
@@ -65,3 +74,6 @@ def test_api_query_endpoint():
     assert "energy_joules" in data
     assert "cost_usd" in data
     assert "co2e_grams" in data
+    assert data["model_id"] == "qwen2.5-coder:7b"
+    assert data["metadata"]["provider"] == "ollama"
+    assert data["metadata"]["generation_energy_tier"] == "MEASURED"

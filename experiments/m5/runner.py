@@ -26,7 +26,7 @@ from experiments.m5.manifest import ExperimentManifest, SystemID
 from experiments.m5.metrics import TrialResult, compute_trial_aggregates
 from experiments.m5.splits import load_or_create_splits
 from generation.base import BaseLLMProvider
-from generation.providers.openai import MockLLMProvider
+from generation.providers.factory import build_provider
 from generation.quality_rag import QualityAwareRAGPipeline
 from generation.rag import BaselineRAGPipeline
 from knowledge.schemas.benchmark import BenchmarkTask
@@ -62,20 +62,16 @@ class M5BenchmarkRunner:
         self,
         manifest: Optional[ExperimentManifest] = None,
         llm_provider: Optional[BaseLLMProvider] = None,
-        use_live_llm: bool = False,
+        provider_name: Optional[str] = None,
         raw_output_dir: Optional[Path] = None,
         processed_output_dir: Optional[Path] = None,
     ) -> None:
         self.manifest = manifest or ExperimentManifest.create_default()
         self._manifest_hash = self.manifest.compute_hash()
 
-        if llm_provider:
-            self.llm_provider = llm_provider
-        elif use_live_llm:
-            from generation.providers.openai import OpenAIProvider
-            self.llm_provider = OpenAIProvider()
-        else:
-            self.llm_provider = MockLLMProvider()
+        # No silent mock: unless a provider is passed or named explicitly
+        # ("mock" is for tests only), runs use the configured real provider.
+        self.llm_provider = llm_provider or build_provider(provider_name)
 
         self.raw_dir = raw_output_dir or M5_RAW_DIR
         self.processed_dir = processed_output_dir or M5_PROCESSED_DIR
@@ -398,7 +394,7 @@ class M5BenchmarkRunner:
             f"{len(tasks)} tasks x {len(target_systems)} systems x {trials_count} trials."
         )
 
-        llm = self.llm_provider or MockLLMProvider()
+        llm = self.llm_provider
 
         all_trial_results: Dict[str, List[TrialResult]] = {sys_id: [] for sys_id in target_systems}
 
@@ -463,6 +459,8 @@ if __name__ == "__main__":
     parser.add_argument("--split", type=str, default="dev", choices=["dev", "val", "test"], help="Dataset split")
     parser.add_argument("--trials", type=int, default=3, help="Number of trials per task")
     parser.add_argument("--manifest", type=str, default=None, help="Path to custom experiment manifest JSON")
+    parser.add_argument("--provider", type=str, default=None,
+                        help="LLM provider: ollama (default from settings) | openai | mock (tests only, never results)")
     args = parser.parse_args()
 
     custom_manifest = None
@@ -470,6 +468,6 @@ if __name__ == "__main__":
         with open(args.manifest, "r", encoding="utf-8") as f:
             custom_manifest = ExperimentManifest(**json.load(f))
 
-    benchmark_runner = M5BenchmarkRunner(manifest=custom_manifest)
+    benchmark_runner = M5BenchmarkRunner(manifest=custom_manifest, provider_name=args.provider)
     res = benchmark_runner.run_split(split_name=args.split, trials_count=args.trials)
     print(f"M5 benchmark run complete for split='{args.split}'. Evaluated {res['tasks_evaluated']} tasks.")

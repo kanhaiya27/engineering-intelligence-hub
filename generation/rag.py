@@ -16,8 +16,9 @@ from typing import List, Optional
 from core.config import settings
 from core.logging import get_logger
 from experiments.logger import ExperimentLogger
+from generation.accounting import account_generation
 from generation.base import BaseLLMProvider, GenerationRequest
-from generation.providers.openai import MockLLMProvider, OpenAIProvider
+from generation.providers.factory import build_provider
 from knowledge.schemas.tasks import (
     EngTaskRequest,
     EngTaskResponse,
@@ -66,12 +67,8 @@ class BaselineRAGPipeline:
             from retrieval.hybrid import HybridRetriever
             self.retriever = HybridRetriever()
 
-        if llm_provider:
-            self.llm_provider = llm_provider
-        elif settings.secrets.openai_api_key:
-            self.llm_provider = OpenAIProvider()
-        else:
-            self.llm_provider = MockLLMProvider()
+        # No silent mock: the default is the configured real provider (Ollama).
+        self.llm_provider = llm_provider or build_provider()
 
         self.model_id = model_id or settings.model.default_model_id
         # Estimators are built FROM SETTINGS, never bare-constructed: the bare
@@ -161,20 +158,9 @@ class BaselineRAGPipeline:
         total_latency_ms = (time.perf_counter() - start_time) * 1000.0
 
         # 5. Sustainability metrics computation
-        energy_est = self.energy_estimator.estimate(
-            latency_ms=gen_response.latency_ms,
-            input_tokens=gen_response.input_tokens,
-            output_tokens=gen_response.output_tokens,
-            model_id=self.model_id,
-            is_local_model=False,
-        )
-        cost_est = self.cost_estimator.estimate(
-            input_tokens=gen_response.input_tokens,
-            output_tokens=gen_response.output_tokens,
-            model_id=self.model_id,
-        )
-        carbon_est = self.carbon_estimator.estimate(
-            energy_estimate=energy_est,
+        account = account_generation(
+            gen_response, self.model_id,
+            self.energy_estimator, self.carbon_estimator, self.cost_estimator,
         )
 
         # 6. Response assembly
@@ -188,15 +174,19 @@ class BaselineRAGPipeline:
             input_tokens=gen_response.input_tokens,
             output_tokens=gen_response.output_tokens,
             latency_ms=round(total_latency_ms, 2),
-            energy_joules=energy_est.energy_joules,
-            cost_usd=cost_est.total_cost_usd,
-            co2e_grams=carbon_est.co2e_grams,
+            energy_joules=account.energy_joules,
+            cost_usd=account.cost_usd,
+            co2e_grams=account.co2e_grams,
             experiment_id=request.experiment_id,
             created_at=datetime.datetime.utcnow().isoformat(),
             metadata={
                 "retrieval_strategy": strategy.strategy_name if strategy else "none",
                 "retrieved_chunk_count": len(retrieval_result.chunks) if retrieval_result else 0,
                 "provider": self.llm_provider.provider_name,
+                "models_called": [gen_response.model_id or self.model_id],
+                "model_digest": (gen_response.extra or {}).get("model_digest"),
+                "context_check": (gen_response.extra or {}).get("context_check"),
+                **{f"generation_{k}": v for k, v in account.as_metadata().items()},
             },
         )
 
