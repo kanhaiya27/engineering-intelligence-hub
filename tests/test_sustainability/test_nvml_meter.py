@@ -36,6 +36,7 @@ class FakeNvml:
         return int((time.perf_counter() - self._t0) * self._power)  # mJ: mW * s
 
     def nvmlDeviceGetPowerUsage(self, h):
+        self.power_reads = getattr(self, "power_reads", 0) + 1
         return self._power
 
     def nvmlDeviceGetMemoryInfo(self, h):
@@ -113,7 +114,19 @@ def test_net_energy_subtracts_idle(fake):
     assert r.net_energy_j(None) is None
 
 
-def test_wait_for_gpu_idle_settles_on_stable_power(fake):
-    fake()
+def test_counter_measurement_never_polls_power(fake):
+    # Polling power perturbs the energy counter on the dev laptop's driver, so a
+    # counter-based measurement must not read power at all.
+    f = fake()
+    meter = nvml_meter.NvmlEnergyMeter(sample_interval_s=0.01)
+    with meter:
+        time.sleep(0.1)
+    assert getattr(f, "power_reads", 0) == 0
+    assert meter.result.counter_reads == 2
+
+
+def test_wait_for_gpu_idle_settles_on_idle_pstate(fake):
+    f = fake()
     info = nvml_meter.wait_for_gpu_idle(max_wait_s=2, window=3, interval_s=0.01)
-    assert info["settled"] is True and info["power_w"] == 20.0 and info["pstate"] == 8
+    assert info["settled"] is True and info["pstate"] == 8
+    assert getattr(f, "power_reads", 0) == 0

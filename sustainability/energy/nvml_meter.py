@@ -6,7 +6,7 @@ counter (`nvmlDeviceGetTotalEnergyConsumption`, millijoules), which integrates
 power inside the driver. This is a MEASURED quantity: no TDP proxy and no
 single-sample power x duration extrapolation.
 
-A background thread samples power, device memory, temperature, SM clock and
+A background thread samples device memory, temperature, SM clock and
 clock-throttle reasons while the block runs, so peak VRAM and thermal or power
 throttling are visible in the record of every measurement.
 
@@ -22,6 +22,16 @@ not included. Gross energy includes the GPU's idle draw for the duration; use
 
 Windows note: under the WDDM driver, NVML does not report per-process GPU memory,
 so memory figures are DEVICE-WIDE (all processes, including the desktop).
+
+OBSERVER EFFECT (measured on Laptop A, RTX 4050, driver 617.14, 2026-10-05):
+querying the GPU during a measurement changes the energy the counter reports.
+Over 3 s idle windows the counter read 31.9 W with no queries, 40.6 W while
+power was read every 250 ms, 43.5 W at 50 ms, and 137 W while the counter
+itself was read every 50 ms. Memory/temperature/clock/throttle queries every
+250 ms stayed within noise (33.7 W / 30.2 W). Therefore, while the counter is
+available this meter reads the counter ONLY at start and stop and NEVER polls
+power; the background sampler reads memory, temperature, SM clock and
+throttle reasons only, at 250 ms. See scripts/phase1_nvml_observer_probe.py.
 """
 
 from __future__ import annotations
@@ -71,6 +81,7 @@ class EnergyMeasurement:
     max_sm_clock_mhz: Optional[int]
     throttle_reasons_seen: List[str] = field(default_factory=list)
     n_samples: int = 0
+    counter_reads: int = 0
 
     def net_energy_j(self, idle_power_w: Optional[float]) -> Optional[float]:
         """Gross energy minus idle draw over the same duration (DERIVED)."""
@@ -102,7 +113,7 @@ class NvmlEnergyMeter:
         m = meter.result   # EnergyMeasurement
     """
 
-    def __init__(self, device_index: int = 0, sample_interval_s: float = 0.05) -> None:
+    def __init__(self, device_index: int = 0, sample_interval_s: float = 0.25) -> None:
         self.device_index = device_index
         self.sample_interval_s = sample_interval_s
         self.samples: List[GpuSample] = []
@@ -130,7 +141,9 @@ class NvmlEnergyMeter:
             return None
 
     def _sample(self) -> GpuSample:
-        power = self._read(pynvml.nvmlDeviceGetPowerUsage)
+        # Power is read ONLY when the energy counter is unavailable (fallback
+        # integration). Polling power perturbs the counter; see module docstring.
+        power = None if self._counter_ok else self._read(pynvml.nvmlDeviceGetPowerUsage)
         mem = self._read(pynvml.nvmlDeviceGetMemoryInfo)
         return GpuSample(
             t_s=time.perf_counter() - self._t0,
@@ -203,46 +216,46 @@ class NvmlEnergyMeter:
             max_sm_clock_mhz=max(clocks) if clocks else None,
             throttle_reasons_seen=throttles,
             n_samples=len(self.samples),
+            counter_reads=2 if method == "nvml_energy_counter" else 0,
         )
 
 
 def wait_for_gpu_idle(
-    max_wait_s: float = 60.0,
-    window: int = 8,
-    tolerance_w: float = 1.5,
+    max_wait_s: float = 90.0,
+    window: int = 6,
     interval_s: float = 0.5,
+    target_pstate: int = 8,
     device_index: int = 0,
 ) -> Dict[str, Any]:
     """
-    Block until GPU board power has settled, so an idle baseline is not taken
-    while the GPU is still in its high-performance state after a workload.
+    Block until the GPU has dropped to its idle performance state (P8 by default)
+    for `window` consecutive checks, so an idle baseline is not taken while the
+    GPU is still at P0 after a workload. Laptop GPUs can stay at P0 for many
+    seconds after work ends.
 
-    Settled = the last `window` power samples lie within `tolerance_w` of each
-    other. Laptop GPUs can stay at P0 for many seconds after work ends; an idle
-    window measured then reads several times the true idle draw.
+    Only the performance state is polled: polling power perturbs the energy
+    counter (see module docstring).
     """
     if not nvml_available():
-        return {"settled": False, "waited_s": 0.0, "power_w": None, "pstate": None, "reason": "no_nvml"}
+        return {"settled": False, "waited_s": 0.0, "pstate": None, "reason": "no_nvml"}
     h = pynvml.nvmlDeviceGetHandleByIndex(device_index)
-    powers: List[float] = []
+    states: List[Optional[int]] = []
     t0 = time.perf_counter()
     while time.perf_counter() - t0 < max_wait_s:
-        powers.append(pynvml.nvmlDeviceGetPowerUsage(h) / 1000.0)
-        recent = powers[-window:]
-        if len(recent) == window and max(recent) - min(recent) <= tolerance_w:
+        try:
+            states.append(pynvml.nvmlDeviceGetPerformanceState(h))
+        except Exception:  # noqa: BLE001
+            states.append(None)
+        recent = states[-window:]
+        if len(recent) == window and all(p is not None and p >= target_pstate for p in recent):
             break
         time.sleep(interval_s)
-    recent = powers[-window:]
-    try:
-        pstate = pynvml.nvmlDeviceGetPerformanceState(h)
-    except Exception:  # noqa: BLE001
-        pstate = None
+    recent = states[-window:]
     return {
-        "settled": len(recent) == window and max(recent) - min(recent) <= tolerance_w,
+        "settled": len(recent) == window and all(p is not None and p >= target_pstate for p in recent),
         "waited_s": round(time.perf_counter() - t0, 2),
-        "power_w": round(sum(recent) / len(recent), 2) if recent else None,
-        "power_spread_w": round(max(recent) - min(recent), 2) if recent else None,
-        "pstate": pstate,
+        "pstate": states[-1] if states else None,
+        "target_pstate": target_pstate,
     }
 
 

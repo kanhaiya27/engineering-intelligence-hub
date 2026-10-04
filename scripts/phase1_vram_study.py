@@ -285,8 +285,10 @@ def write_markdown(path: Path, data: Dict[str, Any]) -> None:
         f"{' (dirty)' if p['git']['dirty'] else ''}, recorded {p['recorded_at_utc']}.",
         "",
         f"Options: `{json.dumps(data['config']['options'])}`. Cold n={data['config']['cold']}, "
-        f"warm n={data['config']['warm']}. Energy = NVML energy counter (MEASURED, GPU board only); "
-        "net = gross − idle power × duration (DERIVED). VRAM = device-wide (WDDM).",
+        f"warm n={data['config']['warm']}. Energy = NVML energy counter read only at call start and end "
+        "(MEASURED, GPU board only; power is never polled during a measurement because it perturbs the "
+        "counter on this driver, see nvml_observer_probe.json). Net = gross − idle power × duration "
+        "(DERIVED; idle taken at P8 after settling). VRAM = device-wide (WDDM).",
         "",
         "| Model | Condition | On GPU | Ollama VRAM MiB | Peak device MiB | Cold s | Warm s | Decode tok/s | Prefill tok/s | Warm J gross | Warm J net | J/out-token | Max °C | Throttle |",
         "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|",
