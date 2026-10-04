@@ -130,13 +130,31 @@ def test_schema_rejects_reversed_span():
         _evidence(start_line=5, end_line=4)
 
 
+# --- Checkout location -------------------------------------------------------------
+
+
+def test_repo_dir_accepts_ingest_corpus_and_owner_layouts(tmp_path, monkeypatch):
+    monkeypatch.setattr(rl, "CORPUS_CACHE", tmp_path)
+    # Neither exists: default to the ingest_corpus layout (.corpus_cache/<repo_id>).
+    assert rl.repo_dir("pallets/flask") == tmp_path / "flask"
+    (tmp_path / "pallets__flask" / ".git").mkdir(parents=True)
+    assert rl.repo_dir("pallets/flask") == tmp_path / "pallets__flask"
+    # Both exist: the ingest_corpus layout wins.
+    (tmp_path / "flask" / ".git").mkdir(parents=True)
+    assert rl.repo_dir("pallets/flask") == tmp_path / "flask"
+
+
+def test_checkout_sha_is_none_without_a_checkout(tmp_path, monkeypatch):
+    monkeypatch.setattr(rl, "CORPUS_CACHE", tmp_path)
+    assert rl.checkout_sha("pallets/flask") is None
+
+
 # --- Rebuild (integration) ---------------------------------------------------------
 
 
 def _sources_available() -> bool:
     for repo, sha in rl.PINNED_COMMITS.items():
-        head = rl.repo_dir(repo) / ".git" / "HEAD"
-        if not head.is_file() or head.read_text().strip() != sha:
+        if rl.checkout_sha(repo) != sha:
             return False
     try:
         import urllib.request

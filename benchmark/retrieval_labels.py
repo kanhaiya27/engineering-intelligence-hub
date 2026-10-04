@@ -24,12 +24,15 @@ import ast
 import hashlib
 import json
 import re
+import subprocess
 import sys
 import urllib.request
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, List, Optional, Sequence, Tuple
+
+import yaml
 
 from knowledge.schemas.benchmark import (
     RequiredEvidence,
@@ -43,6 +46,7 @@ TASKS_PATH = DATA_DIR / "meib_phase1_tasks.json"
 SPLITS_PATH = DATA_DIR / "splits_v1.0.json"
 LABELS_PATH = DATA_DIR / "retrieval_labels_v1.json"
 CORPUS_CACHE = REPO_ROOT / ".corpus_cache"
+REGISTRY_PATH = REPO_ROOT / "datasets" / "registry.yaml"
 
 LABELS_VERSION = "1.0-draft"
 ANNOTATOR = "laptop-b (Claude Opus 5.5 draft; requires human verification)"
@@ -382,8 +386,43 @@ class LabelError(RuntimeError):
     pass
 
 
+def _registry_repo_id(repository: str) -> Optional[str]:
+    """The ``repo_id`` that scripts/ingest_corpus.py uses for ``owner/name``."""
+    owner, _, name = repository.partition("/")
+    with open(REGISTRY_PATH, encoding="utf-8") as f:
+        entries = yaml.safe_load(f).get("repositories", [])
+    for e in entries:
+        if e.get("owner") == owner and e.get("name") == name:
+            return e["repo_id"]
+    return None
+
+
 def repo_dir(repository: str) -> Path:
-    return CORPUS_CACHE / repository.replace("/", "__")
+    """Checkout of ``owner/name`` under .corpus_cache/.
+
+    Accepts the ingest_corpus layout (``.corpus_cache/<repo_id>``, e.g. ``flask``)
+    and the older ``owner__name`` layout; returns the first that exists, else the
+    ingest_corpus path.
+    """
+    repo_id = _registry_repo_id(repository)
+    candidates = [CORPUS_CACHE / repo_id] if repo_id else []
+    candidates.append(CORPUS_CACHE / repository.replace("/", "__"))
+    for path in candidates:
+        if (path / ".git").exists():
+            return path
+    return candidates[0]
+
+
+def checkout_sha(repository: str) -> Optional[str]:
+    """Commit checked out in ``repo_dir(repository)``, or None if unavailable."""
+    try:
+        res = subprocess.run(
+            ["git", "-C", str(repo_dir(repository)), "rev-parse", "HEAD"],
+            capture_output=True, text=True, timeout=10,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return None
+    return res.stdout.strip() if res.returncode == 0 else None
 
 
 def _read(repository: str, rel: str) -> List[str]:
@@ -565,8 +604,7 @@ def build() -> RetrievalLabelSet:
         raise LabelError(f"spec/task mismatch: missing={sorted(missing)} extra={sorted(extra)}")
 
     for repository, sha in PINNED_COMMITS.items():
-        head = (repo_dir(repository) / ".git" / "HEAD")
-        if not head.is_file() or head.read_text().strip() != sha:
+        if checkout_sha(repository) != sha:
             raise LabelError(
                 f"{repository} must be checked out at {sha} in {repo_dir(repository)} "
                 "(see docs/RETRIEVAL_LABELS.md)"
