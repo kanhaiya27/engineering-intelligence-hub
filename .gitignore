@@ -176,3 +176,6 @@ Thumbs.db
 # --- Build artifacts ---
 *.whl
 *.tar.gz
+
+# --- Claude Code personal settings (shared hooks live in .claude/settings.json) ---
+.claude/settings.local.json
