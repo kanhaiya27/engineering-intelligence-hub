@@ -27,11 +27,12 @@ OBSERVER EFFECT (measured on Laptop A, RTX 4050, driver 617.14, 2026-10-05):
 querying the GPU during a measurement changes the energy the counter reports.
 Over 3 s idle windows the counter read 31.9 W with no queries, 40.6 W while
 power was read every 250 ms, 43.5 W at 50 ms, and 137 W while the counter
-itself was read every 50 ms. Memory/temperature/clock/throttle queries every
-250 ms stayed within noise (33.7 W / 30.2 W). Therefore, while the counter is
-available this meter reads the counter ONLY at start and stop and NEVER polls
-power; the background sampler reads memory, temperature, SM clock and
-throttle reasons only, at 250 ms. See scripts/phase1_nvml_observer_probe.py.
+itself was read every 50 ms. Memory reads every 250 ms were within noise
+(27.8 vs 27.3 W); temperature or SM-clock reads every 250 ms added ~2.5-3 W,
+and all three every 1 s stayed within noise. Therefore, while the counter is
+available this meter reads the counter ONLY at start and stop, NEVER polls
+power, reads memory every 250 ms, and reads temperature, SM clock and
+throttle reasons once per second. See scripts/phase1_nvml_observer_probe.py.
 """
 
 from __future__ import annotations
@@ -113,9 +114,11 @@ class NvmlEnergyMeter:
         m = meter.result   # EnergyMeasurement
     """
 
-    def __init__(self, device_index: int = 0, sample_interval_s: float = 0.25) -> None:
+    def __init__(self, device_index: int = 0, sample_interval_s: float = 0.25, thermal_every: int = 4) -> None:
         self.device_index = device_index
         self.sample_interval_s = sample_interval_s
+        self.thermal_every = max(1, thermal_every)
+        self._tick = 0
         self.samples: List[GpuSample] = []
         self.result: Optional[EnergyMeasurement] = None
         self._handle = None
@@ -145,13 +148,17 @@ class NvmlEnergyMeter:
         # integration). Polling power perturbs the counter; see module docstring.
         power = None if self._counter_ok else self._read(pynvml.nvmlDeviceGetPowerUsage)
         mem = self._read(pynvml.nvmlDeviceGetMemoryInfo)
+        # Temperature / clock / throttle queries add ~2-3 W at 250 ms on the dev
+        # laptop, so they are read only every `thermal_every` samples (~1 s).
+        thermal = self._tick % self.thermal_every == 0
+        self._tick += 1
         return GpuSample(
             t_s=time.perf_counter() - self._t0,
             power_w=power / 1000.0 if power is not None else None,
             mem_used_mib=(mem.used >> 20) if mem is not None else None,
-            temp_c=self._read(pynvml.nvmlDeviceGetTemperature, pynvml.NVML_TEMPERATURE_GPU),
-            sm_clock_mhz=self._read(pynvml.nvmlDeviceGetClockInfo, pynvml.NVML_CLOCK_SM),
-            throttle_mask=self._read(pynvml.nvmlDeviceGetCurrentClocksThrottleReasons),
+            temp_c=self._read(pynvml.nvmlDeviceGetTemperature, pynvml.NVML_TEMPERATURE_GPU) if thermal else None,
+            sm_clock_mhz=self._read(pynvml.nvmlDeviceGetClockInfo, pynvml.NVML_CLOCK_SM) if thermal else None,
+            throttle_mask=self._read(pynvml.nvmlDeviceGetCurrentClocksThrottleReasons) if thermal else None,
         )
 
     def _run(self) -> None:
