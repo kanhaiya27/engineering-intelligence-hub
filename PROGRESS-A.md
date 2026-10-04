@@ -8,6 +8,48 @@ measured (with numbers only if actually measured), what is blocked.
 
 ---
 
+## 2026-10-06 — Phase 1b (steps 1–5 of 8): OllamaProvider, routing, escalation
+
+Branch `feat/local-inference-routing` (task A2 in `docs/WORK_PLAN.md`).
+
+**Done**
+- **Decision:** Systems A–E use a fixed `qwen2.5-coder:7b`, all layers on the GPU;
+  routing (1.5B→3B→7B) is an added system compared against it (RQ4).
+- 7B option A measured (`vram_study_7b_forced_gpu.json`): forcing all layers onto
+  the GPU fits and is faster and cheaper (numbers below).
+- `OllamaProvider`: temperature 0 + seed 42, exact tokens, cold start measured
+  separately, NVML energy per call (MEASURED), cost 0 (DERIVED), model digest,
+  and it **refuses prompts that would be silently truncated** (exact Qwen
+  tokenizer count matched Ollama 702 = 702).
+- **Silent defects fixed:** pipelines and M5 runners fell back to `MockLLMProvider`
+  when no OpenAI key was set (the final-test CLI would have run on the mock); the
+  manifest's escalation limit never reached the pipeline; the `.env` escalation
+  value was never read; `configs/default.yaml` is not loaded at runtime (labelled).
+- `TierRouter` wired into `QualityAwareRAGPipeline`; tests assert the `model`
+  field of every HTTP request actually sent. Escalation limit 2 → 3 (manifest hash
+  `fcdbfa1b825d11e4` → `aa733133d041f11c`).
+- Tests: **229 passed** (incl. live Ollama tests on this laptop).
+
+**Measured** (Laptop A, warm n=5, ~1,338 prompt + 128 output tokens, num_ctx 4096)
+- 7B default placement (82% on GPU): 22.1 tok/s, 390.1 ± 8.9 J per call
+- 7B `num_gpu=999` (100% on GPU): **38.1 tok/s, 306.8 ± 11.8 J per call**, device
+  peak 5,342 MiB of 6,141 with the encoders resident; reached 89 °C with hw thermal slowdown
+
+**Must pull (Laptop B)**
+- Defaults changed: provider `ollama`, model `qwen2.5-coder:7b`, temperature 0.
+- **Edit your `.env`: `EIH_QUALITY_MAX_ESCALATION_ATTEMPTS=3`** (yours says 2, and
+  `.env` values are now actually applied).
+- Runs without an explicit provider now use the real Ollama; `--provider mock` only for tests.
+
+**Next**
+- [ ] Step 6: 20K-token long-context probe → set the context budget (needed before
+      any real run: the final escalation rung can exceed num_ctx 4096) — STOP point
+- [ ] Step 7: `scripts/job_queue.py`; Step 8: PR
+- [ ] A3: correct and re-freeze the manifest (stale: gpt-4o-mini, temp 0.1, UK carbon,
+      60 W, OpenAI prices, 2 repos)
+
+---
+
 ## 2026-10-05 — Phase 1a: local inference audit, energy meter, VRAM study
 
 Branch `feat/local-inference` (task A1 in `docs/WORK_PLAN.md`).
