@@ -46,10 +46,15 @@ why), `graph_paths`, `expected_citations`. They live in a separate file keyed by
 
 Rebuild or verify (needs `.corpus_cache/` checkouts and Qdrant running):
 
+The checkouts are found at `.corpus_cache/<repo_id>` (`flask`, `fastapi`, the
+layout `scripts/ingest_corpus.py` creates) or `.corpus_cache/<owner>__<name>`.
+Whichever is used, `git rev-parse HEAD` there must equal the pinned commit. If
+the ingestion clones are already at those commits, nothing needs fetching.
+
 ```powershell
-# one-time: fetch the pinned commits (source only, ~2,500 files)
-git init .corpus_cache/pallets__flask;  git -C .corpus_cache/pallets__flask fetch --depth 1 https://github.com/pallets/flask.git c12a5d874c5a014495eb2db8a73f40037bc813ac;  git -C .corpus_cache/pallets__flask checkout FETCH_HEAD
-git init .corpus_cache/fastapi__fastapi; git -C .corpus_cache/fastapi__fastapi fetch --depth 1 https://github.com/fastapi/fastapi.git 1c3e6918750ccb3f20ea260e9a4238ce2c0e5f63; git -C .corpus_cache/fastapi__fastapi checkout FETCH_HEAD
+# one-time, only if .corpus_cache/ lacks the pinned commits (source only, ~2,500 files)
+git init .corpus_cache/flask;   git -C .corpus_cache/flask fetch --depth 1 https://github.com/pallets/flask.git c12a5d874c5a014495eb2db8a73f40037bc813ac;   git -C .corpus_cache/flask checkout FETCH_HEAD
+git init .corpus_cache/fastapi; git -C .corpus_cache/fastapi fetch --depth 1 https://github.com/fastapi/fastapi.git 1c3e6918750ccb3f20ea260e9a4238ce2c0e5f63; git -C .corpus_cache/fastapi checkout FETCH_HEAD
 
 python -m benchmark.retrieval_labels --check   # labels file reproducible?
 python -m benchmark.retrieval_labels           # rebuild after editing SPECS

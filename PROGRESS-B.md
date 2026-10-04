@@ -19,6 +19,31 @@ measured (with numbers only if actually measured), what is blocked.
 
 ---
 
+## 2026-10-05 (later) — Pulled Phase 1b; labels checkout-path fix
+
+**Done**
+- Pulled master with A's `feat/local-inference-routing` (PR #8, must-pull) and B2 (PR #5).
+  `.env` already had `EIH_QUALITY_MAX_ESCALATION_ATTEMPTS=3`; its keys match `.env.example`.
+- `fix/retrieval-labels-repo-dir` (A's request): `benchmark/retrieval_labels.repo_dir()`
+  now finds the checkout at `.corpus_cache/<repo_id>` (the `scripts/ingest_corpus.py`
+  layout, repo_id from `datasets/registry.yaml`) or the old `.corpus_cache/<owner>__<name>`.
+  The pinned-commit check uses `git rev-parse HEAD` instead of reading `.git/HEAD`, so
+  normal clones (HEAD = branch ref) also pass. On laptop-b the clones were renamed to
+  `flask` / `fastapi`.
+
+**Measured** (laptop-b)
+- Label tests: 20 passed, 0 skipped with the old layout and with the ingest_corpus layout;
+  `python -m benchmark.retrieval_labels --check`: labels file up to date.
+- Full suite: 256 passed.
+- Ollama 0.35.1; `qwen2.5-coder` 1.5b / 3b / 7b digests and sizes identical to the
+  CLAUDE.md pins (d7372fd8…, f72c60ca…, dae161e2…).
+
+**Next**
+- [ ] WORK_PLAN B3: knowledge-graph population.
+- [ ] Human verification of the 35 draft labels.
+
+---
+
 ## 2026-10-05 — B1: retrieval labels for dev + val (draft)
 
 **Heads-up (shared file):** `knowledge/schemas/benchmark.py`. Adds new models
