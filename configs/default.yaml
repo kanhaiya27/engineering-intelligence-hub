@@ -39,7 +39,7 @@ retrieval:
 
 quality:
   default_quality_threshold: 0.75
-  max_escalation_attempts: 2
+  max_escalation_attempts: 3
   enable_code_compilation_check: false
   enable_test_execution: false
 

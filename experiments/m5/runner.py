@@ -37,6 +37,7 @@ from knowledge.schemas.tasks import (
 )
 from retrieval.adaptive import ExperimentMode
 from retrieval.strategies import RetrievalMode, RetrievalStrategyConfig
+from verification.config import VerificationConfig
 from verification.evaluators import (
     CitationGroundingEvaluator,
     EvidenceConsistencyEvaluator,
@@ -105,7 +106,14 @@ class M5BenchmarkRunner:
 
     def _get_pipeline_quality(self, llm: BaseLLMProvider) -> QualityAwareRAGPipeline:
         if self._pipe_quality is None or self._pipe_quality.llm_provider != llm:
-            self._pipe_quality = QualityAwareRAGPipeline(llm_provider=llm)
+            # The manifest's System E escalation limit must reach the pipeline;
+            # previously it was never passed, so every run used the built-in 2
+            # whatever the manifest (or a calibration candidate) said.
+            max_esc = self.manifest.systems[SystemID.SYSTEM_E.value].max_escalations
+            self._pipe_quality = QualityAwareRAGPipeline(
+                llm_provider=llm,
+                verification_config=VerificationConfig(max_escalation_attempts=max_esc),
+            )
         return self._pipe_quality
 
     def _execute_system(

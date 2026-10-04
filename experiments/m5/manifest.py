@@ -161,7 +161,7 @@ class ExperimentManifest(BaseModel):
                 graph_context_enabled=True,
                 quality_gate_enabled=True,
                 escalation_enabled=True,
-                max_escalations=2,
+                max_escalations=3,
             ),
         }
         return cls(systems=systems)

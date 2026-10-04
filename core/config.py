@@ -129,7 +129,8 @@ class QualitySettings(BaseSettings):
         description="Default minimum acceptable quality score (0.0–1.0)",
     )
     max_escalation_attempts: int = Field(
-        default=2, description="Maximum escalation rounds before failing"
+        default=3,
+        description="Maximum escalation rounds before refusing (3 = reranking rung reachable)",
     )
     enable_code_compilation_check: bool = Field(
         default=False, description="Run compilation checks on generated code"
