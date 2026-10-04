@@ -70,7 +70,7 @@ testpaths = ["tests"]
 asyncio_mode = "auto"
 log_cli = true
 log_cli_level = "INFO"
-addopts = "--tb=short -q"
+addopts = "--tb=short -q -rs"
 markers = [
   "integration: exercises a real model, database, or network service; skips when unavailable",
 ]
