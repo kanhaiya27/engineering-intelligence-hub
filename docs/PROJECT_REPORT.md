@@ -602,6 +602,14 @@ loading to a single query (762 J instead of ~0.09 J, an error of roughly four or
 of magnitude) — was identified and corrected by separating cold-start from
 per-query cost.
 
+**Identified 2026-10-04, not yet corrected (open).** A further defect of the same class:
+escalated retrieval strategies (`<name>_esc1`, `_esc2_graph`, `_esc_max`) are passed to
+the policy by name only, are not in the strategy registry, and silently fall back to
+`hybrid` (top_k 7, no graph, no reranking). The escalation ladder therefore never
+strengthens retrieval, while attempt telemetry records the escalated name. Verified by
+execution on laptop-b; details in `docs/API_CONTRACT.md` §8 (F1). No System E result
+may be reported until it is fixed.
+
 **Methodological observation.** Every one of these defects was silent: the system
 produced output, tests passed, and results appeared reasonable. This supports a
 general argument for the evaluation discipline adopted here — that a declared
@@ -618,6 +626,10 @@ dashboard; Mode P patch-generation harness.
 ---
 
 ## 11. Phased Work Plan
+
+> **Superseded for scheduling by `docs/PROJECT_PLAN.md` (2026-10-05)**, which maps these
+> phases onto the two development laptops and the 25 Oct / 15 Nov deadlines. The
+> phase content below is unchanged.
 
 Sequential phases with explicit ownership. Parallelism is limited to genuinely
 independent tracks, since concurrent work on coupled subsystems has repeatedly

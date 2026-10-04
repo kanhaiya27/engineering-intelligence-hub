@@ -115,12 +115,18 @@ uvicorn apps.api.main:app --reload --port 8000   # http://localhost:8000/docs
 `intelligence/` task classifier · `generation/` LLM providers, RAG pipelines ·
 `verification/` quality gate + escalation · `routing/` model routing (not yet wired)
 · `sustainability/` energy, cost, carbon · `experiments/m5/` controlled evaluation ·
-`benchmark/` tasks + splits · `apps/api/` FastAPI · `scripts/` drivers · `docs/`.
+`benchmark/` tasks + splits · `apps/api/` FastAPI (`apps/api/contract/` = frozen v1 trace contract) ·
+`web/` public web platform frontend · `scripts/` drivers · `docs/`.
 
-## Current state (2026-10-03)
+## Current state (2026-10-05)
 
-Phase-2 M1–M5 implemented; P0-1/P0-2 audit fixes applied; wave-1 corpus ingested.
-**No real System A–E comparison has been run yet.** Next: local model ladder
-(Ollama, Qwen2.5-Coder 1.5B/3B/7B) and routing wiring, P0-3 live calibration,
-EIH-SWE annotation. Deadline: experiments complete 25 Oct 2026; final 15 Nov 2026.
-See `PROGRESS-A.md`.
+Phase-2 M1–M5 code complete; P0-1/P0-2 audit fixes applied; wave-1 corpus ingested
+(48,046 chunks); both laptops set up. **No real System A–E comparison has been run
+yet.** Open blocker **F1**: escalated retrieval strategies silently fall back to
+`hybrid`, so System E's escalation is inert (verified by execution, see
+`docs/API_CONTRACT.md` §8). Knowledge graph not yet populated (System D = C until it is).
+API contract v1 (`apps/api/contract/`, `docs/API_CONTRACT.md`) is the frozen interface
+between the pipeline and the public web platform (`apps/api/` + `web/`).
+
+**Status, remaining work and who does what: `docs/PROJECT_PLAN.md`.**
+Deadlines: experiments complete 25 Oct 2026; final 15 Nov 2026.

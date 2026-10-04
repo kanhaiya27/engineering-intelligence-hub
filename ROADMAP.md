@@ -38,12 +38,17 @@ Engineering Intelligence Hub — Six-Month Development Roadmap
 
 ## Milestone 3 — Major Implementation + Experiments (25 October 2026)
 
-### Phase-2 Goals (In Progress)
+> **Current status and the two-laptop work split live in [docs/PROJECT_PLAN.md](docs/PROJECT_PLAN.md)** (updated 2026-10-05).
+
+### Phase-2 Goals (code complete; experiments not yet run)
 
 - [x] **Task Intelligence (M1)** — `RuleBasedTaskClassifier`, `HeuristicComplexityAnalyzer`, and `HeuristicCriticalityAnalyzer`
 - [x] **Knowledge Graph Foundation (M2)** — Concrete `Neo4jGraphStore`, `InMemoryGraphStore`, `ASTGraphExtractor`, and `EngineeringGraphBuilder`
 - [x] **Adaptive Retrieval (M3)** — Dynamic retrieval strategy selection driven by `TaskClassification`, `AdaptiveRetrievalPolicy`, `GraphAugmentedRetriever`, `AdaptiveRetrievalPipeline`
 - [x] **Controlled Evaluation Framework (M5)** — Multi-system benchmark runner, frozen manifest, deterministic stratified splits (Dev/Val/Test), 3-tier metrics, failure taxonomy, and Pareto engine for Baselines A, B, and Systems C, D, E
+- [ ] **Fix F1: escalation strategies silently fall back to `hybrid`** (verified 2026-10-04; `docs/API_CONTRACT.md` §8). Blocks any System E result. *Laptop A, A1*
+- [ ] **Local model ladder** (Ollama + Qwen2.5-Coder 1.5B/3B/7B-Q4) and routing wired. *Laptop A, A4–A5*
+- [ ] **P0-3 calibration** with a live local model, manifest re-frozen. *Laptop A, A8*
 - [ ] **Full Test-Set Evaluation Execution** — Run final held-out test evaluation after dataset expansion / policy tuning
 - [ ] **Baselines C, D, E** — Comparative reporting across full benchmark splits
 - [ ] **Ablation studies** — Stepwise ablation deltas Delta(A->B), Delta(B->C), Delta(C->D), Delta(D->E)
@@ -53,15 +58,16 @@ Engineering Intelligence Hub — Six-Month Development Roadmap
 
 ### Phase-3 Goals
 
-- [ ] **Graph store** — Neo4j integration (`Neo4jGraphStore`)
-- [ ] **Graph-augmented retrieval** — Architecture Q&A, dependency analysis
-- [ ] **Knowledge graph population** — Repository entity extraction
+- [x] **Graph store** — Neo4j integration (`Neo4jGraphStore`)
+- [x] **Graph-augmented retrieval** — `GraphAugmentedRetriever` (code; needs a populated graph)
+- [ ] **Knowledge graph population** — 6 ingested repos into Neo4j; graph is empty today, so System D = C. *Laptop B, B4*
 - [ ] **Code evaluator** — Compilation + test execution checks
 
 ---
 
 ## Milestone 4 — Final Submission (15 November 2026)
 
+- [ ] **Public web platform**: ask a question, view the full pipeline trace (contract v1, `docs/API_CONTRACT.md`). *Laptop B, B3/B7/B11*
 - [ ] Final paper with complete experiments and results
 - [ ] Final code freeze with reproducibility documentation
 - [ ] Final benchmark (hidden test set frozen)
@@ -76,4 +82,4 @@ Engineering Intelligence Hub — Six-Month Development Roadmap
 - NVIDIA NeMo Agent Toolkit integration for agent orchestration
 - Reinforcement-learning model router
 - Online learning for quality threshold calibration
-- Dashboard (Phase-3)
+- Real-time monitoring dashboard (the public web platform is in Milestone 4)

@@ -37,10 +37,14 @@ them, but only through a PR the owner approves.
 |---|---|
 | **A** (Laptop A, Avaneesh) | `routing/` `generation/` `verification/` `experiments/` `retrieval/` `sustainability/` |
 | **B** (Laptop B, teammate) | `ingestion/` `knowledge/graph/` `benchmark/` `apps/` `web/` `docs/` |
-| **Shared** (both review) | `core/` `configs/` `intelligence/` `knowledge/schemas/` `knowledge/vector/` `evaluation/` `agents/` `dashboard/` `datasets/` `scripts/` `tests/`, root files |
+| **Shared** (both review) | `core/` `configs/` `intelligence/` `knowledge/schemas/` `knowledge/vector/` `evaluation/` `agents/` `dashboard/` `datasets/` `scripts/` `tests/`, root files, **`apps/api/contract/`** (frozen API contract; see `docs/API_CONTRACT.md`) |
 
 Changes to shared schemas (`knowledge/schemas/`) or `core/config.py` break the
 other person's code most easily — announce them before merging.
+
+Collision-proof conventions (own test folders, one open PR at a time on
+`core/config.py`/`configs/`, per-annotator benchmark batch files, results under
+`<machine_id>/`) and the current work split: `docs/PROJECT_PLAN.md` §3–§4.
 
 ## 3. Commits
 

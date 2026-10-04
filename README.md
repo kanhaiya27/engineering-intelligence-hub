@@ -94,9 +94,11 @@ engineering-intelligence-hub/
 |---|---|---|---|
 | **Phase-0 (Foundation)** | Repository structure, schemas, interfaces, tests | August 2026 | ✅ Complete |
 | **Phase-1 (Core Baseline RAG)** | Repository ingestion, GPU embeddings, Qdrant, hybrid retrieval, baseline RAG, 60-task benchmark, evaluation suite | August 2026 | ✅ Complete |
-| **Phase-2 (Adaptive RAG)** | Task classification, adaptive retrieval routing, model routing, quality gate | October 2026 | ⏳ Planned |
-| **Phase-3 (Experiments)** | Baselines A–F, ablations, Pareto analysis | October 2026 | ⏳ Planned |
-| **Phase-4 (Graph + Agents)** | Knowledge graph, agentic orchestration | November 2026 | ⏳ Planned |
+| **Phase-2 (Adaptive RAG)** | Task classification, KG code, adaptive retrieval, quality gate, M5 evaluation framework | October 2026 | ✅ Code complete (escalation defect F1 open) |
+| **Milestone 3 (Experiments)** | Local model ladder, routing, KG population, Mode R + Mode Q runs of Systems A–E | 25 October 2026 | ⏳ In progress (no real A–E run yet) |
+| **Milestone 4 (Final)** | Held-out test, Pareto + ablations, EIH-Fresh, paper, public web platform | 15 November 2026 | ⏳ Planned |
+
+**Current status, remaining work and the two-laptop split: [docs/PROJECT_PLAN.md](docs/PROJECT_PLAN.md).**
 
 See [ROADMAP.md](ROADMAP.md) for detailed milestone breakdown.
 
@@ -126,7 +128,7 @@ docker-compose up -d qdrant
 # 3. Ingest a repository (or single file via REST API)
 # REST API: POST /ingest/repository or POST /ingest/file
 
-# 4. Run test suite (90/90 tests passing)
+# 4. Run test suite (178 tests on master; 2 need Docker Qdrant)
 pytest tests/ -v
 
 # 5. Start API server
@@ -168,7 +170,7 @@ uvicorn apps.api.main:app --reload --port 8000
 
 ## Contributing
 
-See [docs/development_phases.md](docs/development_phases.md) for contribution guidelines per phase.
+See [docs/WORKFLOW.md](docs/WORKFLOW.md) (branches, PRs, directory ownership) and [docs/PROJECT_PLAN.md](docs/PROJECT_PLAN.md) (who does what).
 
 ---
 

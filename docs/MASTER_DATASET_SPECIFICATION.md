@@ -427,13 +427,13 @@ Counts for these in §4 are marked `~` and are estimates, not citable figures.
 
 | # | Decision | Owner | Blocks |
 |---|---|---|---|
-| 1 | Licence audit for all external datasets (§4.1) | TBD | Tier-4 downloads |
-| 2 | Large-LLM baseline strategy (§7.3) | TBD | RQ8 framing |
-| 3 | Team task split across 4 members | TBD | Annotation start |
-| 4 | Which ≥8 repositories form the expanded Tier-1 corpus | TBD | Phase 4 |
-| 5 | `max_escalation_attempts` 2 → 3 (reranking rung currently unreachable) | TBD | System E design, manifest hash |
-| 6 | Mode-P harness scope: how many of the 6 patch datasets are realistic? | TBD | Phase 5 |
-| 7 | Annotation tooling — spreadsheet, custom UI, or LLM-assisted draft + human verify | TBD | Annotation throughput |
+| 1 | Licence audit for all external datasets (§4.1) | Laptop B (`docs/LICENCE_AUDIT.md`, B2) | Tier-4 downloads |
+| 2 | Large-LLM baseline strategy (§7.3) | Laptop A (D4) | RQ8 framing |
+| 3 | Team task split | **Decided:** two laptops, see `docs/PROJECT_PLAN.md` §3–§4 | — |
+| 4 | Which ≥8 repositories form the expanded Tier-1 corpus | Laptop B (B8, P2) | Phase 4 |
+| 5 | `max_escalation_attempts` 2 → 3 (reranking rung currently unreachable). Decide after F1 fix | Laptop A (D5) | System E design, manifest hash |
+| 6 | Mode-P harness scope: how many of the 6 patch datasets are realistic? (no third member) | A + B (D6) | Phase 5 |
+| 7 | Annotation tooling — spreadsheet, custom UI, or LLM-assisted draft + human verify | Laptop B (B6) | Annotation throughput |
 
 ---
 
@@ -441,4 +441,5 @@ Counts for these in §4 are marked `~` and are estimates, not citable figures.
 
 | Version | Date | Change |
 |---|---|---|
+| v0.2 | 2026-10-05 | §11 owners assigned to the two-laptop split (`docs/PROJECT_PLAN.md`). No dataset facts changed. |
 | v0.1 | 2026-08-26 | Initial specification. Six-tier portfolio, three evaluation modes, feasibility envelope, contamination protocol, EIH-SWE schema v2.0. |
