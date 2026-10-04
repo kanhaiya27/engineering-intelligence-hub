@@ -111,6 +111,18 @@ def test_feature_branch_unblocked_by_merging_master(laptops):
     assert decision(run_guard(a, "pretool", edit_payload(a, "retrieval/x.py"))) == "allow"
 
 
+def test_edits_allowed_while_resolving_a_merge_of_master(laptops):
+    a, b = laptops
+    commit(a, "PROGRESS-A.md", "mine\n", "docs: my entry")
+    commit(b, "PROGRESS-A.md", "theirs\n", "docs: their entry [must-pull]")
+    git(b, "push", "-q", "origin", "master")
+    run_guard(a, "session", {})
+    assert decision(run_guard(a, "pretool", edit_payload(a, "PROGRESS-A.md"))) == "deny"
+    with pytest.raises(subprocess.CalledProcessError):      # conflicting merge stops half-way
+        git(a, "merge", "--no-edit", "origin/master")
+    assert decision(run_guard(a, "pretool", edit_payload(a, "PROGRESS-A.md"))) == "allow"
+
+
 def test_files_outside_the_repo_are_never_blocked(laptops, tmp_path):
     a, b = laptops
     commit(b, "core/config.py", "X = 2\n", "fix: shared [must-pull]")
