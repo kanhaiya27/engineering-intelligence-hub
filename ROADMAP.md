@@ -56,6 +56,7 @@ retrieval, model routing), conservative novelty statement, architecture, evaluat
 ## Milestone 4 — Final Submission (15 November 2026)
 
 - [ ] Paper and report with the measured results (B: docs, A: results)
+- [ ] Project website (`web/`, B): overview, live pipeline demo, results dashboard from the measured JSON
 - [ ] Larger EIH-SWE set; EIH-Fresh contamination-controlled set if time allows
 - [ ] Final code freeze with reproducibility documentation (hardware, software, seeds, model digests)
 - [ ] Plagiarism check < 10%
@@ -67,4 +68,4 @@ retrieval, model routing), conservative novelty statement, architecture, evaluat
 - Tree-sitter chunking for Java, Go, Rust, TS/JS, C/C++ and corpus waves 2–4 (RQ6)
 - Mode P patch + test harness (SWE-bench Pro, Multi-SWE-bench, Defects4J)
 - Scalability study (10K → 500K chunks); human study (needs ethics approval)
-- Learned router; dashboard / web UI
+- Learned router

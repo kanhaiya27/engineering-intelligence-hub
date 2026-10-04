@@ -36,6 +36,7 @@ journal (TOSEM / TSE / EMSE). Details: `docs/PROJECT_REPORT.md`.
 | 6 | Mode Q: Systems A–E on dev/val, then the held-out test once (N=5) | A | ⬜ Blocked on 1b, B4 |
 | 10 | Pareto frontier + ablation deltas Δ(A→B)…Δ(D→E) | A | ⬜ After 6 |
 | 12 | Report / paper updated with real numbers | B (docs) + A (results) | ⬜ After 6 |
+| Web | Project website: overview, live demo of the pipeline, results dashboard | B | ⬜ Skeleton 17–24 Oct, results pages after 25 Oct |
 | 2 | Tree-sitter chunking for non-Python languages (RQ6) | B | ⏸ After 25 Oct |
 | 3 | Corpus waves 2–4 | B | ⏸ After 25 Oct |
 | 7 | Mode P patch + test harness (SWE-bench family) | Member C (TBD) | ⏸ Stretch, not needed for 25 Oct |
@@ -71,6 +72,7 @@ Each task is one branch and one PR into `master`. Do them in order. Dates are ta
 | B3 | `feat/graph-populate-wave1` | Populate Neo4j for the 6 wave-1 repos with `EngineeringGraphBuilder`; export a dump to `C:\EIH_share\neo4j.dump` for Laptop A | `knowledge/graph/`, new `scripts/build_graph.py` | 16 Oct |
 | B4 | `feat/benchmark-eih-swe-batch1` | EIH-SWE batch 1: 60–100 new human-verified tasks across the wave-1 repos (schema in dataset spec §5) | `benchmark/` | 20 Oct |
 | B5 | `docs/report-real-results` | Put A's measured results into `docs/PROJECT_REPORT.md` and the paper draft | `docs/` | 25 Oct → 15 Nov |
+| B6 | `feat/web-project-site` | Project website in `web/`, served by the FastAPI app: (1) overview and architecture; (2) live demo — ask a question, see the task classification, retrieval strategy, model tier, quality-gate verdict and measured energy; (3) results dashboard that reads `experiments/results/**/machine_A/*.json` (VRAM study now; A–E Pareto and ablations after A6). Reads A's result files, never edits them | `web/`, `apps/api/` | Skeleton 24 Oct, complete 10 Nov |
 
 `*` = shared file (see §5).
 
@@ -80,6 +82,10 @@ Each task is one branch and one PR into `master`. Do them in order. Dates are ta
 - **A5 needs B3** (populated graph), otherwise System D is identical to System C and the
   D-vs-C ablation measures nothing. Laptop A restores B's Neo4j dump before A5.
 - **B5 needs A5/A6** results.
+- **B6 (website) reads A's result JSON.** Laptop A keeps result files stable: every file
+  has a top-level `study`, `provenance` and `results` key, and A announces any change to
+  that shape in PROGRESS-A before merging it. The live demo uses existing API endpoints
+  (`/adaptive/query`); new endpoints go in `apps/api/` (B).
 
 ## 5. Collision rules
 
