@@ -4,28 +4,55 @@ Context for AI assistants and new contributors. Read this before changing anythi
 
 ## Session routine (Claude: do this automatically, on both laptops)
 
-The two laptops share context only through this repository, so every Claude session
-follows this routine without being asked.
+The two laptops work **at the same time** and share context only through this
+repository, so every Claude session follows this routine without being asked. Claude
+handles all git commands; the user only approves pushes and merges PRs on GitHub.
+
+**Automatic guard (hooks in `.claude/settings.json`, script `scripts/git_sync_guard.py`):**
+- At session start it runs `git fetch` and reports which commits the other laptop merged
+  into `origin/master` that this checkout lacks. Its report arrives in your context as
+  "[git sync guard]". **Tell the user this status first, before anything else.**
+- While `origin/master` holds a **must-pull** change this branch lacks (a commit tagged
+  `[must-pull]`, or any change to a shared file), **edits to repo files are blocked**.
+  Do not work around the block (never edit via Bash/sed instead): tell the user, sync,
+  re-run the tests, then continue.
 
 **At the start of a session, before any other work:**
 1. Identify the laptop from `EIH_MACHINE_ID` in `.env` (`laptop-a` or `laptop-b`). If
    there is no `.env` yet, ask which laptop this is.
-2. Run `git fetch`, then `git status -sb`.
-   - On `master` with no uncommitted changes: `git pull`.
-   - On another branch, or with uncommitted changes: do **not** switch branches or pull.
-     Report the state and ask how to proceed.
-3. Read `PROGRESS-A.md` and `PROGRESS-B.md` (newest entries first).
+2. Report the guard's status. Then sync safely:
+   - On `master`, nothing uncommitted: `git pull`.
+   - On a feature branch: `git fetch` then `git merge origin/master` (never rebase), and
+     run `python -m pytest` if anything shared changed.
+   - With uncommitted changes: do not switch branches or pull. Report and ask.
+3. Read `PROGRESS-A.md`, `PROGRESS-B.md` (newest first) and this laptop's queue in
+   `docs/WORK_PLAN.md`.
 4. Give the user a short summary: what each laptop did last, anything blocked, and the
-   suggested next task for *this* laptop. Then wait for the user's go-ahead.
+   next task for *this* laptop. Then wait for the user's go-ahead.
+
+**When starting a task:** from up-to-date `master`, create the branch named in
+`docs/WORK_PLAN.md` (`git checkout -b <branch>`). Never commit on `master`.
+
+**Marking must-pull changes (so the other laptop gets warned and blocked):** if a commit
+changes a shared file (`core/`, `configs/`, `knowledge/schemas/`, `knowledge/vector/`,
+`evaluation/`, `tests/conftest.py`, `requirements*.txt`, `pyproject.toml`,
+`docker-compose.yml`, `.env.example`, `.gitignore`, `.gitattributes`, `.claude/`,
+`CLAUDE.md`, `scripts/git_sync_guard.py`) or changes how the other laptop must work,
+end its subject with ` [must-pull]` and add a line to this laptop's PROGRESS file
+under "Must pull". The guard also catches untagged shared-file changes automatically.
 
 **When the user says they are done for the session** ("done for today", "wrap up",
-"that's it" and similar), or before a long pause:
-1. Add a dated entry to this laptop's PROGRESS file (done / measured / next / blocked;
-   real numbers only).
-2. Commit it on the current feature branch (or a new `docs/progress-<date>` branch;
-   never on `master`).
-3. Show `git log --oneline -5` and `git status -sb`, and **ask before pushing**. After
-   the push, explain how to open the PR.
+"that's it" and similar), or a task is finished:
+1. Run `python -m pytest`; report the real result.
+2. Add a dated entry to this laptop's PROGRESS file (done / measured / next / blocked /
+   must pull; real numbers only).
+3. Commit on the current feature branch (never on `master`), tagging `[must-pull]` where
+   the rule above applies.
+4. Show `git log --oneline -5` and `git status -sb`, and **ask before pushing**.
+5. After the push, give the PR link
+   (`https://github.com/kanhaiya27/engineering-intelligence-hub/pull/new/<branch>`) and
+   tell the user to send the other laptop: "merged <branch>" once it is merged — plus
+   "MUST PULL before working" if the push contains a `[must-pull]` commit.
 
 Never force-push, rewrite pushed history, push directly to `master`, change repository
 visibility, or delete anything (files, branches, containers, data) without asking.
