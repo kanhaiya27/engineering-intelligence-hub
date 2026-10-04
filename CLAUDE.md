@@ -2,6 +2,34 @@
 
 Context for AI assistants and new contributors. Read this before changing anything.
 
+## Session routine (Claude: do this automatically, on both laptops)
+
+The two laptops share context only through this repository, so every Claude session
+follows this routine without being asked.
+
+**At the start of a session, before any other work:**
+1. Identify the laptop from `EIH_MACHINE_ID` in `.env` (`laptop-a` or `laptop-b`). If
+   there is no `.env` yet, ask which laptop this is.
+2. Run `git fetch`, then `git status -sb`.
+   - On `master` with no uncommitted changes: `git pull`.
+   - On another branch, or with uncommitted changes: do **not** switch branches or pull.
+     Report the state and ask how to proceed.
+3. Read `PROGRESS-A.md` and `PROGRESS-B.md` (newest entries first).
+4. Give the user a short summary: what each laptop did last, anything blocked, and the
+   suggested next task for *this* laptop. Then wait for the user's go-ahead.
+
+**When the user says they are done for the session** ("done for today", "wrap up",
+"that's it" and similar), or before a long pause:
+1. Add a dated entry to this laptop's PROGRESS file (done / measured / next / blocked;
+   real numbers only).
+2. Commit it on the current feature branch (or a new `docs/progress-<date>` branch;
+   never on `master`).
+3. Show `git log --oneline -5` and `git status -sb`, and **ask before pushing**. After
+   the push, explain how to open the PR.
+
+Never force-push, rewrite pushed history, push directly to `master`, change repository
+visibility, or delete anything (files, branches, containers, data) without asking.
+
 ## What this project is
 
 B.Tech CSE (AI/ML) major project, UPES Dehradun. Research title:
