@@ -8,6 +8,46 @@ measured (with numbers only if actually measured), what is blocked.
 
 ---
 
+## 2026-10-05 — Phase 1a: local inference audit, energy meter, VRAM study
+
+Branch `feat/local-inference` (task A1 in `docs/WORK_PLAN.md`).
+
+**Done**
+- Environment audit: RTX 4050 Laptop 6141 MiB, driver 617.14, NVML default power limit
+  80 W (max 140 W); torch 2.6.0+cu124; Ollama 0.35.1; qwen2.5-coder 1.5b/3b/7b (all
+  Q4_K_M) pinned by digest in `CLAUDE.md`. `.env`: `laptop-a`, CPU 45 W, GPU 60 → 80 W.
+- **Bug fixed:** 8 settings groups never read `.env` (only OS env vars) on either laptop —
+  TDP, carbon, quality, reranking and graph settings in `.env` were ignored. Now fixed,
+  12 regression tests.
+- New `NvmlEnergyMeter` (energy counter at start/end only), `experiments/provenance.py`
+  (machine_id, GPU, torch/CUDA, Ollama digests, git SHA in every result), `Settings.machine_id`.
+- **Measurement finding:** querying the GPU during a measurement perturbs the energy
+  counter on this driver (power polling +9–12 W, counter polling +100 W; evidence in
+  `experiments/results/phase1/machine_A/nvml_observer_probe.json`). First VRAM-study run
+  discarded and re-run with the fixed meter.
+- `docs/WORK_PLAN.md` created; README, ROADMAP, CHANGELOG, CLAUDE.md, report updated.
+
+**Measured** (Laptop A, git `215a482`, `experiments/results/phase1/machine_A/vram_study.{json,md}`;
+~1,338 prompt + 128 output tokens, num_ctx 4096, temp 0, seed 42; warm n=5, co-resident with encoders)
+- 1.5B: 100% on GPU, device peak 1920 MiB, 131 tok/s, **105.7 ± 10.3 J** per call
+- 3B: 100% on GPU, device peak 2870 MiB, 76 tok/s, **174.2 ± 10.7 J** per call
+- 7B: **82% on GPU** (3992 of 4886 MiB), device peak 4806 MiB, 22 tok/s, **390.1 ± 8.9 J** per call
+- Encoders (BGE-small + cross-encoder): +490 MiB device VRAM
+- Test suite: 200 passed (Qdrant up) at `8378760`
+
+**Next** (Phase 1b, branch `feat/local-inference-routing`)
+- [ ] Decide 7B handling: A) force all layers on GPU (`num_gpu`) and measure, B) A + flash attention, C) accept 82%
+- [ ] `OllamaProvider`; routing wired with per-call model-id logging and tests
+- [ ] `max_escalation_attempts` 2 → 3 — NB `.env.example` now pins it (show manifest-hash change first)
+- [ ] 20K-token long-context probe for the 7B KV cache (large-LLM baseline options)
+- [ ] `scripts/job_queue.py`
+- [ ] Re-measure reranker energy in batches (report §10.4 figures came from one power sample)
+
+**Blocked / decisions needed**
+- 7B handling (above). Large-LLM baseline strategy (dataset spec §7.3). Licence audit (§4.1).
+
+---
+
 ## 2026-10-03 — Repository consolidated and shared
 
 **Done**
@@ -31,11 +71,12 @@ measured (with numbers only if actually measured), what is blocked.
 - Corpus wave 1 ingested: flask, fastapi, requests, pytest, sphinx, pylint —
   48,046 chunks.
 
-**Not done / next**
-- [ ] Install Ollama + Qwen2.5-Coder 1.5B / 3B / 7B-Q4; wire `routing/` into the pipeline (RQ4).
+**Not done / next** (superseded by the 2026-10-05 entry above)
+- [x] Install Ollama + Qwen2.5-Coder 1.5B / 3B / 7B-Q4 (done 2026-10-04).
+- [ ] Wire `routing/` into the pipeline (RQ4).
 - [ ] P0-3: re-run validation calibration with a live local LLM; re-freeze manifest.
 - [ ] Decide `max_escalation_attempts` 2 → 3 (reranking rung unreachable at 2).
-- [ ] Record `machine_id` automatically in experiment logs.
+- [x] Record `machine_id` automatically (`experiments/provenance.py`, 2026-10-05).
 - [ ] Laptop A's existing `eih-qdrant` container (and its volume data) is still
       Qdrant **v1.13.2**, while `docker-compose.yml` pins v1.15.1. Do NOT run
       `docker compose up` on it blindly (that jumps two minor versions on the stored

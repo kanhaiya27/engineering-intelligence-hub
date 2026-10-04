@@ -88,17 +88,21 @@ engineering-intelligence-hub/
 
 ---
 
-## Development Phases
+## Status (5 October 2026)
 
-| Phase | Goal | Target Date | Status |
-|---|---|---|---|
-| **Phase-0 (Foundation)** | Repository structure, schemas, interfaces, tests | August 2026 | ✅ Complete |
-| **Phase-1 (Core Baseline RAG)** | Repository ingestion, GPU embeddings, Qdrant, hybrid retrieval, baseline RAG, 60-task benchmark, evaluation suite | August 2026 | ✅ Complete |
-| **Phase-2 (Adaptive RAG)** | Task classification, adaptive retrieval routing, model routing, quality gate | October 2026 | ⏳ Planned |
-| **Phase-3 (Experiments)** | Baselines A–F, ablations, Pareto analysis | October 2026 | ⏳ Planned |
-| **Phase-4 (Graph + Agents)** | Knowledge graph, agentic orchestration | November 2026 | ⏳ Planned |
+| Area | Status |
+|---|---|
+| Ingestion, BGE embeddings (GPU), Qdrant, BM25, hybrid retrieval, cross-encoder reranker | ✅ Implemented and verified |
+| Task intelligence, knowledge-graph code, adaptive retrieval, quality gate + escalation | ✅ Implemented (graph not yet populated) |
+| M5 controlled evaluation framework (manifest, splits, metrics, Pareto) + P0 audit fixes | ✅ Implemented |
+| Corpus wave 1: 6 Python repositories, 48,046 chunks | ✅ Ingested |
+| Local model ladder (Ollama, Qwen2.5-Coder 1.5B / 3B / 7B) + measured VRAM/energy study | ✅ Phase 1a done |
+| OllamaProvider + model routing in the pipeline | 🟡 Phase 1b, in progress |
+| Real System A–E results, Pareto frontier, ablations | ⬜ Not run yet — no comparison is claimed |
 
-See [ROADMAP.md](ROADMAP.md) for detailed milestone breakdown.
+**Who does what, by when:** [docs/WORK_PLAN.md](docs/WORK_PLAN.md).
+Milestones: [ROADMAP.md](ROADMAP.md). Team workflow: [docs/WORKFLOW.md](docs/WORKFLOW.md).
+Methodology and measured status: [docs/PROJECT_REPORT.md](docs/PROJECT_REPORT.md).
 
 ---
 
@@ -113,26 +117,22 @@ See [ROADMAP.md](ROADMAP.md) for detailed milestone breakdown.
 
 ---
 
-## Quick Start (Phase-1 Baseline RAG)
+## Quick Start (Windows, PowerShell)
 
-```bash
-# 1. Activate virtual environment
-cd c:\Projects\Majors\engineering-intelligence-hub
-.\.venv311\Scripts\activate
+New laptop: follow [SETUP_LAPTOP_B.md](SETUP_LAPTOP_B.md) first.
 
-# 2. Run Qdrant Vector Store
-docker-compose up -d qdrant
+```powershell
+cd C:\Projects\Majors\engineering-intelligence-hub
+.\.venv311\Scripts\Activate.ps1
 
-# 3. Ingest a repository (or single file via REST API)
-# REST API: POST /ingest/repository or POST /ingest/file
+# Databases (Docker Desktop running). On Laptop A use `docker start eih-qdrant eih-neo4j`
+# until its Qdrant volume is upgraded — see PROGRESS-A.md.
+docker compose up -d
 
-# 4. Run test suite (90/90 tests passing)
-pytest tests/ -v
-
-# 5. Start API server
-uvicorn apps.api.main:app --reload --port 8000
-# Visit http://localhost:8000/docs
-# Test /health, /info, /ingest/file, /retrieve, /query
+python -m pytest                               # 200+ tests; 2 need Qdrant running
+python -m scripts.ingest_corpus --wave 1       # (re)build the corpus into Qdrant
+python -m scripts.phase1_vram_study            # measured VRAM / throughput / energy study
+uvicorn apps.api.main:app --reload --port 8000 # http://localhost:8000/docs
 ```
 
 ---
@@ -141,15 +141,16 @@ uvicorn apps.api.main:app --reload --port 8000
 
 | Component | Technology |
 |---|---|
-| Language | Python 3.8+ (3.11+ recommended) |
+| Language | Python 3.11 |
 | API | FastAPI + Uvicorn |
 | Schemas | Pydantic v2 |
-| Vector Store | Qdrant (Phase-1) |
-| Graph Store | Neo4j (Phase-1) |
-| Embeddings | BAAI/bge-small-en-v1.5 (Phase-1) |
-| LLM Providers | OpenAI, Anthropic, Google, Local (Ollama) |
+| Vector Store | Qdrant 1.15 |
+| Graph Store | Neo4j 5.18 |
+| Embeddings / reranker | BAAI/bge-small-en-v1.5, cross-encoder/ms-marco-MiniLM-L-6-v2 |
+| LLMs | **Local only**, via Ollama: Qwen2.5-Coder 1.5B / 3B / 7B (Q4_K_M, pinned by digest in CLAUDE.md) |
+| Energy / carbon | NVML energy counter (MEASURED); region-aware CO₂e (India grid, 713 gCO₂e/kWh) |
 | Logging | Loguru (structured JSONL) |
-| GPU | NVIDIA RTX 4050 (CUDA 12.1) |
+| GPUs | Laptop A: RTX 4050 6 GB (headline results) · Laptop B: RTX 5050 8 GB (development) |
 | Containers | Docker + Docker Compose |
 | Experiments | JSONL logs + pandas/DuckDB analysis |
 
@@ -168,7 +169,9 @@ uvicorn apps.api.main:app --reload --port 8000
 
 ## Contributing
 
-See [docs/development_phases.md](docs/development_phases.md) for contribution guidelines per phase.
+Two laptops share this private repository. Read [CLAUDE.md](CLAUDE.md) and
+[docs/WORKFLOW.md](docs/WORKFLOW.md): work on `feat/<area>-<what>` branches, open a Pull
+Request into `master`, never push to `master` directly, and record `machine_id` on every result.
 
 ---
 

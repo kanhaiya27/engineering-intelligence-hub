@@ -8,6 +8,25 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Added — Phase 1a: local inference measurement (2026-10-05, Laptop A)
+- `sustainability/energy/nvml_meter.py`: `NvmlEnergyMeter` — GPU energy from the NVML energy
+  counter read only at start/end (MEASURED); background memory/thermal/throttle sampling;
+  `wait_for_gpu_idle()`, `measure_idle_power()`.
+- `experiments/provenance.py`: `collect_provenance()` (machine_id, GPU, torch/CUDA, Ollama model
+  digests, git SHA/dirty, carbon/TDP settings); `Settings.machine_id` from `EIH_MACHINE_ID`.
+- `scripts/phase1_vram_study.py` (+ frozen prompt fixture) and `scripts/phase1_nvml_observer_probe.py`;
+  results in `experiments/results/phase1/machine_A/`.
+- Ollama model ladder (qwen2.5-coder 1.5b/3b/7b, Q4_K_M) pinned by digest in `CLAUDE.md`.
+- `docs/WORK_PLAN.md`: phase status and per-laptop task queues; collaboration docs
+  (`CLAUDE.md` session routine, `PROGRESS-A/B.md`, `SETUP_LAPTOP_B.md`, `docs/WORKFLOW.md`, PR template).
+
+### Fixed — Phase 1a
+- `core/config.py`: the 8 nested settings groups never read `.env` (only OS environment
+  variables), so every `EIH_<GROUP>_*` value in `.env` was silently ignored.
+- Energy measurement observer effect: polling GPU power or the energy counter during a
+  measurement inflated the counter on the RTX 4050 / driver 617.14 (+9–12 W and +100 W);
+  the meter no longer polls power and reads thermal sensors once per second.
+
 ### Added
 - **Phase-2 Controlled Evaluation Framework (`M5`)**:
   - `experiments/m5/manifest.py`: `ExperimentManifest`, `FrozenVariables`, and system definitions for Baselines A, B, and Systems C, D, E with SHA-256 configuration hashing.

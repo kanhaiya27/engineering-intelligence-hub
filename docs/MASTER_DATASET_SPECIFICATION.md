@@ -381,8 +381,10 @@ one-off small paid API run purely for this baseline, disclosed as the only paid 
 | **7** | EIH-Fresh construction and single frozen run. | RQ7 |
 | **8** | Pareto + ablation across everything. | RQ8 |
 
-**Phase 0 is the critical path and is not started.** Every result currently on disk came from a
-mock LLM over an empty index.
+**Status 2026-10-05:** Phase 0 is done (wave-1 corpus ingested, 48,046 chunks; Qdrant and Neo4j
+running) and Phase 1 is in progress (local model ladder installed and measured). Results from
+before October came from a mock LLM over an empty index and are not evidence. Task assignment:
+`docs/WORK_PLAN.md`.
 
 ---
 
