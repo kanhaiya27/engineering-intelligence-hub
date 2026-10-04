@@ -330,43 +330,52 @@ def main() -> None:
     ap.add_argument("--warm", type=int, default=5)
     ap.add_argument("--models", default=",".join(MODELS))
     ap.add_argument("--out", default=str(PROJECT_ROOT / "experiments" / "results" / "phase1" / "machine_A"))
+    ap.add_argument("--num-gpu", type=int, default=None,
+                    help="Force Ollama to offload this many layers to the GPU (default: Ollama decides)")
+    ap.add_argument("--conditions", default="alone,coresident")
+    ap.add_argument("--out-name", default="vram_study", help="Output file stem")
     args = ap.parse_args()
 
+    if args.num_gpu is not None:
+        OPTIONS["num_gpu"] = args.num_gpu
+    conditions = [c.strip() for c in args.conditions.split(",") if c.strip()]
     context = CONTEXT_FILE.read_text(encoding="utf-8")
     models = [m.strip() for m in args.models.split(",") if m.strip()]
     results: Dict[str, Dict[str, Any]] = {m: {} for m in models}
 
-    print("== condition: alone (no torch CUDA context yet)")
-    for m in models:
-        print(f"- {m}")
-        results[m]["alone"] = run_condition(m, context, args.cold, args.warm, None)
+    if "alone" in conditions:
+        print("== condition: alone (no torch CUDA context yet)")
+        for m in models:
+            print(f"- {m}")
+            results[m]["alone"] = run_condition(m, context, args.cold, args.warm, None)
 
-    print("== loading encoders (BGE-small + cross-encoder)")
-    unload_all()
-    encoders = Encoders(context)
-    print(f"  encoders: {encoders.info}")
-
-    print("== condition: coresident")
-    for m in models:
-        print(f"- {m}")
-        results[m]["coresident"] = run_condition(m, context, args.cold, args.warm, encoders)
+    encoders = None
+    if "coresident" in conditions:
+        print("== loading encoders (BGE-small + cross-encoder)")
+        unload_all()
+        encoders = Encoders(context)
+        print(f"  encoders: {encoders.info}")
+        print("== condition: coresident")
+        for m in models:
+            print(f"- {m}")
+            results[m]["coresident"] = run_condition(m, context, args.cold, args.warm, encoders)
 
     unload_all()
     out = Path(args.out)
     data = {
-        "study": "phase1_vram_study",
+        "study": "phase1_vram_study" if args.num_gpu is None else "phase1_vram_study_forced_gpu",
         "provenance": collect_provenance(),
         "config": {"options": OPTIONS, "cold": args.cold, "warm": args.warm, "models": models,
                    "context_file": str(CONTEXT_FILE.relative_to(PROJECT_ROOT)),
                    "context_sha256": hashlib.sha256(CONTEXT_FILE.read_bytes()).hexdigest(),
                    "question": QUESTION, "rerank_candidates": RERANK_CANDIDATES,
                    "idle_baseline_s": IDLE_SECONDS},
-        "encoders": encoders.info,
+        "encoders": encoders.info if encoders else None,
         "results": results,
     }
-    write_json(out / "vram_study.json", data)
-    write_markdown(out / "vram_study.md", data)
-    print(f"wrote {out / 'vram_study.json'} and vram_study.md")
+    write_json(out / f"{args.out_name}.json", data)
+    write_markdown(out / f"{args.out_name}.md", data)
+    print(f"wrote {out / (args.out_name + '.json')} and {args.out_name}.md")
 
 
 if __name__ == "__main__":

@@ -131,6 +131,19 @@ def session() -> None:
     print(json.dumps(payload))
 
 
+def merging_upstream() -> bool:
+    """True while a merge that brings in the upstream tip is in progress.
+
+    Resolving that merge's conflicts IS the sync this guard asks for, so edits
+    must be allowed during it (found live: a PROGRESS-A.md conflict could not be
+    resolved because HEAD did not yet contain the must-pull commits).
+    """
+    merge_head = git("rev-parse", "-q", "--verify", "MERGE_HEAD")
+    if not merge_head:
+        return False
+    return git("merge-base", "--is-ancestor", UPSTREAM, merge_head) is not None
+
+
 def pretool() -> None:
     try:
         data = json.load(sys.stdin)
@@ -140,6 +153,8 @@ def pretool() -> None:
     try:
         Path(path).resolve().relative_to(REPO)
     except Exception:  # noqa: BLE001 - file outside this repo (memory, scratchpad): allow
+        return
+    if merging_upstream():
         return
 
     reasons = must_pull_reasons()

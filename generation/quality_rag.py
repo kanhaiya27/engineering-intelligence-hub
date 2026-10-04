@@ -14,7 +14,14 @@ Loop:
             Return EngTaskResponse with explicit INSUFFICIENT EVIDENCE refusal.
 
 Preserves full provenance and telemetry across all attempts for M5 analysis.
-BaselineRAGPipeline is UNCHANGED.
+
+Model routing (optional, RQ4): with a `model_router`, attempt 0 uses the model
+the router selects from the task classification, and each escalation also moves
+one tier up the model ladder. Without a router the fixed `model_id` is used for
+every attempt (Systems A-E). The model that answered is logged per attempt.
+
+Energy: a provider-MEASURED figure (OllamaProvider) is used when present; the
+TDP estimator runs only otherwise and is labelled ESTIMATED (generation/accounting.py).
 """
 
 from __future__ import annotations
@@ -26,8 +33,9 @@ from typing import Any, Dict, List, Optional
 from core.config import settings
 from core.logging import get_logger
 from experiments.logger import ExperimentLogger
+from generation.accounting import account_generation
 from generation.base import BaseLLMProvider, GenerationRequest
-from generation.providers.openai import MockLLMProvider, OpenAIProvider
+from generation.providers.factory import build_provider
 from generation.rag import SYSTEM_PROMPT
 from knowledge.schemas.tasks import (
     EngTaskRequest,
@@ -40,6 +48,7 @@ from knowledge.schemas.tasks import (
 from retrieval.adaptive import AdaptiveRetrievalPipeline, ExperimentMode
 from retrieval.base import BaseRetriever
 from retrieval.strategies import RetrievalMode, RetrievalStrategyConfig
+from routing.base import BaseModelRouter
 from sustainability.carbon.estimator import CarbonEstimator
 from sustainability.cost.estimator import CostEstimator
 from sustainability.energy.estimator import EnergyEstimator
@@ -69,16 +78,14 @@ class QualityAwareRAGPipeline:
         carbon_estimator: Optional[CarbonEstimator] = None,
         cost_estimator: Optional[CostEstimator] = None,
         exp_logger: Optional[ExperimentLogger] = None,
+        model_router: Optional[BaseModelRouter] = None,
     ) -> None:
         self.adaptive_pipeline = adaptive_pipeline or AdaptiveRetrievalPipeline()
         self.fallback_retriever = retriever
 
-        if llm_provider:
-            self.llm_provider = llm_provider
-        elif settings.secrets.openai_api_key:
-            self.llm_provider = OpenAIProvider()
-        else:
-            self.llm_provider = MockLLMProvider()
+        # No silent mock: the default is the configured real provider (Ollama).
+        self.llm_provider = llm_provider or build_provider()
+        self.model_router = model_router
 
         self.verification_config = verification_config or VerificationConfig()
         self.quality_gate = quality_gate or QualityGate.default_gate(self.verification_config)
@@ -172,6 +179,19 @@ class QualityAwareRAGPipeline:
 
         current_strategy = initial_strategy
         current_attempt = 0
+        if self.model_router is not None:
+            current_model = self.model_router.select_model(
+                classification or TaskClassification(
+                    task_id=request.task_id, sdlc_stage="unknown", task_type="unknown",
+                    complexity="unknown", criticality="unknown",
+                    security_sensitivity="unknown", quality_threshold=threshold,
+                )
+            )
+        else:
+            current_model = self.model_id
+        models_called: List[str] = []
+        cold_starts: List[Dict[str, Any]] = []
+        account = None
         final_response: Optional[EngTaskResponse] = None
         final_report: Optional[QualityReport] = None
         passed_gate = False
@@ -246,12 +266,13 @@ class QualityAwareRAGPipeline:
             gen_request = GenerationRequest(
                 prompt=user_prompt,
                 system_prompt=SYSTEM_PROMPT,
-                model_id=self.model_id,
+                model_id=current_model,
                 max_tokens=settings.model.max_tokens,
                 temperature=settings.model.temperature,
             )
 
             gen_response = self.llm_provider.generate(gen_request)
+            models_called.append(gen_response.model_id or current_model)
 
             # --- C. Telemetry Accounting for this attempt ---
             attempt_input_tokens = gen_response.input_tokens or 0
@@ -259,19 +280,13 @@ class QualityAwareRAGPipeline:
             total_input_tokens += attempt_input_tokens
             total_output_tokens += attempt_output_tokens
 
-            energy_est = self.energy_estimator.estimate(
-                latency_ms=gen_response.latency_ms,
-                input_tokens=attempt_input_tokens,
-                output_tokens=attempt_output_tokens,
-                model_id=self.model_id,
-                is_local_model=False,
+            account = account_generation(
+                gen_response, current_model,
+                self.energy_estimator, self.carbon_estimator, self.cost_estimator,
             )
-            cost_est = self.cost_estimator.estimate(
-                input_tokens=attempt_input_tokens,
-                output_tokens=attempt_output_tokens,
-                model_id=self.model_id,
-            )
-            carbon_est = self.carbon_estimator.estimate(energy_estimate=energy_est)
+            if account.cold_start:
+                cold_starts.append({"attempt": current_attempt, "model_id": current_model,
+                                    **account.cold_start})
 
             # Reranking energy is a REAL local-GPU cost incurred during retrieval,
             # not part of the API generation call. It must be added to the attempt's
@@ -284,8 +299,8 @@ class QualityAwareRAGPipeline:
                     retrieval_result.metadata.get("reranker_energy_joules", 0.0) or 0.0
                 )
 
-            attempt_energy_j = energy_est.energy_joules + rerank_energy_j
-            attempt_co2e_g = carbon_est.co2e_grams
+            attempt_energy_j = account.energy_joules + rerank_energy_j
+            attempt_co2e_g = account.co2e_grams
             if rerank_energy_j > 0.0:
                 # Convert the reranking energy through the same grid intensity.
                 attempt_co2e_g += (rerank_energy_j / 3_600_000.0) * (
@@ -293,7 +308,7 @@ class QualityAwareRAGPipeline:
                 )
 
             total_energy_joules += attempt_energy_j
-            total_cost_usd += cost_est.total_cost_usd
+            total_cost_usd += account.cost_usd
             total_co2e_grams += attempt_co2e_g
 
             attempt_latency_ms = (time.perf_counter() - attempt_start_time) * 1000.0
@@ -305,12 +320,12 @@ class QualityAwareRAGPipeline:
                 answer=gen_response.text,
                 classification=classification,
                 retrieval=retrieval_result,
-                model_id=self.model_id,
+                model_id=current_model,
                 input_tokens=attempt_input_tokens,
                 output_tokens=attempt_output_tokens,
                 latency_ms=round(attempt_latency_ms, 2),
                 energy_joules=attempt_energy_j,
-                cost_usd=cost_est.total_cost_usd,
+                cost_usd=account.cost_usd,
                 co2e_grams=attempt_co2e_g,
                 experiment_id=request.experiment_id,
                 created_at=datetime.datetime.utcnow().isoformat(),
@@ -349,6 +364,13 @@ class QualityAwareRAGPipeline:
             # Record attempt telemetry
             attempt_record = {
                 "attempt_number": current_attempt,
+                "model_id": current_model,
+                "model_digest": (gen_response.extra or {}).get("model_digest"),
+                "generation_energy_joules": account.energy_joules,
+                "generation_energy_tier": account.energy_tier,
+                "energy_reliability": account.energy_reliability,
+                "cold_start": account.cold_start is not None,
+                "context_check": (gen_response.extra or {}).get("context_check"),
                 "strategy_used": current_strategy.strategy_name if current_strategy else "none",
                 "chunks_retrieved": len(retrieval_result.chunks),
                 "quality_score": report.aggregated_score,
@@ -392,6 +414,10 @@ class QualityAwareRAGPipeline:
                         attempt=current_attempt,
                         report=report,
                     )
+                    if self.model_router is not None:
+                        previous_model = current_model
+                        current_model = self.model_router.escalate(current_model)
+                        logger.info(f"Task {request.task_id}: model escalation {previous_model} -> {current_model}")
                 else:
                     # Escalations exhausted — break to insufficient evidence handler
                     current_attempt += 1
@@ -415,7 +441,7 @@ class QualityAwareRAGPipeline:
                 answer=refusal_answer,
                 classification=classification,
                 retrieval=candidate_response.retrieval if 'candidate_response' in locals() else None,
-                model_id=self.model_id,
+                model_id=models_called[-1] if models_called else current_model,
                 input_tokens=total_input_tokens,
                 output_tokens=total_output_tokens,
                 latency_ms=round(total_latency_ms, 2),
@@ -452,6 +478,10 @@ class QualityAwareRAGPipeline:
             "experiment_mode": experiment_mode.value if hasattr(experiment_mode, "value") else str(experiment_mode),
             "total_attempts": len(attempt_history),
             "provider": self.llm_provider.provider_name,
+            "router": self.model_router.router_name if self.model_router else None,
+            "models_called": models_called,
+            "cold_starts": cold_starts,
+            "generation_energy_tier": account.energy_tier if account else None,
         })
 
         # --- G. Experiment Logging ---
@@ -459,7 +489,7 @@ class QualityAwareRAGPipeline:
             try:
                 self.exp_logger.log_result(
                     task_id=request.task_id,
-                    model_id=self.model_id,
+                    model_id=final_response.model_id or self.model_id,
                     answer=final_response.answer,
                     latency_ms=final_response.latency_ms or 0.0,
                     input_tokens=final_response.input_tokens or 0,

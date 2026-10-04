@@ -62,17 +62,22 @@ class APISettings(BaseSettings):
 class ModelSettings(BaseSettings):
     """Default model routing settings."""
 
+    # Local-only inference (RD-013): every system runs on the Ollama model ladder.
+    # The fixed model for Systems A-E is the 7B (decision 2026-10-05); model
+    # routing (routing/tier_router.py) is an added system compared against it.
     default_provider: str = Field(
-        default="openai", description="Default LLM provider ID"
+        default="ollama", description="Default LLM provider ID: ollama | openai | mock"
     )
     default_model_id: str = Field(
-        default="gpt-4o-mini", description="Default model identifier"
+        default="qwen2.5-coder:7b", description="Fixed model for non-routed systems"
     )
     fallback_model_id: str = Field(
-        default="gpt-3.5-turbo", description="Fallback model for failed routing"
+        default="qwen2.5-coder:3b", description="Fallback model for failed routing"
     )
     max_tokens: int = Field(default=2048, description="Maximum output tokens")
-    temperature: float = Field(default=0.1, description="Default sampling temperature")
+    temperature: float = Field(
+        default=0.0, description="Sampling temperature (0 = deterministic with a fixed seed)"
+    )
     request_timeout_seconds: int = Field(
         default=120, description="Provider request timeout"
     )
@@ -124,7 +129,8 @@ class QualitySettings(BaseSettings):
         description="Default minimum acceptable quality score (0.0–1.0)",
     )
     max_escalation_attempts: int = Field(
-        default=2, description="Maximum escalation rounds before failing"
+        default=3,
+        description="Maximum escalation rounds before refusing (3 = reranking rung reachable)",
     )
     enable_code_compilation_check: bool = Field(
         default=False, description="Run compilation checks on generated code"

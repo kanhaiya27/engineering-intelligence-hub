@@ -16,6 +16,8 @@ from typing import Any, Dict
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from core.config import settings
+
 
 class VerificationConfig(BaseModel):
     """
@@ -54,8 +56,11 @@ class VerificationConfig(BaseModel):
         le=1.0,
         description="Fallback minimum quality score if not specified by task classification",
     )
+    # Single source of truth: settings.quality.max_escalation_attempts (EIH_QUALITY_
+    # MAX_ESCALATION_ATTEMPTS). This was a hard-coded 2, so the .env value was dead.
+    # 3 makes the final rung (graph + cross-encoder reranking) reachable.
     max_escalation_attempts: int = Field(
-        default=2,
+        default_factory=lambda: settings.quality.max_escalation_attempts,
         ge=0,
         le=5,
         description="Maximum retrieval escalation attempts before returning INSUFFICIENT_EVIDENCE",

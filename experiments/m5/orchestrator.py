@@ -28,7 +28,7 @@ from experiments.m5.manifest import ExperimentManifest, SystemID
 from experiments.m5.metrics import TrialResult
 from experiments.m5.runner import M5BenchmarkRunner
 from generation.base import BaseLLMProvider
-from generation.providers.openai import MockLLMProvider
+from generation.providers.factory import build_provider
 
 logger = get_logger(__name__)
 
@@ -48,7 +48,7 @@ class M5CalibrationOrchestrator:
     """
 
     def __init__(self, llm_provider: Optional[BaseLLMProvider] = None) -> None:
-        self.llm_provider = llm_provider or MockLLMProvider()
+        self.llm_provider = llm_provider or build_provider()
 
         # Ensure all result directories exist
         for d in (
