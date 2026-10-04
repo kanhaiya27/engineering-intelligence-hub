@@ -1,0 +1,2286 @@
+{
+  "components": {
+    "schemas": {
+      "AttemptTrace": {
+        "additionalProperties": false,
+        "properties": {
+          "attempt_index": {
+            "minimum": 0.0,
+            "title": "Attempt Index",
+            "type": "integer"
+          },
+          "generation": {
+            "$ref": "#/components/schemas/GenerationTrace"
+          },
+          "resources": {
+            "$ref": "#/components/schemas/ResourceMetrics"
+          },
+          "retrieval": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RetrievalTrace"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "null for system A."
+          },
+          "verification": {
+            "$ref": "#/components/schemas/VerificationTrace"
+          }
+        },
+        "required": [
+          "attempt_index",
+          "retrieval",
+          "generation",
+          "verification",
+          "resources"
+        ],
+        "title": "AttemptTrace",
+        "type": "object"
+      },
+      "CachedRunRef": {
+        "additionalProperties": false,
+        "properties": {
+          "recorded_at": {
+            "format": "date-time",
+            "title": "Recorded At",
+            "type": "string"
+          },
+          "run_id": {
+            "maxLength": 120,
+            "title": "Run Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "run_id",
+          "recorded_at"
+        ],
+        "title": "CachedRunRef",
+        "type": "object"
+      },
+      "ChannelExecution": {
+        "additionalProperties": false,
+        "description": "Whether a retrieval channel was asked for, and whether it actually ran.",
+        "properties": {
+          "candidates": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Candidates"
+          },
+          "executed": {
+            "description": "True only if runtime evidence shows the channel ran and returned a result set (possibly empty).",
+            "title": "Executed",
+            "type": "boolean"
+          },
+          "requested": {
+            "title": "Requested",
+            "type": "boolean"
+          },
+          "skip_reason": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Skip Reason"
+          }
+        },
+        "required": [
+          "requested",
+          "executed"
+        ],
+        "title": "ChannelExecution",
+        "type": "object"
+      },
+      "ClassificationEvent": {
+        "additionalProperties": false,
+        "properties": {
+          "contract_version": {
+            "const": "1.0.0",
+            "default": "1.0.0",
+            "title": "Contract Version",
+            "type": "string"
+          },
+          "event": {
+            "const": "classification",
+            "default": "classification",
+            "title": "Event",
+            "type": "string"
+          },
+          "payload": {
+            "$ref": "#/components/schemas/ClassificationTrace"
+          },
+          "seq": {
+            "description": "0, 1, 2, … within one stream.",
+            "minimum": 0,
+            "title": "Seq",
+            "type": "integer"
+          },
+          "trace_id": {
+            "maxLength": 64,
+            "title": "Trace Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "trace_id",
+          "seq",
+          "payload"
+        ],
+        "title": "ClassificationEvent",
+        "type": "object"
+      },
+      "ClassificationTrace": {
+        "additionalProperties": false,
+        "properties": {
+          "classifier": {
+            "examples": [
+              "rule_based"
+            ],
+            "maxLength": 64,
+            "title": "Classifier",
+            "type": "string"
+          },
+          "classifier_confidence": {
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Classifier Confidence",
+            "type": "number"
+          },
+          "complexity": {
+            "$ref": "#/components/schemas/ComplexityLevel"
+          },
+          "criticality": {
+            "$ref": "#/components/schemas/CriticalityLevel"
+          },
+          "latency_ms": {
+            "$ref": "#/components/schemas/Metric"
+          },
+          "quality_threshold": {
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Quality Threshold",
+            "type": "number"
+          },
+          "quality_threshold_source": {
+            "enum": [
+              "classifier",
+              "config_default"
+            ],
+            "title": "Quality Threshold Source",
+            "type": "string"
+          },
+          "reasoning": {
+            "anyOf": [
+              {
+                "maxLength": 1000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reasoning"
+          },
+          "sdlc_stage": {
+            "$ref": "#/components/schemas/SDLCStage"
+          },
+          "security_sensitivity": {
+            "$ref": "#/components/schemas/SecuritySensitivity"
+          },
+          "task_type": {
+            "$ref": "#/components/schemas/TaskType"
+          },
+          "task_type_source": {
+            "enum": [
+              "classifier",
+              "client_hint"
+            ],
+            "title": "Task Type Source",
+            "type": "string"
+          }
+        },
+        "required": [
+          "classifier",
+          "sdlc_stage",
+          "task_type",
+          "task_type_source",
+          "complexity",
+          "criticality",
+          "security_sensitivity",
+          "quality_threshold",
+          "quality_threshold_source",
+          "classifier_confidence",
+          "latency_ms"
+        ],
+        "title": "ClassificationTrace",
+        "type": "object"
+      },
+      "ComplexityLevel": {
+        "enum": [
+          "low",
+          "medium",
+          "high",
+          "very_high",
+          "unknown"
+        ],
+        "title": "ComplexityLevel",
+        "type": "string"
+      },
+      "CriticalityLevel": {
+        "description": "Operational criticality of the task outcome.\nHigher criticality → stricter quality threshold, slower escalation path allowed.",
+        "enum": [
+          "low",
+          "medium",
+          "high",
+          "critical",
+          "unknown"
+        ],
+        "title": "CriticalityLevel",
+        "type": "string"
+      },
+      "ErrorBody": {
+        "additionalProperties": false,
+        "properties": {
+          "code": {
+            "$ref": "#/components/schemas/ErrorCode"
+          },
+          "message": {
+            "description": "Human-readable; never contains stack traces, paths or config.",
+            "maxLength": 500,
+            "title": "Message",
+            "type": "string"
+          },
+          "retry_after_s": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Retry After S"
+          }
+        },
+        "required": [
+          "code",
+          "message"
+        ],
+        "title": "ErrorBody",
+        "type": "object"
+      },
+      "ErrorCode": {
+        "enum": [
+          "invalid_request",
+          "payload_too_large",
+          "rate_limited",
+          "pipeline_unavailable",
+          "internal_error"
+        ],
+        "title": "ErrorCode",
+        "type": "string"
+      },
+      "ErrorEvent": {
+        "additionalProperties": false,
+        "properties": {
+          "contract_version": {
+            "const": "1.0.0",
+            "default": "1.0.0",
+            "title": "Contract Version",
+            "type": "string"
+          },
+          "event": {
+            "const": "error",
+            "default": "error",
+            "title": "Event",
+            "type": "string"
+          },
+          "payload": {
+            "$ref": "#/components/schemas/ErrorBody"
+          },
+          "seq": {
+            "description": "0, 1, 2, … within one stream.",
+            "minimum": 0,
+            "title": "Seq",
+            "type": "integer"
+          },
+          "trace_id": {
+            "maxLength": 64,
+            "title": "Trace Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "trace_id",
+          "seq",
+          "payload"
+        ],
+        "title": "ErrorEvent",
+        "type": "object"
+      },
+      "ErrorResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "contract_version": {
+            "const": "1.0.0",
+            "default": "1.0.0",
+            "title": "Contract Version",
+            "type": "string"
+          },
+          "error": {
+            "$ref": "#/components/schemas/ErrorBody"
+          },
+          "request_id": {
+            "maxLength": 64,
+            "title": "Request Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "request_id",
+          "error"
+        ],
+        "title": "ErrorResponse",
+        "type": "object"
+      },
+      "EscalationEvent": {
+        "additionalProperties": false,
+        "properties": {
+          "contract_version": {
+            "const": "1.0.0",
+            "default": "1.0.0",
+            "title": "Contract Version",
+            "type": "string"
+          },
+          "event": {
+            "const": "escalation",
+            "default": "escalation",
+            "title": "Event",
+            "type": "string"
+          },
+          "payload": {
+            "$ref": "#/components/schemas/EscalationStep"
+          },
+          "seq": {
+            "description": "0, 1, 2, … within one stream.",
+            "minimum": 0,
+            "title": "Seq",
+            "type": "integer"
+          },
+          "trace_id": {
+            "maxLength": 64,
+            "title": "Trace Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "trace_id",
+          "seq",
+          "payload"
+        ],
+        "title": "EscalationEvent",
+        "type": "object"
+      },
+      "EscalationStep": {
+        "additionalProperties": false,
+        "properties": {
+          "changes": {
+            "items": {
+              "$ref": "#/components/schemas/ParameterChange"
+            },
+            "title": "Changes",
+            "type": "array"
+          },
+          "critical_failures": {
+            "items": {
+              "$ref": "#/components/schemas/SignalType"
+            },
+            "title": "Critical Failures",
+            "type": "array"
+          },
+          "from_attempt": {
+            "minimum": 0.0,
+            "title": "From Attempt",
+            "type": "integer"
+          },
+          "from_strategy": {
+            "maxLength": 120,
+            "title": "From Strategy",
+            "type": "string"
+          },
+          "rung": {
+            "description": "Ladder rung id, e.g. expanded_retrieval, graph_augmentation, max_capability. The ladder length is configurable.",
+            "maxLength": 64,
+            "title": "Rung",
+            "type": "string"
+          },
+          "threshold": {
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Threshold",
+            "type": "number"
+          },
+          "to_attempt": {
+            "minimum": 1.0,
+            "title": "To Attempt",
+            "type": "integer"
+          },
+          "to_strategy": {
+            "maxLength": 120,
+            "title": "To Strategy",
+            "type": "string"
+          },
+          "trigger_score": {
+            "anyOf": [
+              {
+                "maximum": 1.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Trigger Score"
+          }
+        },
+        "required": [
+          "from_attempt",
+          "to_attempt",
+          "rung",
+          "from_strategy",
+          "to_strategy",
+          "threshold"
+        ],
+        "title": "EscalationStep",
+        "type": "object"
+      },
+      "EscalationSummary": {
+        "additionalProperties": false,
+        "properties": {
+          "exhausted": {
+            "description": "True if every allowed escalation failed.",
+            "title": "Exhausted",
+            "type": "boolean"
+          },
+          "max_escalations": {
+            "minimum": 0.0,
+            "title": "Max Escalations",
+            "type": "integer"
+          },
+          "steps": {
+            "items": {
+              "$ref": "#/components/schemas/EscalationStep"
+            },
+            "title": "Steps",
+            "type": "array"
+          }
+        },
+        "required": [
+          "max_escalations",
+          "exhausted"
+        ],
+        "title": "EscalationSummary",
+        "type": "object"
+      },
+      "ExecutionContext": {
+        "additionalProperties": false,
+        "properties": {
+          "cached_from": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CachedRunRef"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "generation_source": {
+            "$ref": "#/components/schemas/GenerationSource"
+          },
+          "producer": {
+            "$ref": "#/components/schemas/MachineInfo"
+          },
+          "research_evidence": {
+            "description": "True only if the answer came from a real model run. Always false for mock output. Does NOT mean the trace belongs to any benchmark.",
+            "title": "Research Evidence",
+            "type": "boolean"
+          },
+          "served_by_machine_id": {
+            "pattern": "^[a-z0-9][a-z0-9-]{0,62}$",
+            "title": "Served By Machine Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "producer",
+          "served_by_machine_id",
+          "generation_source",
+          "research_evidence"
+        ],
+        "title": "ExecutionContext",
+        "type": "object"
+      },
+      "GenerationDeltaEvent": {
+        "additionalProperties": false,
+        "properties": {
+          "contract_version": {
+            "const": "1.0.0",
+            "default": "1.0.0",
+            "title": "Contract Version",
+            "type": "string"
+          },
+          "event": {
+            "const": "generation.delta",
+            "default": "generation.delta",
+            "title": "Event",
+            "type": "string"
+          },
+          "payload": {
+            "$ref": "#/components/schemas/GenerationDeltaPayload"
+          },
+          "seq": {
+            "description": "0, 1, 2, … within one stream.",
+            "minimum": 0,
+            "title": "Seq",
+            "type": "integer"
+          },
+          "trace_id": {
+            "maxLength": 64,
+            "title": "Trace Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "trace_id",
+          "seq",
+          "payload"
+        ],
+        "title": "GenerationDeltaEvent",
+        "type": "object"
+      },
+      "GenerationDeltaPayload": {
+        "additionalProperties": false,
+        "properties": {
+          "attempt_index": {
+            "minimum": 0,
+            "title": "Attempt Index",
+            "type": "integer"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "attempt_index",
+          "text"
+        ],
+        "title": "GenerationDeltaPayload",
+        "type": "object"
+      },
+      "GenerationEvent": {
+        "additionalProperties": false,
+        "properties": {
+          "contract_version": {
+            "const": "1.0.0",
+            "default": "1.0.0",
+            "title": "Contract Version",
+            "type": "string"
+          },
+          "event": {
+            "const": "generation",
+            "default": "generation",
+            "title": "Event",
+            "type": "string"
+          },
+          "payload": {
+            "$ref": "#/components/schemas/GenerationTrace"
+          },
+          "seq": {
+            "description": "0, 1, 2, … within one stream.",
+            "minimum": 0,
+            "title": "Seq",
+            "type": "integer"
+          },
+          "trace_id": {
+            "maxLength": 64,
+            "title": "Trace Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "trace_id",
+          "seq",
+          "payload"
+        ],
+        "title": "GenerationEvent",
+        "type": "object"
+      },
+      "GenerationSource": {
+        "enum": [
+          "live_model",
+          "mock",
+          "cached_run"
+        ],
+        "title": "GenerationSource",
+        "type": "string"
+      },
+      "GenerationTrace": {
+        "additionalProperties": false,
+        "properties": {
+          "answer": {
+            "description": "Raw model output for this attempt (untrusted text).",
+            "title": "Answer",
+            "type": "string"
+          },
+          "attempt_index": {
+            "minimum": 0.0,
+            "title": "Attempt Index",
+            "type": "integer"
+          },
+          "finish_reason": {
+            "anyOf": [
+              {
+                "enum": [
+                  "stop",
+                  "length",
+                  "content_filter",
+                  "error"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finish Reason"
+          },
+          "input_tokens": {
+            "$ref": "#/components/schemas/Metric"
+          },
+          "is_local_model": {
+            "title": "Is Local Model",
+            "type": "boolean"
+          },
+          "latency_ms": {
+            "$ref": "#/components/schemas/Metric"
+          },
+          "model_id": {
+            "maxLength": 120,
+            "title": "Model Id",
+            "type": "string"
+          },
+          "output_tokens": {
+            "$ref": "#/components/schemas/Metric"
+          },
+          "provider": {
+            "examples": [
+              "ollama",
+              "openai",
+              "mock"
+            ],
+            "maxLength": 40,
+            "title": "Provider",
+            "type": "string"
+          }
+        },
+        "required": [
+          "attempt_index",
+          "provider",
+          "model_id",
+          "is_local_model",
+          "answer",
+          "input_tokens",
+          "output_tokens",
+          "latency_ms"
+        ],
+        "title": "GenerationTrace",
+        "type": "object"
+      },
+      "GraphExecution": {
+        "additionalProperties": false,
+        "properties": {
+          "candidates": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Candidates"
+          },
+          "chunks_injected": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Chunks Injected"
+          },
+          "executed": {
+            "description": "True only if runtime evidence shows the channel ran and returned a result set (possibly empty).",
+            "title": "Executed",
+            "type": "boolean"
+          },
+          "hop_depth": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hop Depth"
+          },
+          "nodes_visited": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nodes Visited"
+          },
+          "requested": {
+            "title": "Requested",
+            "type": "boolean"
+          },
+          "skip_reason": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Skip Reason"
+          }
+        },
+        "required": [
+          "requested",
+          "executed"
+        ],
+        "title": "GraphExecution",
+        "type": "object"
+      },
+      "MachineInfo": {
+        "additionalProperties": false,
+        "description": "The machine that PRODUCED the metrics (not necessarily the one serving).",
+        "properties": {
+          "carbon_intensity_gco2_per_kwh": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Carbon Intensity Gco2 Per Kwh"
+          },
+          "carbon_region": {
+            "examples": [
+              "IN"
+            ],
+            "maxLength": 40,
+            "title": "Carbon Region",
+            "type": "string"
+          },
+          "cuda_version": {
+            "anyOf": [
+              {
+                "maxLength": 20,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cuda Version"
+          },
+          "git_sha": {
+            "pattern": "^([0-9a-f]{7,40}|unknown)$",
+            "title": "Git Sha",
+            "type": "string"
+          },
+          "gpu_name": {
+            "anyOf": [
+              {
+                "maxLength": 120,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gpu Name"
+          },
+          "machine_id": {
+            "examples": [
+              "laptop-b"
+            ],
+            "pattern": "^[a-z0-9][a-z0-9-]{0,62}$",
+            "title": "Machine Id",
+            "type": "string"
+          },
+          "torch_version": {
+            "anyOf": [
+              {
+                "maxLength": 40,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Torch Version"
+          }
+        },
+        "required": [
+          "machine_id",
+          "git_sha",
+          "carbon_region"
+        ],
+        "title": "MachineInfo",
+        "type": "object"
+      },
+      "Metric": {
+        "additionalProperties": false,
+        "description": "A single number with its unit and provenance.\n\n``value`` is ``null`` when the quantity was not obtained; then\n``provenance`` is ``null`` and ``method`` is ``\"not_available\"``.",
+        "properties": {
+          "method": {
+            "description": "Machine-readable method id, e.g. perf_counter, provider_usage, nvml_power_sample, tdp_proxy, pricing_table, grid_intensity, weighted_mean, sum, not_available. Vocabulary: docs/API_CONTRACT.md §5.",
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Method",
+            "type": "string"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "maxLength": 300,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "provenance": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Provenance"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Provenance tier; null exactly when value is null."
+          },
+          "unit": {
+            "enum": [
+              "ms",
+              "tokens",
+              "usd",
+              "joules",
+              "gco2e",
+              "score",
+              "count"
+            ],
+            "title": "Unit",
+            "type": "string"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The number, or null if it was not obtained (never a placeholder).",
+            "title": "Value"
+          }
+        },
+        "required": [
+          "value",
+          "unit",
+          "provenance",
+          "method"
+        ],
+        "title": "Metric",
+        "type": "object"
+      },
+      "Outcome": {
+        "additionalProperties": false,
+        "properties": {
+          "answer": {
+            "description": "Final answer, or the INSUFFICIENT EVIDENCE refusal text.",
+            "title": "Answer",
+            "type": "string"
+          },
+          "answer_attempt_index": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Attempt whose answer is returned; null on refusal.",
+            "title": "Answer Attempt Index"
+          },
+          "verdict": {
+            "$ref": "#/components/schemas/Verdict"
+          }
+        },
+        "required": [
+          "verdict",
+          "answer"
+        ],
+        "title": "Outcome",
+        "type": "object"
+      },
+      "ParameterChange": {
+        "additionalProperties": false,
+        "properties": {
+          "after": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "integer"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "After"
+          },
+          "before": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "integer"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Before"
+          },
+          "name": {
+            "examples": [
+              "top_k"
+            ],
+            "maxLength": 64,
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "before",
+          "after"
+        ],
+        "title": "ParameterChange",
+        "type": "object"
+      },
+      "PipelineTrace": {
+        "additionalProperties": false,
+        "description": "The full trace of one query through the EIH pipeline.",
+        "properties": {
+          "attempts": {
+            "items": {
+              "$ref": "#/components/schemas/AttemptTrace"
+            },
+            "minItems": 1,
+            "title": "Attempts",
+            "type": "array"
+          },
+          "classification": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ClassificationTrace"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "null if the system does not classify (A, B)."
+          },
+          "contract_version": {
+            "const": "1.0.0",
+            "default": "1.0.0",
+            "title": "Contract Version",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "escalation": {
+            "$ref": "#/components/schemas/EscalationSummary"
+          },
+          "execution": {
+            "$ref": "#/components/schemas/ExecutionContext"
+          },
+          "outcome": {
+            "$ref": "#/components/schemas/Outcome"
+          },
+          "query": {
+            "maxLength": 2000,
+            "title": "Query",
+            "type": "string"
+          },
+          "request_id": {
+            "maxLength": 64,
+            "title": "Request Id",
+            "type": "string"
+          },
+          "system": {
+            "$ref": "#/components/schemas/SystemId"
+          },
+          "totals": {
+            "$ref": "#/components/schemas/ResourceMetrics"
+          },
+          "trace_id": {
+            "maxLength": 64,
+            "title": "Trace Id",
+            "type": "string"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Warnings",
+            "type": "array"
+          }
+        },
+        "required": [
+          "trace_id",
+          "request_id",
+          "created_at",
+          "query",
+          "system",
+          "execution",
+          "classification",
+          "attempts",
+          "escalation",
+          "outcome",
+          "totals"
+        ],
+        "title": "PipelineTrace",
+        "type": "object"
+      },
+      "Provenance": {
+        "description": "How a number was obtained (docs/PROJECT_REPORT.md §9.1).",
+        "enum": [
+          "MEASURED",
+          "ESTIMATED",
+          "DERIVED"
+        ],
+        "title": "Provenance",
+        "type": "string"
+      },
+      "RerankerExecution": {
+        "additionalProperties": false,
+        "properties": {
+          "candidates": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Candidates"
+          },
+          "energy_joules": {
+            "$ref": "#/components/schemas/Metric"
+          },
+          "executed": {
+            "description": "True only if runtime evidence shows the channel ran and returned a result set (possibly empty).",
+            "title": "Executed",
+            "type": "boolean"
+          },
+          "latency_ms": {
+            "$ref": "#/components/schemas/Metric"
+          },
+          "requested": {
+            "title": "Requested",
+            "type": "boolean"
+          },
+          "reranker_type": {
+            "$ref": "#/components/schemas/RerankerType"
+          },
+          "returned": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Returned"
+          },
+          "skip_reason": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Skip Reason"
+          }
+        },
+        "required": [
+          "requested",
+          "executed",
+          "reranker_type",
+          "latency_ms",
+          "energy_joules"
+        ],
+        "title": "RerankerExecution",
+        "type": "object"
+      },
+      "RerankerType": {
+        "enum": [
+          "cross_encoder",
+          "cohere_rerank",
+          "none"
+        ],
+        "title": "RerankerType",
+        "type": "string"
+      },
+      "ResourceMetrics": {
+        "additionalProperties": false,
+        "description": "Resource accounting for one attempt, or totals for the whole trace.\n\nTotals inherit the weakest tier of their components (MEASURED is\nstrongest); see docs/API_CONTRACT.md §5.",
+        "properties": {
+          "co2e_grams": {
+            "$ref": "#/components/schemas/Metric"
+          },
+          "cost_usd": {
+            "$ref": "#/components/schemas/Metric"
+          },
+          "energy_cpu_joules": {
+            "$ref": "#/components/schemas/Metric"
+          },
+          "energy_gpu_joules": {
+            "$ref": "#/components/schemas/Metric"
+          },
+          "energy_joules": {
+            "$ref": "#/components/schemas/Metric",
+            "description": "cpu + gpu + rerank energy."
+          },
+          "energy_rerank_joules": {
+            "$ref": "#/components/schemas/Metric"
+          },
+          "input_tokens": {
+            "$ref": "#/components/schemas/Metric"
+          },
+          "latency_ms": {
+            "$ref": "#/components/schemas/Metric"
+          },
+          "output_tokens": {
+            "$ref": "#/components/schemas/Metric"
+          }
+        },
+        "required": [
+          "latency_ms",
+          "input_tokens",
+          "output_tokens",
+          "cost_usd",
+          "energy_joules",
+          "energy_cpu_joules",
+          "energy_gpu_joules",
+          "energy_rerank_joules",
+          "co2e_grams"
+        ],
+        "title": "ResourceMetrics",
+        "type": "object"
+      },
+      "RetrievalEvent": {
+        "additionalProperties": false,
+        "properties": {
+          "contract_version": {
+            "const": "1.0.0",
+            "default": "1.0.0",
+            "title": "Contract Version",
+            "type": "string"
+          },
+          "event": {
+            "const": "retrieval",
+            "default": "retrieval",
+            "title": "Event",
+            "type": "string"
+          },
+          "payload": {
+            "$ref": "#/components/schemas/RetrievalTrace"
+          },
+          "seq": {
+            "description": "0, 1, 2, … within one stream.",
+            "minimum": 0,
+            "title": "Seq",
+            "type": "integer"
+          },
+          "trace_id": {
+            "maxLength": 64,
+            "title": "Trace Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "trace_id",
+          "seq",
+          "payload"
+        ],
+        "title": "RetrievalEvent",
+        "type": "object"
+      },
+      "RetrievalMode": {
+        "description": "Primary retrieval mode — drives which indices are queried.",
+        "enum": [
+          "dense",
+          "sparse",
+          "hybrid",
+          "graph",
+          "graph_augmented"
+        ],
+        "title": "RetrievalMode",
+        "type": "string"
+      },
+      "RetrievalTrace": {
+        "additionalProperties": false,
+        "description": "Retrieval for one attempt. All parameters describe what EXECUTED.",
+        "properties": {
+          "attempt_index": {
+            "minimum": 0.0,
+            "title": "Attempt Index",
+            "type": "integer"
+          },
+          "chunks": {
+            "items": {
+              "$ref": "#/components/schemas/RetrievedChunkTrace"
+            },
+            "title": "Chunks",
+            "type": "array"
+          },
+          "dense": {
+            "$ref": "#/components/schemas/ChannelExecution"
+          },
+          "dense_weight": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dense Weight"
+          },
+          "graph": {
+            "$ref": "#/components/schemas/GraphExecution"
+          },
+          "latency_ms": {
+            "$ref": "#/components/schemas/Metric"
+          },
+          "mode": {
+            "$ref": "#/components/schemas/RetrievalMode"
+          },
+          "requested_strategy": {
+            "description": "Strategy the policy or escalation asked for.",
+            "maxLength": 120,
+            "title": "Requested Strategy",
+            "type": "string"
+          },
+          "reranker": {
+            "$ref": "#/components/schemas/RerankerExecution"
+          },
+          "score_threshold": {
+            "title": "Score Threshold",
+            "type": "number"
+          },
+          "sparse": {
+            "$ref": "#/components/schemas/ChannelExecution"
+          },
+          "sparse_weight": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sparse Weight"
+          },
+          "strategy_fallback": {
+            "description": "True if the executed strategy is not the requested one.",
+            "title": "Strategy Fallback",
+            "type": "boolean"
+          },
+          "strategy_name": {
+            "description": "Strategy that actually executed. Differs from requested_strategy when the retriever fell back (see strategy_fallback).",
+            "maxLength": 120,
+            "title": "Strategy Name",
+            "type": "string"
+          },
+          "top_k": {
+            "minimum": 0.0,
+            "title": "Top K",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "attempt_index",
+          "requested_strategy",
+          "strategy_name",
+          "strategy_fallback",
+          "mode",
+          "top_k",
+          "score_threshold",
+          "dense",
+          "sparse",
+          "graph",
+          "reranker",
+          "chunks",
+          "latency_ms"
+        ],
+        "title": "RetrievalTrace",
+        "type": "object"
+      },
+      "RetrievedChunkTrace": {
+        "additionalProperties": false,
+        "description": "One retrieved chunk with a file:line citation.\n\n``content`` is UNTRUSTED repository text. Clients must render it as plain\ntext (never HTML/Markdown with live links) and must never treat it as\ninstructions. See docs/API_CONTRACT.md §6.",
+        "properties": {
+          "channel": {
+            "description": "Which retrieval channel produced this chunk.",
+            "enum": [
+              "dense",
+              "sparse",
+              "hybrid",
+              "graph"
+            ],
+            "title": "Channel",
+            "type": "string"
+          },
+          "chunk_id": {
+            "maxLength": 300,
+            "title": "Chunk Id",
+            "type": "string"
+          },
+          "citation": {
+            "description": "'<repository>:<file_path>:<start_line>-<end_line>'; line part omitted when lines are unknown.",
+            "examples": [
+              "pallets/flask:src/flask/app.py:120-168"
+            ],
+            "maxLength": 800,
+            "title": "Citation",
+            "type": "string"
+          },
+          "commit_sha": {
+            "anyOf": [
+              {
+                "pattern": "^[0-9a-f]{7,40}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Commit Sha"
+          },
+          "content": {
+            "maxLength": 4000,
+            "title": "Content",
+            "type": "string"
+          },
+          "content_truncated": {
+            "title": "Content Truncated",
+            "type": "boolean"
+          },
+          "content_trust": {
+            "const": "untrusted",
+            "default": "untrusted",
+            "title": "Content Trust",
+            "type": "string"
+          },
+          "dense_score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dense Score"
+          },
+          "end_line": {
+            "anyOf": [
+              {
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End Line"
+          },
+          "file_path": {
+            "anyOf": [
+              {
+                "maxLength": 400,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Repo-relative POSIX path.",
+            "title": "File Path"
+          },
+          "graph_hop": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Graph Hop"
+          },
+          "pre_rerank_rank": {
+            "anyOf": [
+              {
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pre Rerank Rank"
+          },
+          "pre_rerank_score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pre Rerank Score"
+          },
+          "rank": {
+            "minimum": 1.0,
+            "title": "Rank",
+            "type": "integer"
+          },
+          "repository": {
+            "anyOf": [
+              {
+                "pattern": "^[A-Za-z0-9_.-]{1,100}/[A-Za-z0-9_.-]{1,100}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Repository"
+          },
+          "score": {
+            "title": "Score",
+            "type": "number"
+          },
+          "score_kind": {
+            "enum": [
+              "dense",
+              "sparse",
+              "fused",
+              "rerank",
+              "graph"
+            ],
+            "title": "Score Kind",
+            "type": "string"
+          },
+          "sparse_score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sparse Score"
+          },
+          "start_line": {
+            "anyOf": [
+              {
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start Line"
+          },
+          "symbol_name": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Symbol Name"
+          }
+        },
+        "required": [
+          "rank",
+          "chunk_id",
+          "channel",
+          "citation",
+          "score",
+          "score_kind",
+          "content",
+          "content_truncated"
+        ],
+        "title": "RetrievedChunkTrace",
+        "type": "object"
+      },
+      "SDLCStage": {
+        "description": "Software Development Life Cycle stage.",
+        "enum": [
+          "requirements",
+          "architecture",
+          "development",
+          "testing",
+          "code_review",
+          "deployment",
+          "operations",
+          "maintenance",
+          "unknown"
+        ],
+        "title": "SDLCStage",
+        "type": "string"
+      },
+      "SecuritySensitivity": {
+        "enum": [
+          "none",
+          "low",
+          "medium",
+          "high",
+          "unknown"
+        ],
+        "title": "SecuritySensitivity",
+        "type": "string"
+      },
+      "SignalStatus": {
+        "enum": [
+          "passed",
+          "failed",
+          "skipped",
+          "error"
+        ],
+        "title": "SignalStatus",
+        "type": "string"
+      },
+      "SignalTrace": {
+        "additionalProperties": false,
+        "properties": {
+          "evaluator_name": {
+            "anyOf": [
+              {
+                "maxLength": 80,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Evaluator Name"
+          },
+          "provenance": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Provenance"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Tier of the score; null exactly when score is null."
+          },
+          "rationale": {
+            "anyOf": [
+              {
+                "maxLength": 1000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rationale"
+          },
+          "score": {
+            "anyOf": [
+              {
+                "maximum": 1.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score"
+          },
+          "signal_type": {
+            "$ref": "#/components/schemas/SignalType"
+          },
+          "status": {
+            "$ref": "#/components/schemas/SignalStatus"
+          },
+          "weight": {
+            "minimum": 0.0,
+            "title": "Weight",
+            "type": "number"
+          }
+        },
+        "required": [
+          "signal_type",
+          "status",
+          "weight",
+          "provenance"
+        ],
+        "title": "SignalTrace",
+        "type": "object"
+      },
+      "SignalType": {
+        "description": "Type of quality signal.",
+        "enum": [
+          "correctness",
+          "relevance",
+          "groundedness",
+          "citation_support",
+          "code_compilation",
+          "test_execution",
+          "diagnosis_accuracy",
+          "security_check",
+          "completeness",
+          "custom"
+        ],
+        "title": "SignalType",
+        "type": "string"
+      },
+      "SystemId": {
+        "description": "Ablation ladder position (CLAUDE.md, 'What this project is').",
+        "enum": [
+          "A",
+          "B",
+          "C",
+          "D",
+          "E"
+        ],
+        "title": "SystemId",
+        "type": "string"
+      },
+      "TaskType": {
+        "description": "Fine-grained task type within an SDLC stage.\nInitial supported set (Phase-0 definition); extend in Phase-1.",
+        "enum": [
+          "requirement_understanding",
+          "requirement_retrieval",
+          "architecture_qa",
+          "dependency_understanding",
+          "architecture_decision_support",
+          "code_explanation",
+          "code_generation",
+          "repository_assistance",
+          "test_generation",
+          "test_explanation",
+          "test_failure_analysis",
+          "defect_detection",
+          "risk_identification",
+          "review_assistance",
+          "change_impact_analysis",
+          "dependency_analysis",
+          "error_analysis",
+          "incident_retrieval",
+          "root_cause_assistance",
+          "technical_debt_analysis",
+          "change_understanding",
+          "historical_reasoning",
+          "unknown"
+        ],
+        "title": "TaskType",
+        "type": "string"
+      },
+      "TraceCompletedEvent": {
+        "additionalProperties": false,
+        "properties": {
+          "contract_version": {
+            "const": "1.0.0",
+            "default": "1.0.0",
+            "title": "Contract Version",
+            "type": "string"
+          },
+          "event": {
+            "const": "trace.completed",
+            "default": "trace.completed",
+            "title": "Event",
+            "type": "string"
+          },
+          "payload": {
+            "$ref": "#/components/schemas/PipelineTrace"
+          },
+          "seq": {
+            "description": "0, 1, 2, … within one stream.",
+            "minimum": 0,
+            "title": "Seq",
+            "type": "integer"
+          },
+          "trace_id": {
+            "maxLength": 64,
+            "title": "Trace Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "trace_id",
+          "seq",
+          "payload"
+        ],
+        "title": "TraceCompletedEvent",
+        "type": "object"
+      },
+      "TraceEvent": {
+        "discriminator": {
+          "mapping": {
+            "classification": "#/components/schemas/ClassificationEvent",
+            "error": "#/components/schemas/ErrorEvent",
+            "escalation": "#/components/schemas/EscalationEvent",
+            "generation": "#/components/schemas/GenerationEvent",
+            "generation.delta": "#/components/schemas/GenerationDeltaEvent",
+            "retrieval": "#/components/schemas/RetrievalEvent",
+            "trace.completed": "#/components/schemas/TraceCompletedEvent",
+            "trace.started": "#/components/schemas/TraceStartedEvent",
+            "verification": "#/components/schemas/VerificationEvent"
+          },
+          "propertyName": "event"
+        },
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/TraceStartedEvent"
+          },
+          {
+            "$ref": "#/components/schemas/ClassificationEvent"
+          },
+          {
+            "$ref": "#/components/schemas/RetrievalEvent"
+          },
+          {
+            "$ref": "#/components/schemas/GenerationDeltaEvent"
+          },
+          {
+            "$ref": "#/components/schemas/GenerationEvent"
+          },
+          {
+            "$ref": "#/components/schemas/VerificationEvent"
+          },
+          {
+            "$ref": "#/components/schemas/EscalationEvent"
+          },
+          {
+            "$ref": "#/components/schemas/TraceCompletedEvent"
+          },
+          {
+            "$ref": "#/components/schemas/ErrorEvent"
+          }
+        ]
+      },
+      "TraceRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "query": {
+            "maxLength": 2000,
+            "minLength": 3,
+            "title": "Query",
+            "type": "string"
+          },
+          "repository": {
+            "anyOf": [
+              {
+                "pattern": "^[A-Za-z0-9_.-]{1,100}/[A-Za-z0-9_.-]{1,100}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Restrict retrieval to one ingested repository (owner/name).",
+            "title": "Repository"
+          },
+          "system": {
+            "$ref": "#/components/schemas/SystemId",
+            "default": "E"
+          },
+          "task_type_hint": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TaskType"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "query"
+        ],
+        "title": "TraceRequest",
+        "type": "object"
+      },
+      "TraceStartedEvent": {
+        "additionalProperties": false,
+        "properties": {
+          "contract_version": {
+            "const": "1.0.0",
+            "default": "1.0.0",
+            "title": "Contract Version",
+            "type": "string"
+          },
+          "event": {
+            "const": "trace.started",
+            "default": "trace.started",
+            "title": "Event",
+            "type": "string"
+          },
+          "payload": {
+            "$ref": "#/components/schemas/TraceStartedPayload"
+          },
+          "seq": {
+            "description": "0, 1, 2, … within one stream.",
+            "minimum": 0,
+            "title": "Seq",
+            "type": "integer"
+          },
+          "trace_id": {
+            "maxLength": 64,
+            "title": "Trace Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "trace_id",
+          "seq",
+          "payload"
+        ],
+        "title": "TraceStartedEvent",
+        "type": "object"
+      },
+      "TraceStartedPayload": {
+        "additionalProperties": false,
+        "properties": {
+          "execution": {
+            "$ref": "#/components/schemas/ExecutionContext"
+          },
+          "request_id": {
+            "maxLength": 64,
+            "title": "Request Id",
+            "type": "string"
+          },
+          "system": {
+            "$ref": "#/components/schemas/SystemId"
+          }
+        },
+        "required": [
+          "request_id",
+          "system",
+          "execution"
+        ],
+        "title": "TraceStartedPayload",
+        "type": "object"
+      },
+      "Verdict": {
+        "enum": [
+          "VERIFIED",
+          "INSUFFICIENT_EVIDENCE",
+          "UNVERIFIED",
+          "ERROR"
+        ],
+        "title": "Verdict",
+        "type": "string"
+      },
+      "VerificationEvent": {
+        "additionalProperties": false,
+        "properties": {
+          "contract_version": {
+            "const": "1.0.0",
+            "default": "1.0.0",
+            "title": "Contract Version",
+            "type": "string"
+          },
+          "event": {
+            "const": "verification",
+            "default": "verification",
+            "title": "Event",
+            "type": "string"
+          },
+          "payload": {
+            "$ref": "#/components/schemas/VerificationTrace"
+          },
+          "seq": {
+            "description": "0, 1, 2, … within one stream.",
+            "minimum": 0,
+            "title": "Seq",
+            "type": "integer"
+          },
+          "trace_id": {
+            "maxLength": 64,
+            "title": "Trace Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "trace_id",
+          "seq",
+          "payload"
+        ],
+        "title": "VerificationEvent",
+        "type": "object"
+      },
+      "VerificationTrace": {
+        "additionalProperties": false,
+        "properties": {
+          "aggregated_score": {
+            "$ref": "#/components/schemas/Metric"
+          },
+          "attempt_index": {
+            "minimum": 0.0,
+            "title": "Attempt Index",
+            "type": "integer"
+          },
+          "critical_failures": {
+            "items": {
+              "$ref": "#/components/schemas/SignalType"
+            },
+            "title": "Critical Failures",
+            "type": "array"
+          },
+          "evaluator_errors": {
+            "items": {
+              "$ref": "#/components/schemas/SignalType"
+            },
+            "title": "Evaluator Errors",
+            "type": "array"
+          },
+          "executed": {
+            "description": "False for systems A–D (no gate).",
+            "title": "Executed",
+            "type": "boolean"
+          },
+          "gate": {
+            "anyOf": [
+              {
+                "maxLength": 64,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gate"
+          },
+          "passed": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "null when the gate did not execute.",
+            "title": "Passed"
+          },
+          "signals": {
+            "items": {
+              "$ref": "#/components/schemas/SignalTrace"
+            },
+            "title": "Signals",
+            "type": "array"
+          },
+          "threshold": {
+            "anyOf": [
+              {
+                "maximum": 1.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Threshold"
+          }
+        },
+        "required": [
+          "attempt_index",
+          "executed",
+          "aggregated_score",
+          "passed"
+        ],
+        "title": "VerificationTrace",
+        "type": "object"
+      }
+    }
+  },
+  "info": {
+    "description": "Frozen v1 contract between the EIH research pipeline and the web platform. See docs/API_CONTRACT.md.",
+    "title": "EIH Pipeline Trace API",
+    "version": "1.0.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/v1/trace": {
+      "post": {
+        "operationId": "trace_v1_trace_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TraceRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PipelineTrace"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid request"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Request body too large"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Request failed validation"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Rate limited; see Retry-After"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Pipeline and cache both unavailable"
+          }
+        },
+        "summary": "Run one query and return the full pipeline trace",
+        "tags": [
+          "Trace v1"
+        ]
+      }
+    },
+    "/v1/trace/stream": {
+      "post": {
+        "operationId": "trace_stream_v1_trace_stream_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TraceRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "text/event-stream": {
+                "schema": {
+                  "$ref": "#/components/schemas/TraceEvent"
+                }
+              }
+            },
+            "description": "Server-Sent Events. Each event's `event:` field equals the JSON `event` discriminator; `data:` is one TraceEvent."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid request"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Request body too large"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Request failed validation"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Rate limited; see Retry-After"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Pipeline and cache both unavailable"
+          }
+        },
+        "summary": "Run one query and stream trace events as they happen",
+        "tags": [
+          "Trace v1"
+        ]
+      }
+    }
+  }
+}
