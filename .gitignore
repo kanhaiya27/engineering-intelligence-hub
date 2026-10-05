@@ -88,6 +88,11 @@ experiments/results/**/*.npz
 !experiments/results/classifier/**/*.json
 !experiments/results/thresholds/**/*.json
 !experiments/results/determinism/**/*.json
+!experiments/results/variance/**/*.json
+!experiments/results/queue/**/summary.json
+!experiments/results/queue/**/run.json
+!experiments/results/queue/machine_A/modeq-*/results.jsonl
+!experiments/results/queue/machine_A/modeq-*/plan.jsonl
 
 # --- Datasets (large files — exclude raw, keep registry/schema) ---
 datasets/**/*.jsonl

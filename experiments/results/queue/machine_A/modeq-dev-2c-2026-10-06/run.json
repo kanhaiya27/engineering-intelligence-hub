@@ -1,0 +1,169 @@
+{
+  "study": "job_queue_run",
+  "run_id": "modeq-dev-2c-2026-10-06",
+  "created_utc": "2026-10-05T20:38:56+00:00",
+  "plan_hash": "97d9337d347c1c7b",
+  "n_units": 432,
+  "config": {
+    "split": "dev",
+    "systems": [
+      "baseline_a",
+      "baseline_b",
+      "system_c",
+      "system_d",
+      "system_e",
+      "system_e_routed"
+    ],
+    "trials": 3,
+    "seed": 42,
+    "max_tasks": null,
+    "task_ids": [
+      "eih-phase1-req-005",
+      "eih-phase1-req-008",
+      "eih-phase1-req-009",
+      "eih-phase1-req-010",
+      "eih-phase1-code-014",
+      "eih-phase1-code-015",
+      "eih-phase1-code-017",
+      "eih-phase1-code-018",
+      "eih-phase1-dev-023",
+      "eih-phase1-dev-025",
+      "eih-phase1-dev-028",
+      "eih-phase1-dev-030",
+      "eih-phase1-test-034",
+      "eih-phase1-test-035",
+      "eih-phase1-test-037",
+      "eih-phase1-test-038",
+      "eih-phase1-rev-043",
+      "eih-phase1-rev-044",
+      "eih-phase1-rev-045",
+      "eih-phase1-rev-048",
+      "eih-phase1-ops-051",
+      "eih-phase1-ops-054",
+      "eih-phase1-ops-058",
+      "eih-phase1-ops-059"
+    ],
+    "manifest": null,
+    "manifest_hash": "95e5a587c9d60e7a",
+    "frozen_variables": {
+      "repositories": {
+        "pallets/flask": "c12a5d874c5a014495eb2db8a73f40037bc813ac",
+        "fastapi/fastapi": "1c3e6918750ccb3f20ea260e9a4238ce2c0e5f63",
+        "psf/requests": "0e322af87745eff34caffe4df68456ebc20d9068",
+        "pytest-dev/pytest": "bbcec9c46509c417ef58e4849847b4aa43f4591e",
+        "sphinx-doc/sphinx": "0d912c85fd3ec385432fe707f6a0678425d1e841",
+        "pylint-dev/pylint": "da1956664d6be3d008a90ad3f72bdd9d8a7ecfaa"
+      },
+      "llm_provider": "ollama",
+      "llm_model_id": "qwen2.5-coder:7b",
+      "llm_num_ctx": 12288,
+      "llm_num_gpu": 999,
+      "temperature": 0.0,
+      "max_output_tokens": 2048,
+      "random_seed": 42,
+      "embedding_model_id": "BAAI/bge-small-en-v1.5",
+      "embedding_device": "cuda",
+      "embedding_dimension": 384,
+      "carbon_intensity_gco2_per_kwh": 713.0,
+      "cpu_tdp_watts": 45.0,
+      "gpu_tdp_watts": 80.0,
+      "input_cost_per_1m_tokens_usd": 0.0,
+      "output_cost_per_1m_tokens_usd": 0.0,
+      "retrieval_config_sha256": "sha256:56d6053b9ca69d3927e48f5d030152ff214d7da20b72567572e401c4dc7c4078",
+      "inference_config_sha256": "sha256:a49537335c33a16c795d940cf0ed848e01b58b7a0b352fe82c311b9df410e3dc",
+      "models_config_sha256": "sha256:bc3fff5d8b2de5f93dd497388eb7f29a8a5c2e4b6d2b758430c3a532ae82efee",
+      "vector_collection": "eih_knowledge_v2",
+      "benchmark_tasks_sha256": "sha256:370e0f740c95ef122f95f17f39f10909e369ed6dbd418b77b5cf9728c8100b3d",
+      "benchmark_splits_sha256": "sha256:87acf6adb884a30a69ab307cd6605399d2fb441e84b2238e76219f59094b9f93",
+      "retrieval_labels_sha256": "sha256:d91195763693e309bf22df2b46c1d64d25919ce4385d3e53d4502f1117fc2130",
+      "graph_build_report_sha256": "sha256:aeed710e97d60f8395f01cd2513b530c0ed7e9dc4c66518cef1700c1942a6e7f",
+      "collection_points": 53905,
+      "graph_nodes": 37066,
+      "graph_edges": 58982,
+      "trials_per_task": 3
+    },
+    "knowledge_graph": {
+      "repository_nodes": 6,
+      "file_nodes": 7109,
+      "total_nodes": 37066,
+      "total_edges": 58982
+    },
+    "warm_up": {
+      "warmed": [
+        "baseline_b:hybrid",
+        "dense",
+        "dense_fast",
+        "graph_augmented",
+        "graph_augmented_reranked",
+        "hybrid",
+        "hybrid_bm25",
+        "hybrid_reranked",
+        "incident_graph",
+        "incident_sparse",
+        "sparse"
+      ],
+      "seconds": 90.93
+    },
+    "provider": "ollama"
+  },
+  "provenance": {
+    "recorded_at_utc": "2026-10-05T20:38:56+00:00",
+    "machine_id": "laptop-a",
+    "platform": "Windows-10-10.0.26300-SP0",
+    "python": "3.11.9",
+    "gpu": {
+      "name": "NVIDIA GeForce RTX 4050 Laptop GPU",
+      "driver": "617.14",
+      "vram_total_mib": 6141,
+      "power_default_limit_w": 80.0,
+      "power_max_limit_w": 140.0,
+      "compute_capability": "8.9"
+    },
+    "torch": {
+      "torch": "2.6.0+cu124",
+      "cuda": "12.4",
+      "cudnn": 90100,
+      "cuda_available": true
+    },
+    "ollama": {
+      "base_url": "http://localhost:11434",
+      "version": "0.35.1",
+      "models": {
+        "qwen2.5-coder:7b": {
+          "digest": "dae161e27b0e90dd1856c8bb3209201fd6736d8eb66298e75ed87571486f4364",
+          "size_bytes": 4683087561,
+          "parameter_size": "7.6B",
+          "quantization": "Q4_K_M"
+        },
+        "qwen2.5-coder:3b": {
+          "digest": "f72c60cabf6237b07f6e632b2c48d533cef25eda2efbd34bed21c5e9c01e6225",
+          "size_bytes": 1929912626,
+          "parameter_size": "3.1B",
+          "quantization": "Q4_K_M"
+        },
+        "qwen2.5-coder:1.5b": {
+          "digest": "d7372fd828518a4d38b1eb196c673c31a85f2ed302b3d1e406c4c2d1b64a0668",
+          "size_bytes": 986062089,
+          "parameter_size": "1.5B",
+          "quantization": "Q4_K_M"
+        }
+      }
+    },
+    "git": {
+      "sha": "4697594a1a46bd91f8286d1d560dd1f98ee3af2f",
+      "branch": "master-fix",
+      "dirty": true
+    },
+    "sustainability_config": {
+      "carbon_region": "custom",
+      "carbon_intensity_gco2_per_kwh": 713.0,
+      "cpu_tdp_watts": 45.0,
+      "gpu_tdp_watts": 80.0
+    }
+  },
+  "thermal_rule": {
+    "max_temp_c": 90,
+    "resume_temp_c": 65,
+    "max_retries": 2
+  }
+}
