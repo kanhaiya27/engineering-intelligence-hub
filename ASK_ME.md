@@ -61,6 +61,44 @@ until you answer. To answer, reply with the item ID and your choice. Answered it
 
 ## Design decisions found in Step 1
 
+## Found in Step 2
+
+- [ ] **V1: Temperature-0 answers still vary between runs.** Seed 42 and temperature 0 were
+  already fixed. Probes on dev (`experiments/results/determinism/`):
+  - the same request in one session gives an identical answer (10/10);
+  - the first request after a fresh model load gives a different but repeatable answer;
+  - output limit 1,024 vs 2,048 gives a third answer.
+
+  The cause is llama.cpp's numeric path (prompt-cache state, `num_predict`), not sampling. Options:
+  (a) keep it and measure it with 3 trials, analysing per-task means;
+  (b) unload/reload the model before every trial, which is deterministic but adds load time and energy
+      to every trial.
+  **Recommended: (a).** It reflects real use, and the 3-trial variance is reported
+  (`experiments/results/variance/`).
+- [ ] **M1: The correctness measure cannot express "correct" for long answers.** Plain token F1
+  between 300–800-token answers and 1–3-sentence references is about 0.1–0.35 for every system,
+  while task thresholds are 0.60–0.85. A2's success (correct AND cites evidence) is then about 0 for
+  all systems, and CO₂e per successful task is undefined. Options:
+  (a) correctness = recall of the reference's content tokens (does the answer contain what the
+      reference says?), with the pass threshold calibrated on dev/val against the human-rated subset;
+  (b) human judgement as primary correctness on dev/val calibration only, with (a) on test;
+  (c) keep F1 and lower thresholds. Not recommended: it hides the problem.
+  **Recommended: (a)**, validated against 30–50 human-rated answers (Step 1e tooling) before the
+  test run. **Measured (Step 2c, 648 dev/val trials):** mean F1 is 0.235–0.260 for every system, and
+  0 of 648 trials reach the task threshold. So A2 success = 0 for all systems, and CO₂e per success
+  is undefined (`experiments/results/variance/machine_A/variance-2c-2026-10-06/variance.json`).
+
+- [ ] **T1: The routing tier's small models loop to the output limit.** In 9 of 108 E + routing
+  trials (3 tasks × 3 trials, repeated exactly), a 1.5B/3B generation repeated itself until the
+  2,048-token limit. System A–E (7B) never reached the limit (longest answer 1,200 tokens). Raising
+  the limit for all systems (master prompt 2e) would not end a loop, and with the ~9K-token widest
+  prompt it would overflow `num_ctx` 12,288. Options:
+  (a) keep 2,048 and report loops as a measured failure mode of the routing tier (they are failures
+      and count against CO₂e per success);
+  (b) add a repetition penalty for all models (changes every system's generation; needs a dev/val
+      rerun).
+  **Recommended: (a).**
+
 ## Plan decisions still open (WORK_PLAN §4)
 
 - [ ] **D4: Large-LLM baseline** (spec §7.3; a large model cannot run on 6 GB).
