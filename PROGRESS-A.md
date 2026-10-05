@@ -8,6 +8,38 @@ measured (with numbers only if actually measured), what is blocked.
 
 ---
 
+## 2026-10-05 (night) — Phase 1b step 7: GPU job queue
+
+Branch `feat/gpu-job-queue` (off `feat/local-inference-routing`; task A2 step 7).
+
+**Done**
+- `scripts/job_queue.py`: one unit = (system, task, trial). Exactly-once ledger
+  (`results.jsonl`, fsynced; re-running the same `--run-id` resumes, a half-written line
+  from a crash re-runs), errors recorded with the exception (never dropped;
+  `--retry-errors`), units interleaved and shuffled per trial round (seed 42) so no
+  system always runs first/last, the 90 °C discard-cool-repeat rule (temperature read
+  between units only), a GPU lock file, and the held-out test split only with
+  `--final-test`, once. Writes `run.json` (provenance), `plan.jsonl`, `discarded.jsonl`,
+  `summary.json` under `experiments/results/queue/<machine>/<run-id>/`.
+- Tests: 11 new; full suite **267 passed**.
+- Smoke run (2 dev tasks × baseline_a + system_e × 1 trial, real Ollama/Qdrant, written
+  to scratch — not a result): 4/4 ok, resume re-ran 0 units.
+
+**Found (for A3 — runner defects, not queue defects)**
+- **System A refuses everything:** `BaselineRAGPipeline` with `skip_retrieval=True` still
+  uses the evidence-only SYSTEM_PROMPT, so the 7B answers "INSUFFICIENT EVIDENCE" (~1.5 s,
+  47–59 tokens) → A→B would measure a strawman. A needs its own no-evidence prompt.
+- **Measured energy never reaches the trial record:** `M5BenchmarkRunner._evaluate_trial`
+  sets `gpu_energy_measured_joules=None` and computes `cpu/gpu_energy_joules` as
+  45 W / 60 W × latency; the NVML energy from `OllamaProvider` (and its per-call max
+  temperature) is dropped. Must be wired before any A–E number counts.
+
+**Next**
+- [ ] Step 8: PRs (`feat/local-inference-routing` = step 6, then this branch)
+- [ ] A3: fix the two runner defects above, manifest re-freeze, live calibration
+
+---
+
 ## 2026-10-05 (evening) — Phase 1b step 6: long-context probe → context budget
 
 Branch `feat/local-inference-routing` (task A2). Script `scripts/phase1_long_context_probe.py`.
