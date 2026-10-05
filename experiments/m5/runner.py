@@ -172,8 +172,8 @@ class M5BenchmarkRunner:
     def graph_preflight(self) -> Dict[str, Any]:
         """Refuse D/E runs unless the populated wave-1 graph is reachable.
 
-        Laptop A held only a 2-node test fixture until laptop-b's dump is restored;
-        D/E on that graph would quietly measure "no graph". Raises with the reason.
+        This laptop holds only a 2-node test fixture until the wave-1 graph is built
+        (WORK_PLAN step 5); D/E on it would quietly measure "no graph". Raises with the reason.
         """
         expected_repos = len(self.manifest.frozen_variables.repositories)
         store = self.graph_store
@@ -184,7 +184,7 @@ class M5BenchmarkRunner:
         if repos < expected_repos or files == 0:
             raise RuntimeError(f"Knowledge graph incomplete: {repos} Repository / {files} File nodes, "
                                f"expected {expected_repos} repositories. Restore C:\\EIH_share\\neo4j.dump "
-                               "(laptop-b B3) before running Systems D/E.")
+                               "(WORK_PLAN step 5) before running Systems D/E.")
         return {"repository_nodes": repos, "file_nodes": files, "total_nodes": store.count_nodes(),
                 "total_edges": store.count_edges()}
 

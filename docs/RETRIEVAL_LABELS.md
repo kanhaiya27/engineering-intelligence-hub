@@ -100,7 +100,7 @@ commit and checks:
 2. Nothing essential is missing. Add a directive to `SPECS` if it is.
 3. `alternative_files` really are equivalent.
 4. If `ground_truth_issue` is set, decide what happens to the task: keep, fix,
-   or drop. Record the decision in `PROGRESS-B.md`.
+   or drop. Record the decision in `PROGRESS-A.md` (laptop-b's log is archived in `docs/archive/`).
 
 Then set `label_status` to `verified` with `verified_by="<name>"`. Do this in
 `SPECS`/the builder so the file stays reproducible. The schema refuses

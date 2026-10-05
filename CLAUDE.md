@@ -2,60 +2,33 @@
 
 Context for AI assistants and new contributors. Read this before changing anything.
 
-## Session routine (Claude: do this automatically, on both laptops)
+## Session routine (Claude: do this automatically)
 
-The two laptops work **at the same time** and share context only through this
-repository, so every Claude session follows this routine without being asked. Claude
-handles all git commands; the user only approves pushes and merges PRs on GitHub.
-
-**Automatic guard (hooks in `.claude/settings.json`, script `scripts/git_sync_guard.py`):**
-- At session start it runs `git fetch` and reports which commits the other laptop merged
-  into `origin/master` that this checkout lacks. Its report arrives in your context as
-  "[git sync guard]". **Tell the user this status first, before anything else.**
-- While `origin/master` holds a **must-pull** change this branch lacks (a commit tagged
-  `[must-pull]`, or any change to a shared file), **edits to repo files are blocked**.
-  Do not work around the block (never edit via Bash/sed instead): tell the user, sync,
-  re-run the tests, then continue.
+**One person, one laptop (laptop-a), since 2026-10-05.** There is no second laptop and
+no task split (WORK_PLAN change C11). GitHub is a private backup only.
 
 **At the start of a session, before any other work:**
-1. Identify the laptop from `EIH_MACHINE_ID` in `.env` (`laptop-a` or `laptop-b`). If
-   there is no `.env` yet, ask which laptop this is.
-2. Report the guard's status. Then sync safely:
-   - On `master`, nothing uncommitted: `git pull`.
-   - On a feature branch: `git fetch` then `git merge origin/master` (never rebase), and
-     run `python -m pytest` if anything shared changed.
-   - With uncommitted changes: do not switch branches or pull. Report and ask.
-3. Read `PROGRESS-A.md`, `PROGRESS-B.md` (newest first) and this laptop's queue in
-   `docs/WORK_PLAN.md`.
-4. Give the user a short summary: what each laptop did last, anything blocked, and the
-   next task for *this* laptop. Then wait for the user's go-ahead.
+1. `git fetch`; report the branch and whether anything is uncommitted. On `master` with a
+   clean tree: `git pull`. On a feature branch: `git merge origin/master` (never rebase).
+   With uncommitted changes: do not switch branches or pull; report and ask.
+2. Read `PROGRESS-A.md` (newest first) and the ordered work list in `docs/WORK_PLAN.md` §3.
+3. Tell Avaneesh in plain words what was done last and what the next step is, then wait.
 
-**When starting a task:** from up-to-date `master`, create the branch named in
-`docs/WORK_PLAN.md` (`git checkout -b <branch>`). Never commit on `master`.
+**When starting a step:** from up-to-date `master`, create a branch for it. Never commit
+on `master`.
 
-**Marking must-pull changes (so the other laptop gets warned and blocked):** if a commit
-changes a shared file (`core/`, `configs/`, `knowledge/schemas/`, `knowledge/vector/`,
-`evaluation/`, `tests/conftest.py`, `requirements*.txt`, `pyproject.toml`,
-`docker-compose.yml`, `.env.example`, `.gitignore`, `.gitattributes`, `.claude/`,
-`CLAUDE.md`, `scripts/git_sync_guard.py`) or changes how the other laptop must work,
-end its subject with ` [must-pull]` and add a line to this laptop's PROGRESS file
-under "Must pull". The guard also catches untagged shared-file changes automatically.
+**When Avaneesh says he is done for the session**, or a step is finished: run
+`python -m pytest` and report the real result; add a dated `PROGRESS-A.md` entry (done /
+measured / next / blocked; real numbers only); commit on the feature branch; push the
+feature branch (standing permission); give the PR link
+`https://github.com/kanhaiya27/engineering-intelligence-hub/pull/new/<branch>`.
 
-**When the user says they are done for the session** ("done for today", "wrap up",
-"that's it" and similar), or a task is finished:
-1. Run `python -m pytest`; report the real result.
-2. Add a dated entry to this laptop's PROGRESS file (done / measured / next / blocked /
-   must pull; real numbers only).
-3. Commit on the current feature branch (never on `master`), tagging `[must-pull]` where
-   the rule above applies.
-4. Show `git log --oneline -5` and `git status -sb`, and **ask before pushing**.
-5. After the push, give the PR link
-   (`https://github.com/kanhaiya27/engineering-intelligence-hub/pull/new/<branch>`) and
-   tell the user to send the other laptop: "merged <branch>" once it is merged — plus
-   "MUST PULL before working" if the push contains a `[must-pull]` commit.
+**The plan:** the original plan is frozen in `docs/original_plan.md` (+ the dataset
+specification). `docs/WORK_PLAN.md` lists the work in order; every deviation goes into its
+change register, and nothing from the original plan is dropped without Avaneesh's decision.
 
-Never force-push, rewrite pushed history, push directly to `master`, change repository
-visibility, or delete anything (files, branches, containers, data) without asking.
+Never force-push, rewrite pushed history, push directly to `master`, or change repository
+visibility.
 
 ## What this project is
 
@@ -79,8 +52,9 @@ RAG → **C** + task-aware adaptive retrieval → **D** + knowledge graph → **
 quality gate & bounded escalation — reporting a quality/latency/energy/cost/CO₂e
 Pareto frontier. Headline metric: **CO₂e per *successful* task**.
 
-Key documents: **`docs/WORK_PLAN.md` (who does what, phase status, task queues per
-laptop — check it before starting any task)**, `docs/PROJECT_REPORT.md` (status and methodology),
+Key documents: **`docs/original_plan.md` (the frozen original plan)**, **`docs/WORK_PLAN.md`
+(ordered work list, status, change register — check it before starting any step)**,
+`docs/PROJECT_REPORT.md` (status and methodology),
 `docs/MASTER_DATASET_SPECIFICATION.md` (datasets, evaluation modes R/Q/P),
 `M5_RESEARCH_VALIDITY_AUDIT.md`, `RESEARCH_NOTES.md` (decision log), `ROADMAP.md`.
 
@@ -94,28 +68,25 @@ laptop — check it before starting any task)**, `docs/PROJECT_REPORT.md` (statu
 4. **A capability must be verified as executing, not just configured.** Four silent
    defects (reranker never ran, BM25 empty, carbon config ignored, rerank energy
    missing) were found this way — see `docs/PROJECT_REPORT.md` §10.5.
-5. **Every result records which machine produced it** (`machine_id`, see
-   `docs/WORKFLOW.md`) and the grid carbon region used.
+5. **Every result records which machine produced it** (`machine_id` from `.env`) and the
+   grid carbon region used.
 6. **Never commit secrets** (`.env`, keys, tokens) or large data (Qdrant snapshots,
-   Neo4j dumps, model weights, `.corpus_cache/`). Share data via `C:\EIH_share\`.
+   Neo4j dumps, model weights, `.corpus_cache/`). Data backups live in `C:\EIH_share\`.
 7. **No direct pushes to `master`, no force-push, no history rewrites.** Work on
-   `feat/<area>` branches and open PRs (see `docs/WORKFLOW.md`).
+   `feat/<area>` / `fix/<area>` branches and open PRs.
 8. Keep novelty claims conservative (see `PROJECT_REPORT.md` §5.1 "non-claims").
 
-## Hardware — two development laptops
+## Hardware (laptop-a — the only machine that produces results)
 
-| | Laptop A (Avaneesh) | Laptop B (teammate) |
-|---|---|---|
-| GPU | RTX 4050 Laptop, 6 GB, Ada (sm_89) | RTX 5050 Laptop, Blackwell (sm_120) — confirm VRAM with `nvidia-smi` |
-| CPU | Intel i7-12650H | record in `PROGRESS-B.md` |
-| PyTorch | 2.6.0 + cu124 | **must be a cu128 build** (≥ 2.7) — see `SETUP_LAPTOP_B.md` |
-| Python | 3.11.9 in `.venv311/` | 3.11 in `.venv311/` |
+| | |
+|---|---|
+| GPU | RTX 4050 Laptop, 6 GB, Ada (sm_89), driver 617.14 |
+| CPU | Intel i7-12650H |
+| PyTorch | 2.6.0 + cu124 |
+| Python | 3.11.9 in `.venv311/` |
 
-Energy figures depend on hardware: each laptop sets its own
-`EIH_SUSTAINABILITY_CPU_TDP_WATTS` / `EIH_SUSTAINABILITY_GPU_TDP_WATTS` in its
-local `.env`. Results from the two laptops are **not directly comparable** for
-energy unless the machine is controlled for — never mix them in one table
-without a `machine_id` column.
+Energy figures are hardware-specific (`EIH_SUSTAINABILITY_*_TDP_WATTS` in `.env`).
+Earlier laptop-b work (Sep–Oct 2026) is archived in `docs/archive/`.
 
 ### Local model ladder (Ollama) — pinned by digest
 
@@ -129,16 +100,15 @@ on 2026-10-04 with Ollama 0.35.1 (`curl http://localhost:11434/api/tags`):
 | large | `qwen2.5-coder:7b` | 7.6B Q4_K_M | 4,683,087,561 | `dae161e27b0e90dd1856c8bb3209201fd6736d8eb66298e75ed87571486f4364` |
 
 If `ollama pull` ever changes a digest, the model changed: results from different
-digests are not comparable. Laptop B must show the same digests before its runs count.
+digests are not comparable. **How** the models are called (num_ctx, num_gpu, temperature,
+seed, output limit) is defined once, in `configs/inference.yaml`.
 
-## Two-laptop setup
+## Data
 
-- Code is shared through GitHub (private repo `kanhaiya27/engineering-intelligence-hub`).
-- Data is **not** in git. The Qdrant collection `eih_knowledge` (48,046 chunks) and
-  any Neo4j graph are exported to `C:\EIH_share\` and copied to Laptop B; restore
-  steps are in `SETUP_LAPTOP_B.md`. Alternatively re-ingest with
-  `python -m scripts.ingest_corpus --wave 1`.
-- Each person logs their work in `PROGRESS-A.md` / `PROGRESS-B.md`.
+- Code: private GitHub repo `kanhaiya27/engineering-intelligence-hub` (backup).
+- Data is **not** in git: Qdrant collection `eih_knowledge` (48,046 chunks; snapshot in
+  `C:\EIH_share\`), Neo4j graph. Re-ingest with `python -m scripts.ingest_corpus --wave 1`.
+- Work log: `PROGRESS-A.md`.
 
 ## Common commands (PowerShell, from repo root)
 
@@ -155,23 +125,18 @@ uvicorn apps.api.main:app --reload --port 8000   # http://localhost:8000/docs
 `ingestion/` loaders + chunkers · `knowledge/` schemas, vector (Qdrant, BGE), graph
 (Neo4j) · `retrieval/` dense, BM25, hybrid, reranker, adaptive policy ·
 `intelligence/` task classifier · `generation/` LLM providers, RAG pipelines ·
-`verification/` quality gate + escalation · `routing/` model routing (not yet wired)
+`verification/` quality gate + escalation · `routing/` model routing (System E_routed, RQ4)
 · `sustainability/` energy, cost, carbon · `experiments/m5/` controlled evaluation ·
 `benchmark/` tasks + splits · `apps/api/` FastAPI · `scripts/` drivers · `docs/`.
 
-## Current state (2026-10-05 night)
+## Current state (2026-10-05, after the restore-original-plan audit)
 
-Phase 0 and Phase 1 done: wave-1 corpus (6 repos, 48,046 chunks), local model ladder
-(Ollama, Qwen2.5-Coder 1.5B/3B/7B) measured and wired with routing, escalation fixed and
-raised to 3 (F1, laptop-b), GPU job queue, run settings num_ctx 12,288 / 1,024 output.
-Measurement-integrity fixes for calibration (A3) on `feat/m5-live-calibration`. Wave-1
-knowledge graph built on laptop-b (B3, draft PR; Laptop A restores `C:\EIH_share
-eo4j.dump`).
-**No real System A–E comparison has been run yet.** Everything — task queues, open
-decisions and the **change register of every deviation from the original plan** — is in
-`docs/WORK_PLAN.md`; the original plan itself is `docs/PROJECT_REPORT.md` §3/§7/§11 and
-`docs/MASTER_DATASET_SPECIFICATION.md` §1/§8/§9. Deadlines: experiments complete
-25 Oct 2026; final 15 Nov 2026.
+Phase 0 and Phase 1 done: wave-1 corpus (6 repos, 48,046 chunks), local models
+(Qwen2.5-Coder 1.5B/3B/7B) measured, job queue, single config `configs/inference.yaml`.
+Measurement and validity fixes on `restore-original-plan` (real classifier for C–E, plan
+§9.1 tiers, CPU estimate, §9.2 latency breakdown, RQ4 routed system). Knowledge graph not
+yet built on this laptop (WORK_PLAN step 5: our own builder). **No real System A–E
+comparison has been run yet.** Deadlines: experiments complete 25 Oct 2026; final 15 Nov 2026.
 
 ## Measurement rules learned the hard way (Laptop A, RTX 4050, driver 617.14)
 
@@ -184,8 +149,8 @@ decisions and the **change register of every deviation from the original plan** 
   at ~27–31 W (P0). Report **gross** energy as the headline; "net of idle" only with a
   settled P8 baseline.
 - 7B (Q4_K_M) runs 82% on GPU at num_ctx 4096 (Ollama's own estimate), even alone.
-- **Run settings (decided 2026-10-05): num_ctx 12,288, `num_gpu 999` (all layers on the
-  GPU) for every model, output limit 1,024 tokens.** The 7B fits at 12K (peak 5,906 of
+- **Run settings (decided 2026-10-05, defined in `configs/inference.yaml`): num_ctx 12,288,
+  `num_gpu 999` (all layers on the GPU) for every model, output limit 1,024 tokens.** The 7B fits at 12K (peak 5,906 of
   6,141 MiB with encoders); at 16K VRAM is full; from 20K the driver silently pages to
   system RAM (5–7× slower, 4–7× the energy) while Ollama still reports "100% on GPU".
   See `experiments/results/phase1/machine_A/long_context_probe.md`.
