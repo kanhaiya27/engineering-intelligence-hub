@@ -20,9 +20,9 @@ class GenerationAccount:
     energy_joules: float
     energy_tier: str            # MEASURED | ESTIMATED
     co2e_grams: float
-    co2e_tier: str              # DERIVED (from measured energy) | ESTIMATED
+    co2e_tier: str              # ESTIMATED: energy x an average grid intensity (original plan §9.1)
     cost_usd: float
-    cost_tier: str              # DERIVED (local: 0) | ESTIMATED (API price list)
+    cost_tier: str              # ESTIMATED (original plan §9.1); 0 for local inference
     energy_reliability: Optional[str] = None
     cold_start: Optional[Dict[str, Any]] = None
 
@@ -50,8 +50,8 @@ def account_generation(
         co2e_g = (energy_j / 3_600_000.0) * carbon_estimator.carbon_intensity
         return GenerationAccount(
             energy_joules=energy_j, energy_tier="MEASURED",
-            co2e_grams=co2e_g, co2e_tier="DERIVED",
-            cost_usd=float(extra.get("cost_usd", 0.0) or 0.0), cost_tier=tiers.get("cost_usd", "DERIVED"),
+            co2e_grams=co2e_g, co2e_tier="ESTIMATED",
+            cost_usd=float(extra.get("cost_usd", 0.0) or 0.0), cost_tier="ESTIMATED",
             energy_reliability=extra.get("energy_reliability"),
             cold_start=extra.get("cold_start"),
         )

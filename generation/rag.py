@@ -141,6 +141,7 @@ class BaselineRAGPipeline:
         # 2. Retrieval step
         retrieval_result: Optional[RetrievalResult] = None
         context_str = ""
+        t_retrieval = time.perf_counter()
         if not skip_retrieval:
             retrieval_result = self.retriever.retrieve(
                 query=request.query,
@@ -149,8 +150,12 @@ class BaselineRAGPipeline:
                 task_id=request.task_id,
             )
             context_str = self._build_context_prompt(retrieval_result.chunks)
+        retrieval_ms = (time.perf_counter() - t_retrieval) * 1000.0 if not skip_retrieval else 0.0
+        rerank_ms = float(((retrieval_result.metadata if retrieval_result else None) or {})
+                          .get("reranker_latency_ms", 0.0) or 0.0)
 
         # 3. Prompt construction
+        t_context = time.perf_counter()
         if skip_retrieval:
             system_prompt = NO_RETRIEVAL_SYSTEM_PROMPT
             user_prompt = (
@@ -173,9 +178,15 @@ class BaselineRAGPipeline:
             temperature=settings.model.temperature,
         )
 
+        context_ms = (time.perf_counter() - t_context) * 1000.0
         # 4. LLM Generation
+        t_generation = time.perf_counter()
         gen_response = self.llm_provider.generate(gen_request)
+        generation_ms = (time.perf_counter() - t_generation) * 1000.0
         total_latency_ms = (time.perf_counter() - start_time) * 1000.0
+        latency_breakdown = {"retrieval": max(0.0, retrieval_ms - rerank_ms), "rerank": rerank_ms,
+                             "context": context_ms, "generation": generation_ms}
+        latency_breakdown["other"] = max(0.0, total_latency_ms - sum(latency_breakdown.values()))
 
         # 5. Sustainability metrics computation
         account = account_generation(
@@ -219,6 +230,9 @@ class BaselineRAGPipeline:
                 "rerank_energy_joules": rerank_energy_j,
                 "energy_tier": account.energy_tier if rerank_energy_j == 0.0 else "ESTIMATED",
                 "gpu_max_temp_c": ((gen_response.extra or {}).get("energy") or {}).get("max_temp_c"),
+                "latency_breakdown_ms": {k: round(v, 3) for k, v in latency_breakdown.items()},
+                "finish_reasons": [gen_response.finish_reason],
+                "output_truncated": gen_response.finish_reason == "length",
             },
         )
 

@@ -20,6 +20,9 @@ import json
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
+import psutil
+
+from core.config import settings
 from core.logging import get_logger
 from benchmark.dataset import BenchmarkDataset
 from evaluation.scorers.correctness import CorrectnessEvaluator
@@ -60,6 +63,13 @@ _CLASSIFICATION_FIELDS = ("sdlc_stage", "task_type", "complexity", "criticality"
 
 def _value(x: Any) -> Any:
     return x.value if hasattr(x, "value") else x
+
+
+def _cpu_utilisation(start, end) -> Optional[float]:
+    """Fraction of all CPU time that was busy between two psutil.cpu_times() snapshots."""
+    total = sum(end) - sum(start)
+    idle = (end.idle - start.idle) + (getattr(end, "iowait", 0.0) - getattr(start, "iowait", 0.0))
+    return round(max(0.0, min(1.0, 1.0 - idle / total)), 4) if total > 0 else None
 
 
 class M5BenchmarkRunner:
@@ -194,7 +204,18 @@ class M5BenchmarkRunner:
                 "quality_threshold_used": clf.quality_threshold,
             }
 
+        # CPU energy is ESTIMATED by a disclosed method (original plan §9.1, §12):
+        # CPU TDP x system-wide CPU utilisation over this trial's window x duration.
+        # Utilisation comes from psutil.cpu_times() snapshots, which (unlike
+        # cpu_percent) no other call inside the window can reset.
+        cpu_start, t_window = psutil.cpu_times(), time.perf_counter()
         response = self._dispatch(system_id, req, clf, llm_provider)
+        window_s = time.perf_counter() - t_window
+        response.metadata["cpu_window"] = {
+            "utilisation": _cpu_utilisation(cpu_start, psutil.cpu_times()),
+            "seconds": round(window_s, 4),
+            "method": "system-wide psutil.cpu_times delta over the trial",
+        }
         if classification_info is not None:
             response.metadata["classification"] = classification_info
         return response
@@ -359,10 +380,23 @@ class M5BenchmarkRunner:
         out_tok = response.output_tokens or 0
         tot_tok = in_tok + out_tok
 
-        en_joules = response.energy_joules
-        cost = response.cost_usd
-        co2e = response.co2e_grams
         md = response.metadata or {}
+        # Tiers as defined by the original plan §9.1: GPU energy MEASURED (NVML
+        # counter; ESTIMATED if a rerank power sample is included), CPU energy,
+        # CO2e and cost ESTIMATED; totals inherit the weakest tier.
+        gpu_joules = response.energy_joules
+        cpu_window = md.get("cpu_window")
+        cpu_joules = None
+        if cpu_window and cpu_window.get("utilisation") is not None:
+            cpu_joules = (settings.sustainability.cpu_tdp_watts * cpu_window["utilisation"]
+                          * cpu_window["seconds"])
+        en_joules = gpu_joules + (cpu_joules or 0.0)
+        cost = response.cost_usd
+        co2e = (en_joules / 3_600_000.0) * self.manifest.frozen_variables.carbon_intensity_gco2_per_kwh
+        breakdown = dict(md.get("latency_breakdown_ms") or {})
+        classification_ms = (md.get("classification") or {}).get("classification_ms")
+        if breakdown and classification_ms is not None:
+            breakdown["query"] = classification_ms
 
         chunks_count = len(response.retrieval.chunks) if response.retrieval else 0
         graph_count = sum(1 for c in response.retrieval.chunks if c.metadata.get("graph_context")) if response.retrieval else 0
@@ -381,9 +415,11 @@ class M5BenchmarkRunner:
             trial_index=trial_index,
             timestamp=datetime.datetime.utcnow().isoformat(),
             manifest_hash=self._manifest_hash,
-            latency_ms=round(lat, 2),
-            retrieval_latency_ms=round(response.retrieval.retrieval_latency_ms or 0.0, 2) if response.retrieval else 0.0,
-            generation_latency_ms=round(lat - (response.retrieval.retrieval_latency_ms or 0.0), 2) if response.retrieval else round(lat, 2),
+            latency_ms=round(lat + (classification_ms or 0.0), 2),
+            retrieval_latency_ms=round(breakdown.get("retrieval", 0.0) + breakdown.get("rerank", 0.0), 2),
+            generation_latency_ms=round(breakdown.get("generation", lat), 2),
+            latency_breakdown_ms=breakdown or None,
+            output_truncated=md.get("output_truncated"),
             input_tokens=in_tok,
             output_tokens=out_tok,
             total_tokens=tot_tok,
@@ -393,10 +429,11 @@ class M5BenchmarkRunner:
             escalation_count=response.escalation_count,
             total_attempts=response.verification_details.get("total_attempts", 1) if response.verification_details else 1,
             gpu_energy_measured_joules=md.get("generation_energy_measured_joules"),
-            cpu_energy_joules=None,  # CPU energy is not measured in local runs
-            gpu_energy_joules=round(en_joules, 4),
+            cpu_energy_joules=round(cpu_joules, 4) if cpu_joules is not None else None,
+            gpu_energy_joules=round(gpu_joules, 4),
             total_energy_joules=round(en_joules, 4),
             energy_tier=md.get("energy_tier"),
+            total_energy_tier="ESTIMATED" if cpu_joules is not None else md.get("energy_tier"),
             gpu_max_temp_c=md.get("gpu_max_temp_c"),
             cost_usd=round(cost, 6),
             co2e_grams=round(co2e, 6),

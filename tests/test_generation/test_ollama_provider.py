@@ -136,7 +136,7 @@ def test_energy_measured_cost_derived_and_digest_recorded():
     assert r.extra["energy_joules"] == 12.5
     assert r.extra["energy_reliability"] == "ok"
     assert r.extra["measurement_tiers"]["energy_joules"] == "MEASURED"
-    assert r.extra["cost_usd"] == 0.0 and r.extra["measurement_tiers"]["cost_usd"] == "DERIVED"
+    assert r.extra["cost_usd"] == 0.0 and r.extra["measurement_tiers"]["cost_usd"] == "ESTIMATED"
     assert r.extra["model_digest"] == DIGEST
 
 

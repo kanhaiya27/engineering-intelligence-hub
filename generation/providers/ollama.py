@@ -9,7 +9,7 @@ API and returns, for every call:
     separately (cold start is never billed to the query)
   * GPU energy for the generation, MEASURED with the NVML energy counter
     (read at start and end only; see sustainability/energy/nvml_meter.py)
-  * monetary cost 0.0, DERIVED (local inference has no per-token price)
+  * monetary cost 0.0, ESTIMATED per the original plan §9.1 (local inference has no per-token price)
   * the sha256 digest of the model that answered
 
 Determinism: temperature 0 and a fixed seed are sent on every call unless the
@@ -257,7 +257,7 @@ class OllamaProvider(BaseLLMProvider):
             "cost_usd": 0.0,
             "measurement_tiers": {
                 "energy_joules": "MEASURED" if energy and energy.energy_j is not None else "UNAVAILABLE",
-                "cost_usd": "DERIVED",
+                "cost_usd": "ESTIMATED",  # original plan §9.1; 0 for local inference
                 "tokens": "MEASURED",
                 "latency_ms": "MEASURED",
             },

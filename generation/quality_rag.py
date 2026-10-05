@@ -182,6 +182,11 @@ class QualityAwareRAGPipeline:
         total_gen_estimated_j = 0.0
         total_rerank_j = 0.0
         gpu_max_temp_c: Optional[float] = None
+        # Latency decomposition of the original plan §9.2 (T_query is measured by
+        # the caller that classifies): retrieval excl. rerank, rerank, context
+        # assembly, generation; 'other' = verification + escalation bookkeeping.
+        lat_ms = {"retrieval": 0.0, "rerank": 0.0, "context": 0.0, "generation": 0.0}
+        finish_reasons: List[Optional[str]] = []
         attempt_history: List[Dict[str, Any]] = []
 
         current_strategy = initial_strategy
@@ -207,6 +212,7 @@ class QualityAwareRAGPipeline:
             attempt_start_time = time.perf_counter()
 
             # --- A. Retrieval Step ---
+            t_retrieval = time.perf_counter()
             retrieval_result: Optional[RetrievalResult] = None
             if current_strategy is not None:
                 # Run current_strategy as a CONFIG, not by name: escalated
@@ -265,7 +271,13 @@ class QualityAwareRAGPipeline:
                         task_id=request.task_id,
                     )
 
+            retrieval_ms = (time.perf_counter() - t_retrieval) * 1000.0
+            rerank_ms = float((retrieval_result.metadata or {}).get("reranker_latency_ms", 0.0) or 0.0)
+            lat_ms["rerank"] += rerank_ms
+            lat_ms["retrieval"] += max(0.0, retrieval_ms - rerank_ms)
+
             # --- B. Prompt & Generation ---
+            t_context = time.perf_counter()
             context_str = self._build_context_prompt(retrieval_result.chunks)
             user_prompt = (
                 f"ENGINEERING QUESTION / TASK:\n{request.query}\n\n"
@@ -281,7 +293,11 @@ class QualityAwareRAGPipeline:
                 temperature=settings.model.temperature,
             )
 
+            lat_ms["context"] += (time.perf_counter() - t_context) * 1000.0
+            t_generation = time.perf_counter()
             gen_response = self.llm_provider.generate(gen_request)
+            lat_ms["generation"] += (time.perf_counter() - t_generation) * 1000.0
+            finish_reasons.append(gen_response.finish_reason)
             models_called.append(gen_response.model_id or current_model)
 
             # --- C. Telemetry Accounting for this attempt ---
@@ -395,6 +411,9 @@ class QualityAwareRAGPipeline:
                 "attempt_energy_joules": attempt_energy_j,
                 "attempt_energy_tier": attempt_energy_tier,
                 "gpu_max_temp_c": call_temp,
+                "finish_reason": gen_response.finish_reason,
+                "retrieval_ms": round(retrieval_ms, 3),
+                "rerank_ms": round(rerank_ms, 3),
                 "energy_reliability": account.energy_reliability,
                 "cold_start": account.cold_start is not None,
                 "context_check": (gen_response.extra or {}).get("context_check"),
@@ -517,6 +536,13 @@ class QualityAwareRAGPipeline:
             "energy_tier": "MEASURED" if (total_gen_measured_j and not total_gen_estimated_j
                                             and not total_rerank_j) else "ESTIMATED",
             "gpu_max_temp_c": gpu_max_temp_c,
+            "latency_breakdown_ms": {
+                **{k: round(v, 3) for k, v in lat_ms.items()},
+                "other": round(max(0.0, total_latency_ms - sum(lat_ms.values())), 3),
+            },
+            "finish_reasons": finish_reasons,
+            # An answer that stopped because it hit max_output_tokens was cut off.
+            "output_truncated": any(r == "length" for r in finish_reasons),
         })
 
         # --- G. Experiment Logging ---

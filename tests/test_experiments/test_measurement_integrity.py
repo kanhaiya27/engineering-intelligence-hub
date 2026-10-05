@@ -41,7 +41,7 @@ class RecordingLLM(BaseLLMProvider):
         return GenerationResponse(
             text="Flask stores configuration in app.config.", model_id=request.model_id,
             input_tokens=120, output_tokens=12, latency_ms=900.0, finish_reason="stop",
-            extra={"energy_joules": 250.0, "measurement_tiers": {"energy_joules": "MEASURED", "cost_usd": "DERIVED"},
+            extra={"energy_joules": 250.0, "measurement_tiers": {"energy_joules": "MEASURED", "cost_usd": "ESTIMATED"},
                    "cost_usd": 0.0, "energy": {"max_temp_c": 71}},
         )
 
@@ -77,11 +77,37 @@ def response(**kw) -> EngTaskResponse:
 def test_local_zero_cost_is_kept_and_measured_energy_reaches_the_trial(runner, task):
     t = runner._evaluate_trial("baseline_a", task, response(), trial_index=0, split_name="dev")
     assert t.cost_usd == 0.0, "a local model's cost of 0.0 must not become API prices"
-    assert t.total_energy_joules == 250.0 and t.gpu_energy_joules == 250.0
-    assert t.gpu_energy_measured_joules == 250.0 and t.energy_tier == "MEASURED"
-    assert t.cpu_energy_joules is None, "CPU energy is not measured: no invented value"
-    assert t.co2e_grams == pytest.approx(0.0495)
+    assert t.gpu_energy_joules == 250.0 and t.gpu_energy_measured_joules == 250.0 and t.energy_tier == "MEASURED"
+    assert t.cpu_energy_joules is None and t.total_energy_joules == 250.0, "no CPU window -> no CPU estimate"
     assert t.gpu_max_temp_c == 71
+
+
+def test_cpu_energy_is_estimated_from_the_trial_window_and_totals_follow_plan_tiers(runner, task):
+    from core.config import settings
+
+    md = {"generation_energy_measured_joules": 250.0, "energy_tier": "MEASURED",
+          "cpu_window": {"utilisation": 0.25, "seconds": 2.0},
+          "latency_breakdown_ms": {"retrieval": 100.0, "rerank": 0.0, "context": 1.0, "generation": 1800.0,
+                                   "other": 5.0},
+          "classification": {"classification_ms": 0.4}, "output_truncated": True}
+    t = runner._evaluate_trial("system_c", task, response(metadata=md, latency_ms=1906.0), 0, "dev")
+    cpu = settings.sustainability.cpu_tdp_watts * 0.25 * 2.0
+    assert t.cpu_energy_joules == pytest.approx(cpu)
+    assert t.total_energy_joules == pytest.approx(250.0 + cpu) and t.total_energy_tier == "ESTIMATED"
+    intensity = runner.manifest.frozen_variables.carbon_intensity_gco2_per_kwh
+    assert t.co2e_grams == pytest.approx((250.0 + cpu) / 3_600_000.0 * intensity, abs=1e-6)
+    assert t.latency_breakdown_ms["query"] == 0.4 and t.generation_latency_ms == 1800.0
+    assert t.output_truncated is True
+
+
+def test_cpu_utilisation_from_cpu_times_snapshots():
+    from collections import namedtuple
+
+    from experiments.m5.runner import _cpu_utilisation
+
+    T = namedtuple("T", "user system idle")
+    assert _cpu_utilisation(T(10, 10, 80), T(20, 20, 100)) == pytest.approx(0.5)
+    assert _cpu_utilisation(T(1, 1, 1), T(1, 1, 1)) is None
 
 
 @pytest.mark.parametrize("missing", ["energy_joules", "cost_usd", "co2e_grams", "latency_ms"])
