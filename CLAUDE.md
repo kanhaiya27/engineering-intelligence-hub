@@ -145,7 +145,7 @@ digests are not comparable. Laptop B must show the same digests before its runs 
 ```powershell
 .\.venv311\Scripts\Activate.ps1
 docker compose up -d                      # Qdrant :6333, Neo4j :7474/:7687
-python -m pytest                          # 178 tests; 2 need Docker Qdrant running
+python -m pytest                          # full suite; a few tests need Docker Qdrant/Neo4j and Ollama
 python -m scripts.ingest_corpus --wave 1  # (re)build the corpus into Qdrant
 uvicorn apps.api.main:app --reload --port 8000   # http://localhost:8000/docs
 ```
@@ -159,15 +159,19 @@ uvicorn apps.api.main:app --reload --port 8000   # http://localhost:8000/docs
 · `sustainability/` energy, cost, carbon · `experiments/m5/` controlled evaluation ·
 `benchmark/` tasks + splits · `apps/api/` FastAPI · `scripts/` drivers · `docs/`.
 
-## Current state (2026-10-05)
+## Current state (2026-10-05 night)
 
-Phase-2 M1–M5 implemented; P0-1/P0-2 audit fixes applied; wave-1 corpus ingested
-(48,046 chunks). Phase 1a done on Laptop A: `.env` settings bug fixed, NVML energy
-meter, run provenance, measured VRAM study (`experiments/results/phase1/machine_A/`).
-**No real System A–E comparison has been run yet.** Next per `docs/WORK_PLAN.md`:
-Laptop A → Phase 1b (OllamaProvider + routing); Laptop B → retrieval labels for the
-60 tasks, Qdrant healthcheck fix, knowledge-graph population. Deadlines: experiments
-complete 25 Oct 2026; final 15 Nov 2026.
+Phase 0 and Phase 1 done: wave-1 corpus (6 repos, 48,046 chunks), local model ladder
+(Ollama, Qwen2.5-Coder 1.5B/3B/7B) measured and wired with routing, escalation fixed and
+raised to 3 (F1, laptop-b), GPU job queue, run settings num_ctx 12,288 / 1,024 output.
+Measurement-integrity fixes for calibration (A3) on `feat/m5-live-calibration`. Wave-1
+knowledge graph built on laptop-b (B3, draft PR; Laptop A restores `C:\EIH_share
+eo4j.dump`).
+**No real System A–E comparison has been run yet.** Everything — task queues, open
+decisions and the **change register of every deviation from the original plan** — is in
+`docs/WORK_PLAN.md`; the original plan itself is `docs/PROJECT_REPORT.md` §3/§7/§11 and
+`docs/MASTER_DATASET_SPECIFICATION.md` §1/§8/§9. Deadlines: experiments complete
+25 Oct 2026; final 15 Nov 2026.
 
 ## Measurement rules learned the hard way (Laptop A, RTX 4050, driver 617.14)
 

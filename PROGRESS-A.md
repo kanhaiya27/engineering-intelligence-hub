@@ -8,6 +8,55 @@ measured (with numbers only if actually measured), what is blocked.
 
 ---
 
+## 2026-10-05 (late night) — Full audit against the original plan + A3 integrity fixes
+
+Branch `feat/m5-live-calibration` (task A3). Requested by Avaneesh: check everything
+against the original plan, fix what can be fixed, one plan for both laptops.
+
+**Audit findings**
+- Two plans existed: `docs/WORK_PLAN.md` (A) and `docs/PROJECT_PLAN.md` on laptop-b's
+  unmerged branch `docs/project-plan` (written in parallel, 01:36). That is the branch
+  laptop-b could not merge (conflicts in CLAUDE.md/README). WORK_PLAN had also lost
+  original-plan items (400–500 EIH-SWE tasks, licence audit, external Mode R/Q datasets,
+  criticality slice, EIH-Fresh, systems studies). **WORK_PLAN rewritten as the single
+  plan**: every original-plan and PROJECT_PLAN item kept (A7–A13, B7–B15), change
+  register §7 (C1–C10), open decisions §6, ID mapping §8, two-laptop routine §9.
+- My own fix `chore/git-sync-guard` c49800e (guard skips when the script is absent) was
+  never merged → cherry-picked here `[must-pull]`.
+- Laptop-b's F2/F3/F5 (energy labels) were still open; F4 was already resolved by Phase 1b.
+- New silent defects in the M5 runner (all fixed, see Done).
+
+**Done** (all verified by a real 4-unit job-queue smoke run on Ollama, dev split, scratch)
+- Runner no longer invents numbers: local cost 0.0 had been replaced by gpt-4o-mini
+  prices, missing energy/CO₂e by 45 W + 60 W × latency at the UK grid. Missing values now
+  fail the trial (recorded as an error by the queue).
+- Measured NVML energy, energy tier and max GPU temperature now reach `TrialResult`
+  (smoke: 338–2,523 J measured per trial; an escalated System E trial with reranking
+  correctly ESTIMATED); `cpu_energy_joules` None instead of TDP × latency.
+- System A: no-retrieval prompt (smoke: answered with 482 / 166 tokens instead of
+  refusing in ~1.5 s).
+- Manifest built from runtime settings: hash `aa733133d041f11c` → **`bc6c83d062f075d9`**
+  (7B, temp 0, num_ctx 12,288, 1,024 tokens, 713 g/kWh, 6 pinned repos, $0); job queue
+  refuses a manifest/runtime mismatch.
+- Systems D/E now get the Neo4j graph store (laptop-b's B3 finding: D equalled C); job
+  queue graph preflight refuses D/E until the graph has all 6 repos — on this laptop it
+  correctly refuses (0 Repository / 1 File node).
+- EnergyEstimator F2/F3/F5 labels fixed. CLAUDE.md current state updated.
+- Tests: 14 new; full suite **318 passed**.
+
+**Must pull (Laptop B)** — `.claude/settings.json` (guard fix), `CLAUDE.md`,
+`docs/WORK_PLAN.md` (single plan; replaces `docs/PROJECT_PLAN.md`).
+
+**Blocked / for Laptop B** — B7 chunk fix and B1 ops-052/053 before A3's calibration run;
+B3 F6 (Repository hub in graph expansion) before merge; B10 API graph store.
+
+**Next**
+- [ ] Restore `neo4j.dump` from laptop-b (copy to `C:\EIH_share\`), run graph preflight
+- [ ] A3 calibration run on the 12 val tasks once B7 + ops-052/053 land
+- [ ] Decisions D1, D3, D4, D9, D10 (WORK_PLAN §6) with Avaneesh
+
+---
+
 ## 2026-10-05 (night) — Phase 1b step 7: GPU job queue
 
 Branch `feat/gpu-job-queue` (off `feat/local-inference-routing`; task A2 step 7).
