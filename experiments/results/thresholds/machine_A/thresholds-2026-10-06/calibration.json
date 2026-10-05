@@ -1,0 +1,215 @@
+{
+  "created_utc": "2026-10-05T19:12:57.885756+00:00",
+  "hybrid": {
+    "tasks": 33,
+    "tasks_without_relevant_candidate": [
+      "eih-phase1-ops-054",
+      "eih-phase1-rev-044",
+      "eih-phase1-rev-045",
+      "eih-phase1-rev-048",
+      "eih-phase1-test-037"
+    ],
+    "best_relevant_score_min": 0.25416,
+    "best_relevant_score_median": 0.8103100000000001,
+    "calibrated_threshold": 0.25,
+    "share_relevant_kept_at_calibrated": 1.0,
+    "share_irrelevant_removed_at_calibrated": 0.048128342245989275,
+    "configured_thresholds": [
+      0.0,
+      0.5,
+      0.55,
+      0.6
+    ],
+    "zero_evidence_tasks_at_configured": [
+      "eih-phase1-dev-026",
+      "eih-phase1-test-032"
+    ],
+    "by_threshold": {
+      "0.00": {
+        "relevant_kept": 1.0,
+        "irrelevant_removed": 0.0,
+        "tasks_losing_all_relevant": 0
+      },
+      "0.05": {
+        "relevant_kept": 1.0,
+        "irrelevant_removed": 0.0,
+        "tasks_losing_all_relevant": 0
+      },
+      "0.10": {
+        "relevant_kept": 1.0,
+        "irrelevant_removed": 0.0,
+        "tasks_losing_all_relevant": 0
+      },
+      "0.15": {
+        "relevant_kept": 1.0,
+        "irrelevant_removed": 0.0,
+        "tasks_losing_all_relevant": 0
+      },
+      "0.20": {
+        "relevant_kept": 1.0,
+        "irrelevant_removed": 0.0,
+        "tasks_losing_all_relevant": 0
+      },
+      "0.25": {
+        "relevant_kept": 1.0,
+        "irrelevant_removed": 0.048128342245989275,
+        "tasks_losing_all_relevant": 0
+      },
+      "0.30": {
+        "relevant_kept": 0.64,
+        "irrelevant_removed": 0.2807486631016043,
+        "tasks_losing_all_relevant": 6
+      },
+      "0.35": {
+        "relevant_kept": 0.62,
+        "irrelevant_removed": 0.40374331550802134,
+        "tasks_losing_all_relevant": 7
+      },
+      "0.40": {
+        "relevant_kept": 0.58,
+        "irrelevant_removed": 0.40374331550802134,
+        "tasks_losing_all_relevant": 8
+      },
+      "0.45": {
+        "relevant_kept": 0.58,
+        "irrelevant_removed": 0.40374331550802134,
+        "tasks_losing_all_relevant": 8
+      },
+      "0.50": {
+        "relevant_kept": 0.56,
+        "irrelevant_removed": 0.42245989304812837,
+        "tasks_losing_all_relevant": 9
+      },
+      "0.55": {
+        "relevant_kept": 0.56,
+        "irrelevant_removed": 0.5080213903743316,
+        "tasks_losing_all_relevant": 9
+      },
+      "0.60": {
+        "relevant_kept": 0.42,
+        "irrelevant_removed": 0.7887700534759359,
+        "tasks_losing_all_relevant": 13
+      },
+      "0.65": {
+        "relevant_kept": 0.4,
+        "irrelevant_removed": 0.8315508021390374,
+        "tasks_losing_all_relevant": 14
+      },
+      "0.70": {
+        "relevant_kept": 0.38,
+        "irrelevant_removed": 0.8368983957219251,
+        "tasks_losing_all_relevant": 14
+      },
+      "0.75": {
+        "relevant_kept": 0.38,
+        "irrelevant_removed": 0.8368983957219251,
+        "tasks_losing_all_relevant": 14
+      },
+      "0.80": {
+        "relevant_kept": 0.38,
+        "irrelevant_removed": 0.839572192513369,
+        "tasks_losing_all_relevant": 14
+      }
+    }
+  },
+  "dense": {
+    "tasks": 3,
+    "tasks_without_relevant_candidate": [],
+    "best_relevant_score_min": 0.0,
+    "best_relevant_score_median": 0.8392,
+    "calibrated_threshold": 0.0,
+    "share_relevant_kept_at_calibrated": 1.0,
+    "share_irrelevant_removed_at_calibrated": 0.0,
+    "configured_thresholds": [
+      0.7
+    ],
+    "zero_evidence_tasks_at_configured": [],
+    "by_threshold": {
+      "0.00": {
+        "relevant_kept": 1.0,
+        "irrelevant_removed": 0.0,
+        "tasks_losing_all_relevant": 0
+      },
+      "0.05": {
+        "relevant_kept": 0.5,
+        "irrelevant_removed": 0.41666666666666663,
+        "tasks_losing_all_relevant": 1
+      },
+      "0.10": {
+        "relevant_kept": 0.5,
+        "irrelevant_removed": 0.41666666666666663,
+        "tasks_losing_all_relevant": 1
+      },
+      "0.15": {
+        "relevant_kept": 0.5,
+        "irrelevant_removed": 0.41666666666666663,
+        "tasks_losing_all_relevant": 1
+      },
+      "0.20": {
+        "relevant_kept": 0.5,
+        "irrelevant_removed": 0.41666666666666663,
+        "tasks_losing_all_relevant": 1
+      },
+      "0.25": {
+        "relevant_kept": 0.5,
+        "irrelevant_removed": 0.41666666666666663,
+        "tasks_losing_all_relevant": 1
+      },
+      "0.30": {
+        "relevant_kept": 0.5,
+        "irrelevant_removed": 0.41666666666666663,
+        "tasks_losing_all_relevant": 1
+      },
+      "0.35": {
+        "relevant_kept": 0.5,
+        "irrelevant_removed": 0.41666666666666663,
+        "tasks_losing_all_relevant": 1
+      },
+      "0.40": {
+        "relevant_kept": 0.5,
+        "irrelevant_removed": 0.41666666666666663,
+        "tasks_losing_all_relevant": 1
+      },
+      "0.45": {
+        "relevant_kept": 0.5,
+        "irrelevant_removed": 0.41666666666666663,
+        "tasks_losing_all_relevant": 1
+      },
+      "0.50": {
+        "relevant_kept": 0.5,
+        "irrelevant_removed": 0.41666666666666663,
+        "tasks_losing_all_relevant": 1
+      },
+      "0.55": {
+        "relevant_kept": 0.5,
+        "irrelevant_removed": 0.41666666666666663,
+        "tasks_losing_all_relevant": 1
+      },
+      "0.60": {
+        "relevant_kept": 0.5,
+        "irrelevant_removed": 0.41666666666666663,
+        "tasks_losing_all_relevant": 1
+      },
+      "0.65": {
+        "relevant_kept": 0.5,
+        "irrelevant_removed": 0.41666666666666663,
+        "tasks_losing_all_relevant": 1
+      },
+      "0.70": {
+        "relevant_kept": 0.5,
+        "irrelevant_removed": 0.41666666666666663,
+        "tasks_losing_all_relevant": 1
+      },
+      "0.75": {
+        "relevant_kept": 0.5,
+        "irrelevant_removed": 0.41666666666666663,
+        "tasks_losing_all_relevant": 1
+      },
+      "0.80": {
+        "relevant_kept": 0.5,
+        "irrelevant_removed": 0.41666666666666663,
+        "tasks_losing_all_relevant": 1
+      }
+    }
+  }
+}

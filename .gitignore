@@ -86,6 +86,7 @@ experiments/results/**/*.npz
 !experiments/results/mode_r/**/*.json
 !experiments/results/retrieval_energy/**/*.json
 !experiments/results/classifier/**/*.json
+!experiments/results/thresholds/**/*.json
 
 # --- Datasets (large files — exclude raw, keep registry/schema) ---
 datasets/**/*.jsonl

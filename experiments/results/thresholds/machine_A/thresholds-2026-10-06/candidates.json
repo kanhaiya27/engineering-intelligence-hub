@@ -1,0 +1,4360 @@
+{
+ "rows": [
+  {
+   "task_id": "eih-phase1-code-011",
+   "split": "val",
+   "strategy": "hybrid",
+   "mode": "hybrid",
+   "configured_threshold": 0.6,
+   "top_k": 7,
+   "max_context_chunks": 7,
+   "candidates": [
+    {
+     "chunk_id": "pallets/flask:src/flask/ctx.py:e1ab4384927f7295:chunk:17",
+     "dense": 0.8055,
+     "sparse": 0.0,
+     "fused": 0.56385,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "pallets/flask:src/flask/ctx.py:e1ab4384927f7295:chunk:22",
+     "dense": 0.8125,
+     "sparse": 0.0,
+     "fused": 0.56875,
+     "relevant": true,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "pallets/flask:docs/api.rst:08650a7a23f8b2f0:chunk:16",
+     "dense": 0.8078,
+     "sparse": 0.0,
+     "fused": 0.56546,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "pallets/flask:tests/test_reqctx.py:8c19e1468ed3360e:chunk:7",
+     "dense": 0.0,
+     "sparse": 0.8287,
+     "fused": 0.24861,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:src/flask/ctx.py:e1ab4384927f7295:chunk:23",
+     "dense": 0.0,
+     "sparse": 0.8752,
+     "fused": 0.26255999999999996,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:docs/shell.rst:10a86c0b756ee35d:chunk:2",
+     "dense": 0.842,
+     "sparse": 1.0,
+     "fused": 0.8894,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:docs/reqcontext.rst:af99d77d335c3dc8:chunk:5",
+     "dense": 0.8111,
+     "sparse": 0.0,
+     "fused": 0.56777,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "pallets/flask:src/flask/app.py:efe961e9c223dbba:chunk:44",
+     "dense": 0.0,
+     "sparse": 0.919,
+     "fused": 0.2757,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:tests/test_reqctx.py:8c19e1468ed3360e:chunk:6",
+     "dense": 0.0,
+     "sparse": 0.8425,
+     "fused": 0.25275,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:src/flask/ctx.py:e1ab4384927f7295:chunk:16",
+     "dense": 0.8251,
+     "sparse": 0.0,
+     "fused": 0.5775699999999999,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "pallets/flask:src/flask/ctx.py:e1ab4384927f7295:chunk:21",
+     "dense": 0.0,
+     "sparse": 0.847,
+     "fused": 0.2541,
+     "relevant": true,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:tests/test_testing.py:57715cab1ba6470c:chunk:25",
+     "dense": 0.82,
+     "sparse": 0.0,
+     "fused": 0.574,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "pallets/flask:tests/test_reqctx.py:8c19e1468ed3360e:chunk:1",
+     "dense": 0.0,
+     "sparse": 0.8317,
+     "fused": 0.24950999999999998,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    }
+   ]
+  },
+  {
+   "task_id": "eih-phase1-code-014",
+   "split": "dev",
+   "strategy": "graph_augmented",
+   "mode": "graph_augmented",
+   "configured_threshold": 0.6,
+   "top_k": 7,
+   "max_context_chunks": 8,
+   "candidates": [
+    {
+     "chunk_id": "fastapi/fastapi:docs/ja/docs/tutorial/dependencies/sub-dependencies.md:646d82b254e91e5d:chunk:8",
+     "dense": 0.0,
+     "sparse": 0.907,
+     "fused": 0.31745,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs/em/docs/tutorial/dependencies/sub-dependencies.md:90372da283d14071:chunk:5",
+     "dense": 0.0,
+     "sparse": 0.9118,
+     "fused": 0.31913,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "fastapi/fastapi:fastapi/param_functions.py:2dc572c45a0af96d:chunk:29",
+     "dense": 0.8217,
+     "sparse": 0.0,
+     "fused": 0.534105,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs/zh/docs/tutorial/dependencies/sub-dependencies.md:5ba4ae10f89b4e37:chunk:8",
+     "dense": 0.0,
+     "sparse": 0.9046,
+     "fused": 0.31660999999999995,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs/en/docs/release-notes.md:c9aa199ddee17583:chunk:671",
+     "dense": 0.8215,
+     "sparse": 0.0,
+     "fused": 0.533975,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs/en/docs/reference/dependencies.md:7c4376a61fa086d3:chunk:1",
+     "dense": 0.8074,
+     "sparse": 0.0,
+     "fused": 0.52481,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "fastapi/fastapi:fastapi/dependencies/utils.py:af29ceaf05ba04a4:chunk:22",
+     "dense": 0.0,
+     "sparse": 0.8999,
+     "fused": 0.314965,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "fastapi/fastapi:fastapi/dependencies/utils.py:af29ceaf05ba04a4:chunk:24",
+     "dense": 0.8287,
+     "sparse": 0.9732,
+     "fused": 0.879275,
+     "relevant": true,
+     "in_dense": true,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs_src/settings/app03/main.py:c168fa5aedf10011:chunk:0",
+     "dense": 0.8117,
+     "sparse": 0.0,
+     "fused": 0.527605,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "fastapi/fastapi:fastapi/dependencies/utils.py:af29ceaf05ba04a4:chunk:23",
+     "dense": 0.0,
+     "sparse": 1.0,
+     "fused": 0.35,
+     "relevant": true,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "fastapi/fastapi:fastapi/dependencies/utils.py:af29ceaf05ba04a4:chunk:5",
+     "dense": 0.0,
+     "sparse": 0.8973,
+     "fused": 0.314055,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs/en/docs/tutorial/dependencies/sub-dependencies.md:97177c54ad31c33e:chunk:5",
+     "dense": 0.8116,
+     "sparse": 0.0,
+     "fused": 0.52754,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "fastapi/fastapi:fastapi/params.py:181eda35cc81b7cc:chunk:30",
+     "dense": 0.8237,
+     "sparse": 0.0,
+     "fused": 0.535405,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    }
+   ]
+  },
+  {
+   "task_id": "eih-phase1-code-015",
+   "split": "dev",
+   "strategy": "hybrid",
+   "mode": "hybrid",
+   "configured_threshold": 0.6,
+   "top_k": 7,
+   "max_context_chunks": 7,
+   "candidates": [
+    {
+     "chunk_id": "pallets/flask:docs/quickstart.rst:884564779240e5b9:chunk:8",
+     "dense": 0.8399,
+     "sparse": 0.9284,
+     "fused": 0.8664499999999999,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:src/flask/app.py:efe961e9c223dbba:chunk:34",
+     "dense": 0.8732,
+     "sparse": 0.9228,
+     "fused": 0.8880799999999999,
+     "relevant": true,
+     "in_dense": true,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:src/flask/app.py:efe961e9c223dbba:chunk:36",
+     "dense": 0.0,
+     "sparse": 0.8954,
+     "fused": 0.26861999999999997,
+     "relevant": true,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:docs/api.rst:08650a7a23f8b2f0:chunk:23",
+     "dense": 0.8283,
+     "sparse": 0.0,
+     "fused": 0.5798099999999999,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "pallets/flask:tests/test_basic.py:362436050fd06040:chunk:57",
+     "dense": 0.8041,
+     "sparse": 0.0,
+     "fused": 0.56287,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "pallets/flask:src/flask/helpers.py:b58adc43fef71ae4:chunk:6",
+     "dense": 0.8653,
+     "sparse": 1.0,
+     "fused": 0.90571,
+     "relevant": true,
+     "in_dense": true,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:docs/tutorial/views.rst:7f1856b2432fb9ae:chunk:10",
+     "dense": 0.8098,
+     "sparse": 0.8922,
+     "fused": 0.8345199999999999,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:src/flask/app.py:efe961e9c223dbba:chunk:35",
+     "dense": 0.0,
+     "sparse": 0.9631,
+     "fused": 0.28892999999999996,
+     "relevant": true,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:docs/blueprints.rst:0efbff2912d81e24:chunk:10",
+     "dense": 0.0,
+     "sparse": 0.9266,
+     "fused": 0.27798,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:docs/patterns/urlprocessors.rst:816aa72b588023fb:chunk:1",
+     "dense": 0.8103,
+     "sparse": 0.0,
+     "fused": 0.56721,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    }
+   ]
+  },
+  {
+   "task_id": "eih-phase1-code-016",
+   "split": "val",
+   "strategy": "incident_graph",
+   "mode": "graph_augmented",
+   "configured_threshold": 0.0,
+   "top_k": 8,
+   "max_context_chunks": 8,
+   "candidates": [
+    {
+     "chunk_id": "fastapi/fastapi:docs/em/docs/tutorial/handling-errors.md:d1e4eb920ff803f3:chunk:27",
+     "dense": 0.0,
+     "sparse": 0.8842,
+     "fused": 0.6189399999999999,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "fastapi/fastapi:fastapi/exceptions.py:b5a362c6e1445dbe:chunk:0",
+     "dense": 0.0,
+     "sparse": 0.8976,
+     "fused": 0.6283199999999999,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs/pt/docs/tutorial/handling-errors.md:d0212b9cd0c5506c:chunk:24",
+     "dense": 0.8951,
+     "sparse": 0.0,
+     "fused": 0.26853,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs/en/docs/tutorial/handling-errors.md:6cbf175ba19c6eb2:chunk:26",
+     "dense": 0.9405,
+     "sparse": 0.9691,
+     "fused": 0.9605199999999999,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs/de/docs/tutorial/handling-errors.md:c096492e8d3d5e5f:chunk:26",
+     "dense": 0.9336,
+     "sparse": 0.0,
+     "fused": 0.28008,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs_src/handling_errors/tutorial004.py:8f8e310c110f97d8:chunk:0",
+     "dense": 0.9171,
+     "sparse": 0.8993,
+     "fused": 0.9046399999999999,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs/zh/docs/tutorial/handling-errors.md:18b01f3fd62eb8e6:chunk:12",
+     "dense": 0.9352,
+     "sparse": 1.0,
+     "fused": 0.9805599999999999,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs_src/handling_errors/tutorial006.py:ce86939ebe2b5082:chunk:0",
+     "dense": 0.9006,
+     "sparse": 0.9065,
+     "fused": 0.9047299999999999,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs/de/docs/tutorial/handling-errors.md:c096492e8d3d5e5f:chunk:27",
+     "dense": 0.0,
+     "sparse": 0.8842,
+     "fused": 0.6189399999999999,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "fastapi/fastapi:tests/test_starlette_exception.py:057ac9c6d7c2a235:chunk:0",
+     "dense": 0.8941,
+     "sparse": 0.902,
+     "fused": 0.8996299999999999,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "fastapi/fastapi:fastapi/exceptions.py:b5a362c6e1445dbe:chunk:1",
+     "dense": 0.8981,
+     "sparse": 0.0,
+     "fused": 0.26943,
+     "relevant": true,
+     "in_dense": true,
+     "in_sparse": false
+    }
+   ]
+  },
+  {
+   "task_id": "eih-phase1-code-017",
+   "split": "dev",
+   "strategy": "hybrid",
+   "mode": "hybrid",
+   "configured_threshold": 0.6,
+   "top_k": 7,
+   "max_context_chunks": 7,
+   "candidates": [
+    {
+     "chunk_id": "pallets/flask:tests/test_basic.py:362436050fd06040:chunk:25",
+     "dense": 0.8187,
+     "sparse": 0.9762,
+     "fused": 0.86595,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:docs/quickstart.rst:884564779240e5b9:chunk:28",
+     "dense": 0.8527,
+     "sparse": 0.9271,
+     "fused": 0.8750199999999999,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:tests/test_signals.py:eaa27de84a44ad1f:chunk:6",
+     "dense": 0.8318,
+     "sparse": 0.0,
+     "fused": 0.58226,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "pallets/flask:docs/patterns/flashing.rst:5802f174e23a0392:chunk:0",
+     "dense": 0.8399,
+     "sparse": 0.0,
+     "fused": 0.58793,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "pallets/flask:docs/patterns/flashing.rst:5802f174e23a0392:chunk:1",
+     "dense": 0.8326,
+     "sparse": 0.0,
+     "fused": 0.58282,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "pallets/flask:src/flask/helpers.py:b58adc43fef71ae4:chunk:10",
+     "dense": 0.0,
+     "sparse": 0.9102,
+     "fused": 0.27305999999999997,
+     "relevant": true,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:tests/test_basic.py:362436050fd06040:chunk:24",
+     "dense": 0.8203,
+     "sparse": 0.938,
+     "fused": 0.85561,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:tests/test_basic.py:362436050fd06040:chunk:26",
+     "dense": 0.8148,
+     "sparse": 0.0,
+     "fused": 0.57036,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "pallets/flask:docs/patterns/flashing.rst:5802f174e23a0392:chunk:4",
+     "dense": 0.0,
+     "sparse": 1.0,
+     "fused": 0.3,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:docs/patterns/flashing.rst:5802f174e23a0392:chunk:3",
+     "dense": 0.0,
+     "sparse": 0.9912,
+     "fused": 0.29735999999999996,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:docs/api.rst:08650a7a23f8b2f0:chunk:11",
+     "dense": 0.0,
+     "sparse": 0.993,
+     "fused": 0.2979,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    }
+   ]
+  },
+  {
+   "task_id": "eih-phase1-code-018",
+   "split": "dev",
+   "strategy": "hybrid",
+   "mode": "hybrid",
+   "configured_threshold": 0.6,
+   "top_k": 7,
+   "max_context_chunks": 7,
+   "candidates": [
+    {
+     "chunk_id": "fastapi/fastapi:docs/en/docs/tutorial/bigger-applications.md:46c0c6d19fbacc66:chunk:35",
+     "dense": 0.8582,
+     "sparse": 0.0,
+     "fused": 0.6007399999999999,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs/em/docs/tutorial/bigger-applications.md:fea70c4c6762c2b5:chunk:45",
+     "dense": 0.8706,
+     "sparse": 0.0,
+     "fused": 0.60942,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "fastapi/fastapi:tests/test_modules_same_name_body/app/main.py:c0141eb7b7031210:chunk:0",
+     "dense": 0.8596,
+     "sparse": 0.0,
+     "fused": 0.60172,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs/em/docs/tutorial/bigger-applications.md:fea70c4c6762c2b5:chunk:35",
+     "dense": 0.0,
+     "sparse": 0.9125,
+     "fused": 0.27375,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs_src/bigger_applications/app/internal/admin.py:2c81315bfe86c99a:chunk:0",
+     "dense": 0.8601,
+     "sparse": 0.0,
+     "fused": 0.60207,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs/en/docs/tutorial/bigger-applications.md:46c0c6d19fbacc66:chunk:44",
+     "dense": 0.8781,
+     "sparse": 0.0,
+     "fused": 0.6146699999999999,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "fastapi/fastapi:fastapi/applications.py:a3045299db25b098:chunk:27",
+     "dense": 0.8613,
+     "sparse": 0.9119,
+     "fused": 0.8764799999999999,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "fastapi/fastapi:fastapi/routing.py:75c4018f152c3bd2:chunk:32",
+     "dense": 0.0,
+     "sparse": 0.9337,
+     "fused": 0.28010999999999997,
+     "relevant": true,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "fastapi/fastapi:fastapi/routing.py:75c4018f152c3bd2:chunk:30",
+     "dense": 0.0,
+     "sparse": 0.9245,
+     "fused": 0.27735,
+     "relevant": true,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "fastapi/fastapi:fastapi/applications.py:a3045299db25b098:chunk:29",
+     "dense": 0.0,
+     "sparse": 0.9004,
+     "fused": 0.27011999999999997,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "fastapi/fastapi:fastapi/routing.py:75c4018f152c3bd2:chunk:34",
+     "dense": 0.0,
+     "sparse": 0.932,
+     "fused": 0.2796,
+     "relevant": true,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs_src/bigger_applications/app/routers/users.py:b2276e608ff0937a:chunk:0",
+     "dense": 0.8601,
+     "sparse": 0.0,
+     "fused": 0.60207,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "fastapi/fastapi:fastapi/routing.py:75c4018f152c3bd2:chunk:16",
+     "dense": 0.0,
+     "sparse": 1.0,
+     "fused": 0.3,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    }
+   ]
+  },
+  {
+   "task_id": "eih-phase1-dev-021",
+   "split": "val",
+   "strategy": "hybrid",
+   "mode": "hybrid",
+   "configured_threshold": 0.6,
+   "top_k": 7,
+   "max_context_chunks": 7,
+   "candidates": [
+    {
+     "chunk_id": "pallets/flask:docs/patterns/appfactories.rst:41d30224c1c29cb6:chunk:3",
+     "dense": 0.8156,
+     "sparse": 0.0,
+     "fused": 0.57092,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "pallets/flask:docs/patterns/celery.rst:d38d301a9a97ffba:chunk:4",
+     "dense": 0.0,
+     "sparse": 1.0,
+     "fused": 0.3,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:src/flask/cli.py:38e69ffc47ea8a1d:chunk:13",
+     "dense": 0.8167,
+     "sparse": 0.0,
+     "fused": 0.5716899999999999,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "pallets/flask:docs/cli.rst:e8e5e9b220a5159e:chunk:3",
+     "dense": 0.0,
+     "sparse": 0.9422,
+     "fused": 0.28266,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:docs/tutorial/factory.rst:47d67dbd5278da36:chunk:2",
+     "dense": 0.8389,
+     "sparse": 0.9661,
+     "fused": 0.87706,
+     "relevant": true,
+     "in_dense": true,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:docs/tutorial/database.rst:88b87c26f014c5ab:chunk:5",
+     "dense": 0.0,
+     "sparse": 0.9469,
+     "fused": 0.28407,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:docs/tutorial/factory.rst:47d67dbd5278da36:chunk:1",
+     "dense": 0.8278,
+     "sparse": 0.0,
+     "fused": 0.57946,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "pallets/flask:docs/cli.rst:e8e5e9b220a5159e:chunk:2",
+     "dense": 0.8044,
+     "sparse": 0.9693,
+     "fused": 0.8538699999999999,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:tests/test_apps/cliapp/factory.py:3a93cd69f200848e:chunk:1",
+     "dense": 0.8436,
+     "sparse": 0.9445,
+     "fused": 0.8738699999999999,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:examples/tutorial/tests/test_factory.py:1906cfed379afe31:chunk:1",
+     "dense": 0.0,
+     "sparse": 0.9478,
+     "fused": 0.28434,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:examples/tutorial/flaskr/__init__.py:ecfe54451a0cb1cf:chunk:1",
+     "dense": 0.8331,
+     "sparse": 0.0,
+     "fused": 0.58317,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    }
+   ]
+  },
+  {
+   "task_id": "eih-phase1-dev-023",
+   "split": "dev",
+   "strategy": "hybrid",
+   "mode": "hybrid",
+   "configured_threshold": 0.6,
+   "top_k": 7,
+   "max_context_chunks": 7,
+   "candidates": [
+    {
+     "chunk_id": "pallets/flask:docs/cli.rst:e8e5e9b220a5159e:chunk:14",
+     "dense": 0.8265,
+     "sparse": 0.9316,
+     "fused": 0.8580300000000001,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:docs/tutorial/database.rst:88b87c26f014c5ab:chunk:4",
+     "dense": 0.0,
+     "sparse": 0.8195,
+     "fused": 0.24584999999999999,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:tests/test_cli.py:054fc879c3a7c2e1:chunk:13",
+     "dense": 0.788,
+     "sparse": 0.0,
+     "fused": 0.5516,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "pallets/flask:src/flask/cli.py:38e69ffc47ea8a1d:chunk:25",
+     "dense": 0.7847,
+     "sparse": 0.0,
+     "fused": 0.54929,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "pallets/flask:tests/test_cli.py:054fc879c3a7c2e1:chunk:16",
+     "dense": 0.785,
+     "sparse": 0.0,
+     "fused": 0.5495,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "pallets/flask:examples/tutorial/flaskr/db.py:69fffb53092c30fa:chunk:5",
+     "dense": 0.8051,
+     "sparse": 0.9692,
+     "fused": 0.85433,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:src/flask/app.py:efe961e9c223dbba:chunk:44",
+     "dense": 0.0,
+     "sparse": 0.8596,
+     "fused": 0.25788,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:docs/api.rst:08650a7a23f8b2f0:chunk:25",
+     "dense": 0.0,
+     "sparse": 0.8353,
+     "fused": 0.25059,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:src/flask/cli.py:38e69ffc47ea8a1d:chunk:17",
+     "dense": 0.0,
+     "sparse": 0.8472,
+     "fused": 0.25416,
+     "relevant": true,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:tests/test_cli.py:054fc879c3a7c2e1:chunk:14",
+     "dense": 0.7958,
+     "sparse": 0.0,
+     "fused": 0.5570599999999999,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "pallets/flask:docs/tutorial/database.rst:88b87c26f014c5ab:chunk:5",
+     "dense": 0.7954,
+     "sparse": 1.0,
+     "fused": 0.8567799999999999,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": true
+    }
+   ]
+  },
+  {
+   "task_id": "eih-phase1-dev-025",
+   "split": "dev",
+   "strategy": "hybrid",
+   "mode": "hybrid",
+   "configured_threshold": 0.6,
+   "top_k": 7,
+   "max_context_chunks": 7,
+   "candidates": [
+    {
+     "chunk_id": "pallets/flask:docs/errorhandling.rst:c70de929b0db0e71:chunk:8",
+     "dense": 0.0,
+     "sparse": 0.8512,
+     "fused": 0.25536,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:docs/errorhandling.rst:c70de929b0db0e71:chunk:5",
+     "dense": 0.8054,
+     "sparse": 0.0,
+     "fused": 0.56378,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "pallets/flask:docs/errorhandling.rst:c70de929b0db0e71:chunk:11",
+     "dense": 0.0,
+     "sparse": 0.8406,
+     "fused": 0.25218,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:tests/test_basic.py:362436050fd06040:chunk:34",
+     "dense": 0.8054,
+     "sparse": 0.0,
+     "fused": 0.56378,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "pallets/flask:src/flask/sansio/scaffold.py:58b57d4d140c3211:chunk:31",
+     "dense": 0.0,
+     "sparse": 0.886,
+     "fused": 0.2658,
+     "relevant": true,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:docs/errorhandling.rst:c70de929b0db0e71:chunk:9",
+     "dense": 0.0,
+     "sparse": 0.8524,
+     "fused": 0.25572,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:docs/blueprints.rst:0efbff2912d81e24:chunk:11",
+     "dense": 0.7997,
+     "sparse": 0.0,
+     "fused": 0.5597899999999999,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "pallets/flask:docs/errorhandling.rst:c70de929b0db0e71:chunk:12",
+     "dense": 0.8446,
+     "sparse": 1.0,
+     "fused": 0.8912199999999999,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:docs/quickstart.rst:884564779240e5b9:chunk:22",
+     "dense": 0.0,
+     "sparse": 0.8506,
+     "fused": 0.25518,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs/en/docs/tutorial/handling-errors.md:6cbf175ba19c6eb2:chunk:7",
+     "dense": 0.0,
+     "sparse": 0.8715,
+     "fused": 0.26145,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:tests/test_json.py:f6c73c61a602ee3b:chunk:1",
+     "dense": 0.8052,
+     "sparse": 0.0,
+     "fused": 0.56364,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "pallets/flask:docs/errorhandling.rst:c70de929b0db0e71:chunk:4",
+     "dense": 0.8147,
+     "sparse": 0.0,
+     "fused": 0.57029,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "pallets/flask:tests/test_json.py:f6c73c61a602ee3b:chunk:2",
+     "dense": 0.8042,
+     "sparse": 0.0,
+     "fused": 0.56294,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    }
+   ]
+  },
+  {
+   "task_id": "eih-phase1-dev-026",
+   "split": "val",
+   "strategy": "hybrid",
+   "mode": "hybrid",
+   "configured_threshold": 0.6,
+   "top_k": 7,
+   "max_context_chunks": 7,
+   "candidates": [
+    {
+     "chunk_id": "fastapi/fastapi:docs/en/docs/tutorial/path-params-numeric-validations.md:6647d324cfa4b13c:chunk:11",
+     "dense": 0.8158,
+     "sparse": 0.0,
+     "fused": 0.5710599999999999,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "fastapi/fastapi:fastapi/param_functions.py:2dc572c45a0af96d:chunk:8",
+     "dense": 0.0,
+     "sparse": 0.9583,
+     "fused": 0.28749,
+     "relevant": true,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs/en/docs/tutorial/query-params-str-validations.md:c05a7e9d9e9cc8ad:chunk:0",
+     "dense": 0.7983,
+     "sparse": 0.0,
+     "fused": 0.5588099999999999,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs/de/docs/tutorial/query-params-str-validations.md:77e93d65537905f2:chunk:0",
+     "dense": 0.8028,
+     "sparse": 0.0,
+     "fused": 0.5619599999999999,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs/ja/docs/tutorial/query-params-str-validations.md:e75cbfec8eb7e022:chunk:39",
+     "dense": 0.0,
+     "sparse": 0.9887,
+     "fused": 0.29661,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs/zh/docs/tutorial/query-params-str-validations.md:a1b2a23fe30c24a0:chunk:44",
+     "dense": 0.0,
+     "sparse": 0.985,
+     "fused": 0.2955,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "fastapi/fastapi:fastapi/params.py:181eda35cc81b7cc:chunk:18",
+     "dense": 0.0,
+     "sparse": 0.9461,
+     "fused": 0.28383,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs/en/docs/tutorial/query-params-str-validations.md:c05a7e9d9e9cc8ad:chunk:16",
+     "dense": 0.7984,
+     "sparse": 0.0,
+     "fused": 0.5588799999999999,
+     "relevant": true,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs/em/docs/tutorial/query-params-str-validations.md:bb4d391f3f32b0ed:chunk:36",
+     "dense": 0.0,
+     "sparse": 1.0,
+     "fused": 0.3,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "fastapi/fastapi:fastapi/params.py:181eda35cc81b7cc:chunk:12",
+     "dense": 0.0,
+     "sparse": 0.9639,
+     "fused": 0.28917,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs/en/docs/tutorial/query-params-str-validations.md:c05a7e9d9e9cc8ad:chunk:4",
+     "dense": 0.8265,
+     "sparse": 0.0,
+     "fused": 0.57855,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "fastapi/fastapi:tests/main.py:f639f115c1daab21:chunk:13",
+     "dense": 0.0,
+     "sparse": 0.9557,
+     "fused": 0.28670999999999996,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs/en/docs/tutorial/query-params-str-validations.md:c05a7e9d9e9cc8ad:chunk:10",
+     "dense": 0.8066,
+     "sparse": 0.0,
+     "fused": 0.5646199999999999,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs/de/docs/tutorial/query-params-str-validations.md:77e93d65537905f2:chunk:4",
+     "dense": 0.8126,
+     "sparse": 0.0,
+     "fused": 0.56882,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    }
+   ]
+  },
+  {
+   "task_id": "eih-phase1-dev-028",
+   "split": "dev",
+   "strategy": "hybrid",
+   "mode": "hybrid",
+   "configured_threshold": 0.6,
+   "top_k": 7,
+   "max_context_chunks": 7,
+   "candidates": [
+    {
+     "chunk_id": "fastapi/fastapi:docs_src/custom_request_and_route/tutorial003.py:938951c89d5b8553:chunk:1",
+     "dense": 0.0,
+     "sparse": 0.8713,
+     "fused": 0.26138999999999996,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs_src/middleware/tutorial001.py:553736190ef1db7a:chunk:1",
+     "dense": 0.8039,
+     "sparse": 0.9807,
+     "fused": 0.8569399999999999,
+     "relevant": true,
+     "in_dense": true,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs/en/docs/release-notes.md:c9aa199ddee17583:chunk:647",
+     "dense": 0.7632,
+     "sparse": 0.0,
+     "fused": 0.5342399999999999,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs/en/docs/advanced/response-cookies.md:427a0a0d25ef084a:chunk:5",
+     "dense": 0.7673,
+     "sparse": 0.0,
+     "fused": 0.53711,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs/em/docs/tutorial/middleware.md:33d9a29c1cf899d0:chunk:3",
+     "dense": 0.0,
+     "sparse": 0.8541,
+     "fused": 0.25622999999999996,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs/en/docs/alternatives.md:abd3caccb29d09ce:chunk:25",
+     "dense": 0.7732,
+     "sparse": 0.0,
+     "fused": 0.5412399999999999,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs/en/docs/tutorial/middleware.md:4dd8a7cbfaf0dc5b:chunk:2",
+     "dense": 0.0,
+     "sparse": 0.8546,
+     "fused": 0.25638,
+     "relevant": true,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs/en/docs/how-to/custom-request-and-route.md:f9727d8cfa69862a:chunk:11",
+     "dense": 0.0,
+     "sparse": 0.8617,
+     "fused": 0.25851,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "fastapi/fastapi:fastapi/applications.py:a3045299db25b098:chunk:88",
+     "dense": 0.7678,
+     "sparse": 1.0,
+     "fused": 0.8374599999999999,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs/en/docs/tutorial/middleware.md:4dd8a7cbfaf0dc5b:chunk:3",
+     "dense": 0.7631,
+     "sparse": 0.9451,
+     "fused": 0.8176999999999999,
+     "relevant": true,
+     "in_dense": true,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs/en/docs/advanced/response-headers.md:9b5549901c0d2472:chunk:4",
+     "dense": 0.7658,
+     "sparse": 0.0,
+     "fused": 0.53606,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    }
+   ]
+  },
+  {
+   "task_id": "eih-phase1-dev-030",
+   "split": "dev",
+   "strategy": "hybrid",
+   "mode": "hybrid",
+   "configured_threshold": 0.6,
+   "top_k": 7,
+   "max_context_chunks": 7,
+   "candidates": [
+    {
+     "chunk_id": "pallets/flask:docs/patterns/sqlite3.rst:6ee6fcaa12dcf1ce:chunk:0",
+     "dense": 0.0,
+     "sparse": 0.893,
+     "fused": 0.26789999999999997,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "fastapi/fastapi:tests/test_router_events.py:40d15ddb50e71736:chunk:5",
+     "dense": 0.7704,
+     "sparse": 0.8831,
+     "fused": 0.80421,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs/en/docs/advanced/events.md:030667eaa90bbe94:chunk:11",
+     "dense": 0.7756,
+     "sparse": 0.0,
+     "fused": 0.54292,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "fastapi/fastapi:fastapi/applications.py:a3045299db25b098:chunk:9",
+     "dense": 0.8047,
+     "sparse": 0.9318,
+     "fused": 0.84283,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs/en/docs/advanced/events.md:030667eaa90bbe94:chunk:2",
+     "dense": 0.8265,
+     "sparse": 1.0,
+     "fused": 0.8785499999999999,
+     "relevant": true,
+     "in_dense": true,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs/en/docs/advanced/events.md:030667eaa90bbe94:chunk:9",
+     "dense": 0.0,
+     "sparse": 0.9243,
+     "fused": 0.27729,
+     "relevant": true,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs_src/events/tutorial003.py:9eea93386ade4389:chunk:4",
+     "dense": 0.7957,
+     "sparse": 0.0,
+     "fused": 0.55699,
+     "relevant": true,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "fastapi/fastapi:fastapi/routing.py:75c4018f152c3bd2:chunk:19",
+     "dense": 0.0,
+     "sparse": 0.9831,
+     "fused": 0.29492999999999997,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs/en/docs/release-notes.md:c9aa199ddee17583:chunk:271",
+     "dense": 0.7904,
+     "sparse": 0.9589,
+     "fused": 0.84095,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs/de/docs/advanced/events.md:7c128164e8b48a94:chunk:2",
+     "dense": 0.7702,
+     "sparse": 0.0,
+     "fused": 0.53914,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    }
+   ]
+  },
+  {
+   "task_id": "eih-phase1-ops-051",
+   "split": "dev",
+   "strategy": "hybrid_reranked",
+   "mode": "hybrid",
+   "configured_threshold": 0.55,
+   "top_k": 10,
+   "max_context_chunks": 5,
+   "candidates": [
+    {
+     "chunk_id": "pallets/flask:CHANGES.rst:b408f652cfde809e:chunk:18",
+     "dense": 0.7735,
+     "sparse": 0.0,
+     "fused": 0.54145,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "pallets/flask:docs/api.rst:08650a7a23f8b2f0:chunk:16",
+     "dense": 0.7829,
+     "sparse": 0.8112,
+     "fused": 0.79139,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:docs/extensiondev.rst:6c8c71ec69a8920a:chunk:5",
+     "dense": 0.0,
+     "sparse": 0.7694,
+     "fused": 0.23081999999999997,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:docs/quickstart.rst:884564779240e5b9:chunk:16",
+     "dense": 0.0,
+     "sparse": 0.7813,
+     "fused": 0.23439,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:docs/patterns/streaming.rst:c21cc62e464fd92e:chunk:3",
+     "dense": 0.788,
+     "sparse": 0.0,
+     "fused": 0.5516,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "pallets/flask:docs/reqcontext.rst:af99d77d335c3dc8:chunk:2",
+     "dense": 0.7796,
+     "sparse": 0.0,
+     "fused": 0.54572,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "pallets/flask:docs/appcontext.rst:6ed25a4ff0d4de95:chunk:3",
+     "dense": 0.0,
+     "sparse": 0.775,
+     "fused": 0.23249999999999998,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:CHANGES.rst:b408f652cfde809e:chunk:48",
+     "dense": 0.7814,
+     "sparse": 0.0,
+     "fused": 0.5469799999999999,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "pallets/flask:docs/reqcontext.rst:af99d77d335c3dc8:chunk:4",
+     "dense": 0.8668,
+     "sparse": 1.0,
+     "fused": 0.90676,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:tests/test_appctx.py:4e40c0ab6c7b7bd0:chunk:3",
+     "dense": 0.7773,
+     "sparse": 0.0,
+     "fused": 0.54411,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "pallets/flask:src/flask/app.py:efe961e9c223dbba:chunk:45",
+     "dense": 0.0,
+     "sparse": 0.7844,
+     "fused": 0.23531999999999997,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:docs/templating.rst:4cbda042253e832d:chunk:2",
+     "dense": 0.0,
+     "sparse": 0.7882,
+     "fused": 0.23646,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:docs/appcontext.rst:6ed25a4ff0d4de95:chunk:4",
+     "dense": 0.789,
+     "sparse": 0.9041,
+     "fused": 0.82353,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:src/flask/globals.py:5dd419992b4198f2:chunk:0",
+     "dense": 0.7747,
+     "sparse": 0.8934,
+     "fused": 0.8103100000000001,
+     "relevant": true,
+     "in_dense": true,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:docs/api.rst:08650a7a23f8b2f0:chunk:9",
+     "dense": 0.0,
+     "sparse": 0.7792,
+     "fused": 0.23376,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:src/flask/app.py:efe961e9c223dbba:chunk:46",
+     "dense": 0.7863,
+     "sparse": 0.0,
+     "fused": 0.55041,
+     "relevant": true,
+     "in_dense": true,
+     "in_sparse": false
+    }
+   ]
+  },
+  {
+   "task_id": "eih-phase1-ops-052",
+   "split": "val",
+   "strategy": "hybrid",
+   "mode": "hybrid",
+   "configured_threshold": 0.6,
+   "top_k": 7,
+   "max_context_chunks": 7,
+   "candidates": [
+    {
+     "chunk_id": "fastapi/fastapi:docs_src/dependencies/tutorial012.py:86bac127674144d1:chunk:3",
+     "dense": 0.8296,
+     "sparse": 0.0,
+     "fused": 0.58072,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs_src/dependencies/tutorial012_an.py:1b3b2e0e04c3fe4f:chunk:3",
+     "dense": 0.8296,
+     "sparse": 0.0,
+     "fused": 0.58072,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "fastapi/fastapi:tests/test_ambiguous_params.py:6c030dd5606c5f45:chunk:1",
+     "dense": 0.0,
+     "sparse": 0.8918,
+     "fused": 0.26754,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "fastapi/fastapi:fastapi/dependencies/utils.py:af29ceaf05ba04a4:chunk:15",
+     "dense": 0.84,
+     "sparse": 0.9568,
+     "fused": 0.8750399999999999,
+     "relevant": true,
+     "in_dense": true,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "fastapi/fastapi:fastapi/routing.py:75c4018f152c3bd2:chunk:17",
+     "dense": 0.0,
+     "sparse": 0.7845,
+     "fused": 0.23534999999999998,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs_src/dependencies/tutorial003_an_py39.py:2560be35a6988fd9:chunk:0",
+     "dense": 0.8109,
+     "sparse": 0.0,
+     "fused": 0.56763,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs_src/dependencies/tutorial004_an_py39.py:1c95cb83f7827b54:chunk:0",
+     "dense": 0.8113,
+     "sparse": 0.0,
+     "fused": 0.56791,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "pytest-dev/pytest:doc/en/example/simple.rst:68998f865ce5ce71:chunk:20",
+     "dense": 0.0,
+     "sparse": 0.8331,
+     "fused": 0.24992999999999999,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs_src/dependencies/tutorial002_an_py39.py:ae790ac726e06e59:chunk:0",
+     "dense": 0.8113,
+     "sparse": 0.0,
+     "fused": 0.56791,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "fastapi/fastapi:tests/test_ambiguous_params.py:6c030dd5606c5f45:chunk:2",
+     "dense": 0.0,
+     "sparse": 1.0,
+     "fused": 0.3,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "fastapi/fastapi:fastapi/routing.py:75c4018f152c3bd2:chunk:19",
+     "dense": 0.0,
+     "sparse": 0.7942,
+     "fused": 0.23826,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pytest-dev/pytest:doc/en/how-to/unittest.rst:df3ec0658733df31:chunk:6",
+     "dense": 0.0,
+     "sparse": 0.8296,
+     "fused": 0.24888,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs_src/sql_databases/sql_app_py310/main.py:8b488c280f6107ce:chunk:0",
+     "dense": 0.8251,
+     "sparse": 0.0,
+     "fused": 0.5775699999999999,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    }
+   ]
+  },
+  {
+   "task_id": "eih-phase1-ops-053",
+   "split": "val",
+   "strategy": "hybrid",
+   "mode": "hybrid",
+   "configured_threshold": 0.6,
+   "top_k": 7,
+   "max_context_chunks": 7,
+   "candidates": [
+    {
+     "chunk_id": "pallets/flask:CHANGES.rst:b408f652cfde809e:chunk:24",
+     "dense": 0.8291,
+     "sparse": 0.8947,
+     "fused": 0.8487799999999999,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:docs/config.rst:eddffc3cb76d04cc:chunk:7",
+     "dense": 0.8209,
+     "sparse": 0.0,
+     "fused": 0.57463,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "pallets/flask:CHANGES.rst:b408f652cfde809e:chunk:7",
+     "dense": 0.8319,
+     "sparse": 0.9747,
+     "fused": 0.8747399999999999,
+     "relevant": true,
+     "in_dense": true,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:CHANGES.rst:b408f652cfde809e:chunk:36",
+     "dense": 0.8146,
+     "sparse": 0.0,
+     "fused": 0.57022,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "pallets/flask:CHANGES.rst:b408f652cfde809e:chunk:46",
+     "dense": 0.0,
+     "sparse": 0.8382,
+     "fused": 0.25145999999999996,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:CHANGES.rst:b408f652cfde809e:chunk:16",
+     "dense": 0.8149,
+     "sparse": 0.9442,
+     "fused": 0.8536899999999998,
+     "relevant": true,
+     "in_dense": true,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pylint-dev/pylint:tests/functional/m/method_hidden.py:d275bebd37f37e1d:chunk:12",
+     "dense": 0.0,
+     "sparse": 0.7978,
+     "fused": 0.23933999999999997,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:CHANGES.rst:b408f652cfde809e:chunk:30",
+     "dense": 0.0,
+     "sparse": 0.8161,
+     "fused": 0.24483,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:CHANGES.rst:b408f652cfde809e:chunk:54",
+     "dense": 0.8384,
+     "sparse": 0.0,
+     "fused": 0.58688,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "pallets/flask:CHANGES.rst:b408f652cfde809e:chunk:13",
+     "dense": 0.8229,
+     "sparse": 1.0,
+     "fused": 0.8760299999999999,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": true
+    }
+   ]
+  },
+  {
+   "task_id": "eih-phase1-ops-054",
+   "split": "dev",
+   "strategy": "hybrid",
+   "mode": "hybrid",
+   "configured_threshold": 0.6,
+   "top_k": 7,
+   "max_context_chunks": 7,
+   "candidates": [
+    {
+     "chunk_id": "fastapi/fastapi:docs/en/docs/how-to/async-sql-encode-databases.md:df6b7cf0d522c984:chunk:15",
+     "dense": 0.0,
+     "sparse": 0.8749,
+     "fused": 0.26247,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs/en/docs/release-notes.md:c9aa199ddee17583:chunk:701",
+     "dense": 0.8566,
+     "sparse": 0.0,
+     "fused": 0.5996199999999999,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs/en/docs/deployment/versions.md:c4741dc59a92f9e2:chunk:9",
+     "dense": 0.8477,
+     "sparse": 0.8692,
+     "fused": 0.85415,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs/en/docs/how-to/separate-openapi-schemas.md:2ca086b1199d16ba:chunk:0",
+     "dense": 0.0,
+     "sparse": 0.869,
+     "fused": 0.2607,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs/en/docs/release-notes.md:c9aa199ddee17583:chunk:194",
+     "dense": 0.8423,
+     "sparse": 0.9192,
+     "fused": 0.86537,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs_src/settings/tutorial001_pv1.py:b078164e9e1a7ae9:chunk:0",
+     "dense": 0.8427,
+     "sparse": 0.0,
+     "fused": 0.5898899999999999,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs/en/docs/tutorial/response-model.md:c79fae3761525c1e:chunk:20",
+     "dense": 0.0,
+     "sparse": 0.8878,
+     "fused": 0.26634,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs/en/docs/contributing.md:57b425ef911d31da:chunk:8",
+     "dense": 0.0,
+     "sparse": 0.8767,
+     "fused": 0.26301,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs/en/docs/release-notes.md:c9aa199ddee17583:chunk:192",
+     "dense": 0.8587,
+     "sparse": 1.0,
+     "fused": 0.90109,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs/en/docs/deployment/docker.md:7d517d7a61bc79da:chunk:10",
+     "dense": 0.8652,
+     "sparse": 0.0,
+     "fused": 0.60564,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs/zh/docs/deployment/versions.md:cf419b90f93067ba:chunk:9",
+     "dense": 0.8432,
+     "sparse": 0.0,
+     "fused": 0.5902399999999999,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    }
+   ]
+  },
+  {
+   "task_id": "eih-phase1-ops-058",
+   "split": "dev",
+   "strategy": "incident_graph",
+   "mode": "graph_augmented",
+   "configured_threshold": 0.0,
+   "top_k": 8,
+   "max_context_chunks": 8,
+   "candidates": [
+    {
+     "chunk_id": "fastapi/fastapi:docs/pt/docs/tutorial/request-forms.md:199becb8adb0f3c5:chunk:1",
+     "dense": 0.8161,
+     "sparse": 0.0,
+     "fused": 0.24483,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "fastapi/fastapi:tests/test_multipart_installation.py:6b6abfae60c472f7:chunk:6",
+     "dense": 0.0,
+     "sparse": 0.9617,
+     "fused": 0.67319,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "fastapi/fastapi:tests/test_multipart_installation.py:6b6abfae60c472f7:chunk:5",
+     "dense": 0.8312,
+     "sparse": 0.9701,
+     "fused": 0.92843,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "fastapi/fastapi:fastapi/dependencies/utils.py:af29ceaf05ba04a4:chunk:1",
+     "dense": 0.866,
+     "sparse": 1.0,
+     "fused": 0.9598,
+     "relevant": true,
+     "in_dense": true,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "fastapi/fastapi:tests/test_multipart_installation.py:6b6abfae60c472f7:chunk:0",
+     "dense": 0.8243,
+     "sparse": 0.0,
+     "fused": 0.24729,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "fastapi/fastapi:tests/test_multipart_installation.py:6b6abfae60c472f7:chunk:10",
+     "dense": 0.8082,
+     "sparse": 0.9811,
+     "fused": 0.92923,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "fastapi/fastapi:tests/test_multipart_installation.py:6b6abfae60c472f7:chunk:4",
+     "dense": 0.8303,
+     "sparse": 0.9739,
+     "fused": 0.93082,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "fastapi/fastapi:tests/test_multipart_installation.py:6b6abfae60c472f7:chunk:1",
+     "dense": 0.8248,
+     "sparse": 0.9787,
+     "fused": 0.93253,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs/en/docs/release-notes.md:c9aa199ddee17583:chunk:71",
+     "dense": 0.8155,
+     "sparse": 0.0,
+     "fused": 0.24464999999999998,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "fastapi/fastapi:fastapi/dependencies/utils.py:af29ceaf05ba04a4:chunk:2",
+     "dense": 0.0,
+     "sparse": 0.936,
+     "fused": 0.6552,
+     "relevant": true,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "fastapi/fastapi:tests/test_multipart_installation.py:6b6abfae60c472f7:chunk:9",
+     "dense": 0.0,
+     "sparse": 0.9849,
+     "fused": 0.68943,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    }
+   ]
+  },
+  {
+   "task_id": "eih-phase1-ops-059",
+   "split": "dev",
+   "strategy": "hybrid",
+   "mode": "hybrid",
+   "configured_threshold": 0.6,
+   "top_k": 7,
+   "max_context_chunks": 7,
+   "candidates": [
+    {
+     "chunk_id": "pallets/flask:CHANGES.rst:b408f652cfde809e:chunk:24",
+     "dense": 0.8259,
+     "sparse": 0.0,
+     "fused": 0.5781299999999999,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "pallets/flask:src/flask/wrappers.py:9b58f9b4827122ef:chunk:8",
+     "dense": 0.0,
+     "sparse": 0.8463,
+     "fused": 0.25389,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:CHANGES.rst:b408f652cfde809e:chunk:38",
+     "dense": 0.821,
+     "sparse": 0.0,
+     "fused": 0.5746999999999999,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "pallets/flask:CHANGES.rst:b408f652cfde809e:chunk:14",
+     "dense": 0.8283,
+     "sparse": 0.0,
+     "fused": 0.5798099999999999,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "pallets/flask:src/flask/wrappers.py:9b58f9b4827122ef:chunk:1",
+     "dense": 0.8576,
+     "sparse": 0.96,
+     "fused": 0.88832,
+     "relevant": true,
+     "in_dense": true,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:src/flask/wrappers.py:9b58f9b4827122ef:chunk:0",
+     "dense": 0.0,
+     "sparse": 1.0,
+     "fused": 0.3,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:src/flask/helpers.py:b58adc43fef71ae4:chunk:0",
+     "dense": 0.0,
+     "sparse": 0.9184,
+     "fused": 0.27552,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:tests/test_converters.py:4f529ca6ee85a88c:chunk:0",
+     "dense": 0.8149,
+     "sparse": 0.0,
+     "fused": 0.5704299999999999,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "pallets/flask:src/flask/debughelpers.py:3c6203852b56fde7:chunk:0",
+     "dense": 0.0,
+     "sparse": 0.8579,
+     "fused": 0.25737,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:src/flask/testing.py:dc11576f76cfed1e:chunk:0",
+     "dense": 0.0,
+     "sparse": 0.8741,
+     "fused": 0.26222999999999996,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:CHANGES.rst:b408f652cfde809e:chunk:23",
+     "dense": 0.8182,
+     "sparse": 0.0,
+     "fused": 0.57274,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "pallets/flask:src/flask/app.py:efe961e9c223dbba:chunk:0",
+     "dense": 0.0,
+     "sparse": 0.8596,
+     "fused": 0.25788,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:CHANGES.rst:b408f652cfde809e:chunk:77",
+     "dense": 0.8125,
+     "sparse": 0.0,
+     "fused": 0.56875,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    }
+   ]
+  },
+  {
+   "task_id": "eih-phase1-req-002",
+   "split": "val",
+   "strategy": "dense_fast",
+   "mode": "dense",
+   "configured_threshold": 0.7,
+   "top_k": 3,
+   "max_context_chunks": 3,
+   "candidates": [
+    {
+     "chunk_id": "fastapi/fastapi:docs/en/docs/tutorial/path-params.md:c9921a716b1aeb7b:chunk:10",
+     "dense": 0.8197,
+     "sparse": 0.0,
+     "fused": 0.8197,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs/en/docs/tutorial/first-steps.md:04829cfec3d7d0bf:chunk:12",
+     "dense": 0.8151,
+     "sparse": 0.0,
+     "fused": 0.8151,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "fastapi/fastapi:tests/test_tutorial/test_custom_response/test_tutorial006b.py:921c6bd8c22f6d34:chunk:2",
+     "dense": 0.8082,
+     "sparse": 0.0,
+     "fused": 0.8082,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs/en/docs/tutorial/first-steps.md:04829cfec3d7d0bf:chunk:19",
+     "dense": 0.0,
+     "sparse": 1.0,
+     "fused": 0.0,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs/en/docs/features.md:d32b9a1e497d31bc:chunk:4",
+     "dense": 0.0,
+     "sparse": 0.9386,
+     "fused": 0.0,
+     "relevant": true,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs/en/docs/tutorial/security/index.md:aed7f65d98ef0057:chunk:6",
+     "dense": 0.0,
+     "sparse": 0.9903,
+     "fused": 0.0,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    }
+   ]
+  },
+  {
+   "task_id": "eih-phase1-req-003",
+   "split": "val",
+   "strategy": "hybrid_reranked",
+   "mode": "hybrid",
+   "configured_threshold": 0.55,
+   "top_k": 10,
+   "max_context_chunks": 5,
+   "candidates": [
+    {
+     "chunk_id": "pallets/flask:src/flask/sansio/blueprints.py:4ea7beec4919fad6:chunk:14",
+     "dense": 0.0,
+     "sparse": 0.9214,
+     "fused": 0.27642,
+     "relevant": true,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:src/flask/sansio/blueprints.py:4ea7beec4919fad6:chunk:2",
+     "dense": 0.8561,
+     "sparse": 1.0,
+     "fused": 0.89927,
+     "relevant": true,
+     "in_dense": true,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:tests/test_blueprints.py:5b7178c2bd655ea1:chunk:44",
+     "dense": 0.0,
+     "sparse": 0.9736,
+     "fused": 0.29208,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:docs/blueprints.rst:0efbff2912d81e24:chunk:8",
+     "dense": 0.0,
+     "sparse": 0.8986,
+     "fused": 0.26958,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:tests/test_apps/blueprintapp/apps/admin/__init__.py:5e849dc6984b0b39:chunk:0",
+     "dense": 0.8313,
+     "sparse": 0.0,
+     "fused": 0.58191,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "pallets/flask:docs/tutorial/blog.rst:e38d7c41b6cfc3a2:chunk:3",
+     "dense": 0.0,
+     "sparse": 0.8666,
+     "fused": 0.25998,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:docs/blueprints.rst:0efbff2912d81e24:chunk:5",
+     "dense": 0.0,
+     "sparse": 0.896,
+     "fused": 0.2688,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:docs/blueprints.rst:0efbff2912d81e24:chunk:1",
+     "dense": 0.8365,
+     "sparse": 0.0,
+     "fused": 0.58555,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "pallets/flask:tests/test_blueprints.py:5b7178c2bd655ea1:chunk:6",
+     "dense": 0.8272,
+     "sparse": 0.0,
+     "fused": 0.57904,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "pallets/flask:tests/test_blueprints.py:5b7178c2bd655ea1:chunk:4",
+     "dense": 0.8286,
+     "sparse": 0.0,
+     "fused": 0.58002,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "pallets/flask:src/flask/sansio/app.py:606e467fb2557f57:chunk:24",
+     "dense": 0.8518,
+     "sparse": 0.0,
+     "fused": 0.59626,
+     "relevant": true,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "pallets/flask:CHANGES.rst:b408f652cfde809e:chunk:43",
+     "dense": 0.8294,
+     "sparse": 0.0,
+     "fused": 0.58058,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "pallets/flask:tests/test_blueprints.py:5b7178c2bd655ea1:chunk:49",
+     "dense": 0.0,
+     "sparse": 0.8548,
+     "fused": 0.25644,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:tests/test_basic.py:362436050fd06040:chunk:72",
+     "dense": 0.8335,
+     "sparse": 0.0,
+     "fused": 0.58345,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "pallets/flask:tests/test_blueprints.py:5b7178c2bd655ea1:chunk:5",
+     "dense": 0.8426,
+     "sparse": 0.8591,
+     "fused": 0.84755,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:src/flask/sansio/app.py:606e467fb2557f57:chunk:11",
+     "dense": 0.8347,
+     "sparse": 0.0,
+     "fused": 0.58429,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "pallets/flask:src/flask/sansio/blueprints.py:4ea7beec4919fad6:chunk:4",
+     "dense": 0.0,
+     "sparse": 0.8902,
+     "fused": 0.26705999999999996,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:src/flask/sansio/blueprints.py:4ea7beec4919fad6:chunk:13",
+     "dense": 0.0,
+     "sparse": 0.9049,
+     "fused": 0.27147,
+     "relevant": true,
+     "in_dense": false,
+     "in_sparse": true
+    }
+   ]
+  },
+  {
+   "task_id": "eih-phase1-req-005",
+   "split": "dev",
+   "strategy": "dense_fast",
+   "mode": "dense",
+   "configured_threshold": 0.7,
+   "top_k": 3,
+   "max_context_chunks": 3,
+   "candidates": [
+    {
+     "chunk_id": "pallets/flask:docs/cli.rst:e8e5e9b220a5159e:chunk:5",
+     "dense": 0.8154,
+     "sparse": 0.9517,
+     "fused": 0.8154,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:src/flask/sansio/app.py:606e467fb2557f57:chunk:22",
+     "dense": 0.0,
+     "sparse": 0.9643,
+     "fused": 0.0,
+     "relevant": true,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:docs/config.rst:eddffc3cb76d04cc:chunk:3",
+     "dense": 0.8481,
+     "sparse": 1.0,
+     "fused": 0.8481,
+     "relevant": true,
+     "in_dense": true,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:docs/quickstart.rst:884564779240e5b9:chunk:3",
+     "dense": 0.8212,
+     "sparse": 0.0,
+     "fused": 0.8212,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    }
+   ]
+  },
+  {
+   "task_id": "eih-phase1-req-008",
+   "split": "dev",
+   "strategy": "dense_fast",
+   "mode": "dense",
+   "configured_threshold": 0.7,
+   "top_k": 3,
+   "max_context_chunks": 3,
+   "candidates": [
+    {
+     "chunk_id": "fastapi/fastapi:docs/de/docs/reference/background.md:27390d285bbbd8df:chunk:1",
+     "dense": 0.8263,
+     "sparse": 0.0,
+     "fused": 0.8263,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "fastapi/fastapi:fastapi/background.py:ae8b8b8abc5400da:chunk:1",
+     "dense": 0.0,
+     "sparse": 1.0,
+     "fused": 0.0,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs/en/docs/reference/background.md:895ad7f9418b148b:chunk:1",
+     "dense": 0.8263,
+     "sparse": 0.0,
+     "fused": 0.8263,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs/en/docs/tutorial/background-tasks.md:35de4f9f9c0d66b5:chunk:0",
+     "dense": 0.0,
+     "sparse": 0.9796,
+     "fused": 0.0,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs/en/docs/tutorial/background-tasks.md:35de4f9f9c0d66b5:chunk:9",
+     "dense": 0.0,
+     "sparse": 0.9556,
+     "fused": 0.0,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs_src/background_tasks/tutorial001.py:8218ad01272cffb4:chunk:0",
+     "dense": 0.8392,
+     "sparse": 0.0,
+     "fused": 0.8392,
+     "relevant": true,
+     "in_dense": true,
+     "in_sparse": false
+    }
+   ]
+  },
+  {
+   "task_id": "eih-phase1-req-009",
+   "split": "dev",
+   "strategy": "hybrid",
+   "mode": "hybrid",
+   "configured_threshold": 0.6,
+   "top_k": 7,
+   "max_context_chunks": 7,
+   "candidates": [
+    {
+     "chunk_id": "pallets/flask:docs/signals.rst:b5c0e6bb0ec158aa:chunk:2",
+     "dense": 0.8237,
+     "sparse": 0.927,
+     "fused": 0.85469,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:docs/signals.rst:b5c0e6bb0ec158aa:chunk:4",
+     "dense": 0.0,
+     "sparse": 0.9917,
+     "fused": 0.29751,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:docs/signals.rst:b5c0e6bb0ec158aa:chunk:5",
+     "dense": 0.829,
+     "sparse": 0.9151,
+     "fused": 0.85483,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:docs/api.rst:08650a7a23f8b2f0:chunk:17",
+     "dense": 0.8224,
+     "sparse": 0.9109,
+     "fused": 0.84895,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:docs/signals.rst:b5c0e6bb0ec158aa:chunk:7",
+     "dense": 0.8339,
+     "sparse": 1.0,
+     "fused": 0.8837299999999999,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:docs/signals.rst:b5c0e6bb0ec158aa:chunk:3",
+     "dense": 0.8033,
+     "sparse": 0.9209,
+     "fused": 0.83858,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:docs/signals.rst:b5c0e6bb0ec158aa:chunk:0",
+     "dense": 0.8224,
+     "sparse": 0.0,
+     "fused": 0.57568,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "pallets/flask:src/flask/signals.py:57b94c530c3b0aa8:chunk:0",
+     "dense": 0.821,
+     "sparse": 0.9048,
+     "fused": 0.8461399999999999,
+     "relevant": true,
+     "in_dense": true,
+     "in_sparse": true
+    }
+   ]
+  },
+  {
+   "task_id": "eih-phase1-req-010",
+   "split": "dev",
+   "strategy": "hybrid_reranked",
+   "mode": "hybrid",
+   "configured_threshold": 0.55,
+   "top_k": 10,
+   "max_context_chunks": 5,
+   "candidates": [
+    {
+     "chunk_id": "fastapi/fastapi:docs/en/docs/advanced/security/oauth2-scopes.md:7bcf2f3322744d77:chunk:22",
+     "dense": 0.8514,
+     "sparse": 0.0,
+     "fused": 0.59598,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs_src/security/tutorial002_py310.py:272d917c36eb4549:chunk:0",
+     "dense": 0.0,
+     "sparse": 0.9734,
+     "fused": 0.29202,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "fastapi/fastapi:tests/test_security_oauth2_optional_description.py:7fe18821b7c4ed2b:chunk:0",
+     "dense": 0.0,
+     "sparse": 0.97,
+     "fused": 0.291,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs/en/docs/tutorial/security/first-steps.md:42c958d602318b56:chunk:6",
+     "dense": 0.8584,
+     "sparse": 0.0,
+     "fused": 0.60088,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs/en/docs/reference/security/index.md:29376b44dc91e351:chunk:6",
+     "dense": 0.8274,
+     "sparse": 0.0,
+     "fused": 0.57918,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs/en/docs/reference/security/index.md:29376b44dc91e351:chunk:5",
+     "dense": 0.8169,
+     "sparse": 0.0,
+     "fused": 0.57183,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs/de/docs/tutorial/security/first-steps.md:6ea019fac4af8dc6:chunk:8",
+     "dense": 0.8275,
+     "sparse": 0.0,
+     "fused": 0.5792499999999999,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs/en/docs/reference/security/index.md:29376b44dc91e351:chunk:7",
+     "dense": 0.8192,
+     "sparse": 0.0,
+     "fused": 0.57344,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "fastapi/fastapi:tests/test_security_oauth2_password_bearer_optional.py:fbc2ce31e0ae3f4f:chunk:0",
+     "dense": 0.0,
+     "sparse": 0.9825,
+     "fused": 0.29475,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "fastapi/fastapi:fastapi/security/oauth2.py:9567a65f808b02f6:chunk:11",
+     "dense": 0.8305,
+     "sparse": 1.0,
+     "fused": 0.8813499999999999,
+     "relevant": true,
+     "in_dense": true,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs_src/security/tutorial001.py:2982d6ebeb11a3d8:chunk:0",
+     "dense": 0.0,
+     "sparse": 0.9854,
+     "fused": 0.29562,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs_src/security/tutorial002.py:cbd7f45a7286c470:chunk:0",
+     "dense": 0.0,
+     "sparse": 0.9705,
+     "fused": 0.29115,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs_src/security/tutorial001_an.py:e8a06cc8dd20dfdb:chunk:0",
+     "dense": 0.0,
+     "sparse": 0.9705,
+     "fused": 0.29115,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs/en/docs/tutorial/security/simple-oauth2.md:ec3ce0f9b65f8307:chunk:1",
+     "dense": 0.8115,
+     "sparse": 0.0,
+     "fused": 0.5680499999999999,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs/en/docs/reference/security/index.md:29376b44dc91e351:chunk:0",
+     "dense": 0.0,
+     "sparse": 0.9751,
+     "fused": 0.29252999999999996,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs_src/security/tutorial001_an_py39.py:5ab2af6e39293cbd:chunk:0",
+     "dense": 0.0,
+     "sparse": 0.9734,
+     "fused": 0.29202,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs/en/docs/tutorial/security/first-steps.md:42c958d602318b56:chunk:7",
+     "dense": 0.8413,
+     "sparse": 0.0,
+     "fused": 0.58891,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "fastapi/fastapi:tests/test_security_oauth2_password_bearer_optional_description.py:f404e69140a65d4b:chunk:0",
+     "dense": 0.8158,
+     "sparse": 0.9889,
+     "fused": 0.8677299999999999,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": true
+    }
+   ]
+  },
+  {
+   "task_id": "eih-phase1-rev-043",
+   "split": "dev",
+   "strategy": "graph_augmented_reranked",
+   "mode": "graph_augmented",
+   "configured_threshold": 0.5,
+   "top_k": 12,
+   "max_context_chunks": 8,
+   "candidates": [
+    {
+     "chunk_id": "pallets/flask:tests/typing/typing_route.py:4554c7c77994fdd2:chunk:14",
+     "dense": 0.7893,
+     "sparse": 0.0,
+     "fused": 0.513045,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "pallets/flask:tests/test_templating.py:d20c5f1f67fdc81e:chunk:5",
+     "dense": 0.0,
+     "sparse": 0.9467,
+     "fused": 0.331345,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:docs/api.rst:08650a7a23f8b2f0:chunk:13",
+     "dense": 0.0,
+     "sparse": 0.9868,
+     "fused": 0.34537999999999996,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:tests/test_signals.py:eaa27de84a44ad1f:chunk:1",
+     "dense": 0.8022,
+     "sparse": 0.0,
+     "fused": 0.5214300000000001,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "pallets/flask:tests/test_templating.py:d20c5f1f67fdc81e:chunk:6",
+     "dense": 0.8073,
+     "sparse": 0.0,
+     "fused": 0.524745,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "pallets/flask:src/flask/__init__.py:eb132a7550341484:chunk:0",
+     "dense": 0.0,
+     "sparse": 0.9646,
+     "fused": 0.33760999999999997,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:src/flask/templating.py:d937172d3f3902c7:chunk:11",
+     "dense": 0.785,
+     "sparse": 0.0,
+     "fused": 0.5102500000000001,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "pallets/flask:docs/quickstart.rst:884564779240e5b9:chunk:13",
+     "dense": 0.8392,
+     "sparse": 0.0,
+     "fused": 0.54548,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "pallets/flask:tests/test_templating.py:d20c5f1f67fdc81e:chunk:24",
+     "dense": 0.7845,
+     "sparse": 0.0,
+     "fused": 0.509925,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "pallets/flask:docs/patterns/templateinheritance.rst:f41b40dea855682d:chunk:2",
+     "dense": 0.0,
+     "sparse": 0.932,
+     "fused": 0.3262,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:src/flask/templating.py:d937172d3f3902c7:chunk:10",
+     "dense": 0.7805,
+     "sparse": 0.0,
+     "fused": 0.507325,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "pallets/flask:tests/test_templating.py:d20c5f1f67fdc81e:chunk:7",
+     "dense": 0.7813,
+     "sparse": 0.0,
+     "fused": 0.507845,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "pallets/flask:src/flask/templating.py:d937172d3f3902c7:chunk:12",
+     "dense": 0.0,
+     "sparse": 1.0,
+     "fused": 0.35,
+     "relevant": true,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:CHANGES.rst:b408f652cfde809e:chunk:19",
+     "dense": 0.0,
+     "sparse": 0.9478,
+     "fused": 0.33172999999999997,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:docs/patterns/flashing.rst:5802f174e23a0392:chunk:1",
+     "dense": 0.0,
+     "sparse": 0.969,
+     "fused": 0.33914999999999995,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:tests/test_signals.py:eaa27de84a44ad1f:chunk:2",
+     "dense": 0.7995,
+     "sparse": 0.991,
+     "fused": 0.866525,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:docs/api.rst:08650a7a23f8b2f0:chunk:17",
+     "dense": 0.0,
+     "sparse": 0.9415,
+     "fused": 0.32952499999999996,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:tests/test_templating.py:d20c5f1f67fdc81e:chunk:28",
+     "dense": 0.0,
+     "sparse": 0.966,
+     "fused": 0.33809999999999996,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:tests/typing/typing_route.py:4554c7c77994fdd2:chunk:17",
+     "dense": 0.7863,
+     "sparse": 0.0,
+     "fused": 0.511095,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "pallets/flask:tests/test_templating.py:d20c5f1f67fdc81e:chunk:4",
+     "dense": 0.0,
+     "sparse": 0.9317,
+     "fused": 0.32609499999999997,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:docs/quickstart.rst:884564779240e5b9:chunk:12",
+     "dense": 0.7847,
+     "sparse": 0.0,
+     "fused": 0.510055,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "pallets/flask:docs/tutorial/templates.rst:3d06b3eeb8bc02a6:chunk:1",
+     "dense": 0.8015,
+     "sparse": 0.0,
+     "fused": 0.520975,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "pallets/flask:docs/errorhandling.rst:c70de929b0db0e71:chunk:10",
+     "dense": 0.0,
+     "sparse": 0.9355,
+     "fused": 0.32742499999999997,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    }
+   ]
+  },
+  {
+   "task_id": "eih-phase1-rev-044",
+   "split": "dev",
+   "strategy": "hybrid",
+   "mode": "hybrid",
+   "configured_threshold": 0.6,
+   "top_k": 7,
+   "max_context_chunks": 7,
+   "candidates": [
+    {
+     "chunk_id": "fastapi/fastapi:docs_src/security/tutorial003_an_py39.py:a3ab34b519b49e3b:chunk:0",
+     "dense": 0.7942,
+     "sparse": 0.0,
+     "fused": 0.55594,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs/em/docs/tutorial/sql-databases.md:7d84765eb45a9c8d:chunk:51",
+     "dense": 0.0,
+     "sparse": 0.957,
+     "fused": 0.28709999999999997,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs_src/sql_databases/sql_app_py310/main.py:8b488c280f6107ce:chunk:4",
+     "dense": 0.0,
+     "sparse": 0.949,
+     "fused": 0.28469999999999995,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs_src/path_params/tutorial003.py:8e61b9cf93803448:chunk:2",
+     "dense": 0.801,
+     "sparse": 0.9728,
+     "fused": 0.85254,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs/en/docs/tutorial/sql-databases.md:0fd2cb437e7e2ab7:chunk:51",
+     "dense": 0.0,
+     "sparse": 0.9501,
+     "fused": 0.28502999999999995,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs_src/sql_databases/sql_app/main.py:e13e38300bbde601:chunk:4",
+     "dense": 0.0,
+     "sparse": 0.9486,
+     "fused": 0.28458,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs/zh/docs/tutorial/path-params.md:6532c2b05263e9ca:chunk:13",
+     "dense": 0.791,
+     "sparse": 0.0,
+     "fused": 0.5537,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs/en/docs/release-notes.md:c9aa199ddee17583:chunk:259",
+     "dense": 0.8215,
+     "sparse": 0.0,
+     "fused": 0.57505,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "pallets/flask:docs/errorhandling.rst:c70de929b0db0e71:chunk:13",
+     "dense": 0.8142,
+     "sparse": 0.0,
+     "fused": 0.56994,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs/zh/docs/tutorial/sql-databases.md:9e00752467073635:chunk:52",
+     "dense": 0.0,
+     "sparse": 0.9531,
+     "fused": 0.28592999999999996,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs_src/security/tutorial003_an.py:e1b7d26e1c1a3587:chunk:0",
+     "dense": 0.7987,
+     "sparse": 0.0,
+     "fused": 0.55909,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "fastapi/fastapi:tests/test_route_scope.py:2d69b31ee4b809ba:chunk:1",
+     "dense": 0.8025,
+     "sparse": 1.0,
+     "fused": 0.86175,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": true
+    }
+   ]
+  },
+  {
+   "task_id": "eih-phase1-rev-045",
+   "split": "dev",
+   "strategy": "hybrid_bm25",
+   "mode": "hybrid",
+   "configured_threshold": 0.5,
+   "top_k": 7,
+   "max_context_chunks": 7,
+   "candidates": [
+    {
+     "chunk_id": "pallets/flask:tests/test_json.py:f6c73c61a602ee3b:chunk:14",
+     "dense": 0.7924,
+     "sparse": 0.9995,
+     "fused": 0.91666,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:tests/test_testing.py:57715cab1ba6470c:chunk:19",
+     "dense": 0.7885,
+     "sparse": 1.0,
+     "fused": 0.9154,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:docs/errorhandling.rst:c70de929b0db0e71:chunk:12",
+     "dense": 0.7918,
+     "sparse": 0.0,
+     "fused": 0.31672,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "pallets/flask:tests/test_testing.py:57715cab1ba6470c:chunk:18",
+     "dense": 0.7931,
+     "sparse": 0.9633,
+     "fused": 0.8952200000000001,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:tests/test_json.py:f6c73c61a602ee3b:chunk:3",
+     "dense": 0.0,
+     "sparse": 0.9744,
+     "fused": 0.58464,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:docs/patterns/javascript.rst:c6939c32456acd05:chunk:8",
+     "dense": 0.7887,
+     "sparse": 0.0,
+     "fused": 0.31548,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "pallets/flask:tests/test_json.py:f6c73c61a602ee3b:chunk:1",
+     "dense": 0.8108,
+     "sparse": 0.9583,
+     "fused": 0.8993,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:tests/test_async.py:0a6a50bfd6515814:chunk:5",
+     "dense": 0.0,
+     "sparse": 0.9411,
+     "fused": 0.56466,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:tests/test_json.py:f6c73c61a602ee3b:chunk:2",
+     "dense": 0.8132,
+     "sparse": 0.9677,
+     "fused": 0.9059,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": true
+    }
+   ]
+  },
+  {
+   "task_id": "eih-phase1-rev-046",
+   "split": "val",
+   "strategy": "hybrid_bm25",
+   "mode": "hybrid",
+   "configured_threshold": 0.5,
+   "top_k": 7,
+   "max_context_chunks": 7,
+   "candidates": [
+    {
+     "chunk_id": "fastapi/fastapi:docs/en/docs/async.md:e82ea93dbfe1affc:chunk:29",
+     "dense": 0.7955,
+     "sparse": 0.0,
+     "fused": 0.31820000000000004,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "sphinx-doc/sphinx:tests/test_intl/test_intl.py:2d4483cf38bce9e3:chunk:52",
+     "dense": 0.0,
+     "sparse": 0.9125,
+     "fused": 0.5475,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs/en/docs/advanced/events.md:030667eaa90bbe94:chunk:2",
+     "dense": 0.7913,
+     "sparse": 0.0,
+     "fused": 0.31652,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs/zh/docs/async.md:b91a180b5fdceedf:chunk:32",
+     "dense": 0.7874,
+     "sparse": 0.0,
+     "fused": 0.31496,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs/en/docs/async.md:e82ea93dbfe1affc:chunk:30",
+     "dense": 0.8113,
+     "sparse": 0.0,
+     "fused": 0.32452000000000003,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "sphinx-doc/sphinx:tests/test_builders/test_build_linkcheck.py:9275aa951087bebe:chunk:47",
+     "dense": 0.0,
+     "sparse": 0.9022,
+     "fused": 0.54132,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs_src/events/tutorial003.py:9eea93386ade4389:chunk:4",
+     "dense": 0.7922,
+     "sparse": 0.0,
+     "fused": 0.31688000000000005,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs/en/docs/async.md:e82ea93dbfe1affc:chunk:4",
+     "dense": 0.8076,
+     "sparse": 0.0,
+     "fused": 0.32304,
+     "relevant": true,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs/en/docs/how-to/sql-databases-peewee.md:c4e3695871f50576:chunk:44",
+     "dense": 0.786,
+     "sparse": 0.9387,
+     "fused": 0.87762,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs/em/docs/how-to/sql-databases-peewee.md:eb2bb9b2aabe1a9f:chunk:44",
+     "dense": 0.0,
+     "sparse": 0.9581,
+     "fused": 0.5748599999999999,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "sphinx-doc/sphinx:tests/test_intl/test_intl.py:2d4483cf38bce9e3:chunk:47",
+     "dense": 0.0,
+     "sparse": 0.9081,
+     "fused": 0.54486,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs_src/sql_databases_peewee/sql_app/main.py:b182263026742263:chunk:8",
+     "dense": 0.0,
+     "sparse": 1.0,
+     "fused": 0.6,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:examples/celery/src/task_app/tasks.py:d2c365c8ed2f5abf:chunk:2",
+     "dense": 0.0,
+     "sparse": 0.9171,
+     "fused": 0.55026,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    }
+   ]
+  },
+  {
+   "task_id": "eih-phase1-rev-047",
+   "split": "val",
+   "strategy": "graph_augmented_reranked",
+   "mode": "graph_augmented",
+   "configured_threshold": 0.5,
+   "top_k": 12,
+   "max_context_chunks": 8,
+   "candidates": [
+    {
+     "chunk_id": "pallets/flask:docs/tutorial/deploy.rst:20293623ad985fe7:chunk:2",
+     "dense": 0.8009,
+     "sparse": 1.0,
+     "fused": 0.8705849999999999,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:docs/quickstart.rst:884564779240e5b9:chunk:26",
+     "dense": 0.0,
+     "sparse": 0.9631,
+     "fused": 0.33708499999999997,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:docs/config.rst:eddffc3cb76d04cc:chunk:9",
+     "dense": 0.7665,
+     "sparse": 0.0,
+     "fused": 0.498225,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "pallets/flask:docs/config.rst:eddffc3cb76d04cc:chunk:3",
+     "dense": 0.7623,
+     "sparse": 0.0,
+     "fused": 0.495495,
+     "relevant": true,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "pallets/flask:pyproject.toml:61823d03517dcc3d:chunk:0",
+     "dense": 0.7548,
+     "sparse": 0.0,
+     "fused": 0.49062000000000006,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "pallets/flask:tests/test_basic.py:362436050fd06040:chunk:41",
+     "dense": 0.7592,
+     "sparse": 0.0,
+     "fused": 0.49348000000000003,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "pallets/flask:tests/test_config.py:09df8aec5f88df42:chunk:9",
+     "dense": 0.0,
+     "sparse": 0.9693,
+     "fused": 0.339255,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:tests/static/config.json:28d7be9c2566e893:chunk:0",
+     "dense": 0.7648,
+     "sparse": 0.9599,
+     "fused": 0.8330850000000001,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pytest-dev/pytest:testing/plugins_integration/django_settings.py:088567c59fa546eb:chunk:0",
+     "dense": 0.0,
+     "sparse": 0.9053,
+     "fused": 0.316855,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:CHANGES.rst:b408f652cfde809e:chunk:57",
+     "dense": 0.7552,
+     "sparse": 0.0,
+     "fused": 0.49088,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "pallets/flask:docs/config.rst:eddffc3cb76d04cc:chunk:12",
+     "dense": 0.758,
+     "sparse": 0.0,
+     "fused": 0.4927,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "pallets/flask:tests/test_config.py:09df8aec5f88df42:chunk:10",
+     "dense": 0.0,
+     "sparse": 0.9033,
+     "fused": 0.31615499999999996,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:src/flask/sansio/app.py:606e467fb2557f57:chunk:6",
+     "dense": 0.0,
+     "sparse": 0.9185,
+     "fused": 0.32147499999999996,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pylint-dev/pylint:doc/data/messages/i/invalid-envvar-default/good.py:6082b1e8163f053e:chunk:0",
+     "dense": 0.0,
+     "sparse": 0.8973,
+     "fused": 0.314055,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pylint-dev/pylint:doc/data/messages/i/invalid-envvar-default/bad.py:7bb6e74c0ffa1fc0:chunk:0",
+     "dense": 0.7553,
+     "sparse": 0.0,
+     "fused": 0.490945,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "pallets/flask:tests/static/config.toml:1551d036dd594e88:chunk:0",
+     "dense": 0.7622,
+     "sparse": 0.9599,
+     "fused": 0.831395,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:docs/server.rst:1d6d170ccb09c2c7:chunk:1",
+     "dense": 0.7542,
+     "sparse": 0.0,
+     "fused": 0.49023,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "pallets/flask:docs/api.rst:08650a7a23f8b2f0:chunk:5",
+     "dense": 0.0,
+     "sparse": 0.8937,
+     "fused": 0.312795,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:tests/conftest.py:822fa3248cec3a9e:chunk:3",
+     "dense": 0.0,
+     "sparse": 0.9163,
+     "fused": 0.32070499999999996,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:tests/test_config.py:09df8aec5f88df42:chunk:0",
+     "dense": 0.756,
+     "sparse": 0.9321,
+     "fused": 0.817635,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": true
+    }
+   ]
+  },
+  {
+   "task_id": "eih-phase1-rev-048",
+   "split": "dev",
+   "strategy": "hybrid_bm25",
+   "mode": "hybrid",
+   "configured_threshold": 0.5,
+   "top_k": 7,
+   "max_context_chunks": 7,
+   "candidates": [
+    {
+     "chunk_id": "fastapi/fastapi:docs_src/sql_databases/sql_app_py310/main.py:8b488c280f6107ce:chunk:6",
+     "dense": 0.0,
+     "sparse": 0.9725,
+     "fused": 0.5835,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs/en/docs/tutorial/path-params.md:c9921a716b1aeb7b:chunk:6",
+     "dense": 0.7853,
+     "sparse": 0.0,
+     "fused": 0.31412,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs_src/sql_databases_peewee/sql_app/main.py:b182263026742263:chunk:7",
+     "dense": 0.0,
+     "sparse": 0.9715,
+     "fused": 0.5829,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs_src/sql_databases/sql_app/main.py:e13e38300bbde601:chunk:6",
+     "dense": 0.0,
+     "sparse": 0.9715,
+     "fused": 0.5829,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs_src/sql_databases/sql_app/crud.py:40e6718b1ec52be7:chunk:5",
+     "dense": 0.0,
+     "sparse": 0.9945,
+     "fused": 0.5967,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs_src/query_params/tutorial001.py:6adfaedf0f557cb2:chunk:1",
+     "dense": 0.7896,
+     "sparse": 0.0,
+     "fused": 0.31584,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs_src/sql_databases_peewee/sql_app/crud.py:566a787971bb6eea:chunk:5",
+     "dense": 0.0,
+     "sparse": 1.0,
+     "fused": 0.6,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs_src/sql_databases/sql_app/alt_main.py:8f5bb6d952c4e129:chunk:8",
+     "dense": 0.0,
+     "sparse": 0.9695,
+     "fused": 0.5817,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "fastapi/fastapi:tests/test_tutorial/test_dependencies/test_tutorial001_an_py310.py:1379d11f282e0dd4:chunk:2",
+     "dense": 0.791,
+     "sparse": 0.0,
+     "fused": 0.3164,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "fastapi/fastapi:tests/test_tutorial/test_dependencies/test_tutorial001_an.py:b750bc4e030d78e0:chunk:1",
+     "dense": 0.7958,
+     "sparse": 0.0,
+     "fused": 0.31832,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs_src/sql_databases/sql_app_py310/alt_main.py:d5ea8e2ce601ee78:chunk:8",
+     "dense": 0.0,
+     "sparse": 0.9705,
+     "fused": 0.5823,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "fastapi/fastapi:tests/test_tutorial/test_dependencies/test_tutorial001_an_py39.py:d30ecb5778762028:chunk:2",
+     "dense": 0.7881,
+     "sparse": 0.0,
+     "fused": 0.31524,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "fastapi/fastapi:tests/test_tutorial/test_dependencies/test_tutorial001.py:ca2e492113f98597:chunk:1",
+     "dense": 0.7958,
+     "sparse": 0.0,
+     "fused": 0.31832,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "fastapi/fastapi:tests/test_tutorial/test_dependencies/test_tutorial001_py310.py:c55c86d770cbeed0:chunk:2",
+     "dense": 0.791,
+     "sparse": 0.0,
+     "fused": 0.3164,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    }
+   ]
+  },
+  {
+   "task_id": "eih-phase1-test-032",
+   "split": "val",
+   "strategy": "hybrid",
+   "mode": "hybrid",
+   "configured_threshold": 0.6,
+   "top_k": 7,
+   "max_context_chunks": 7,
+   "candidates": [
+    {
+     "chunk_id": "fastapi/fastapi:docs/en/docs/tutorial/testing.md:9316c819d8f82c7a:chunk:0",
+     "dense": 0.851,
+     "sparse": 0.0,
+     "fused": 0.5956999999999999,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs/en/docs/tutorial/testing.md:9316c819d8f82c7a:chunk:2",
+     "dense": 0.8295,
+     "sparse": 0.0,
+     "fused": 0.58065,
+     "relevant": true,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "fastapi/fastapi:tests/test_tutorial/test_path_operation_advanced_configurations/test_tutorial007.py:b82ac454a290694c:chunk:5",
+     "dense": 0.0,
+     "sparse": 0.9814,
+     "fused": 0.29442,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "fastapi/fastapi:tests/test_tutorial/test_events/test_tutorial002.py:e88b9c57a2b5817d:chunk:3",
+     "dense": 0.0,
+     "sparse": 0.9628,
+     "fused": 0.28884,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "fastapi/fastapi:tests/test_tutorial/test_header_params/test_tutorial001_an.py:559a419623aecc38:chunk:1",
+     "dense": 0.8203,
+     "sparse": 0.0,
+     "fused": 0.57421,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "fastapi/fastapi:tests/test_tutorial/test_path_operation_advanced_configurations/test_tutorial007_pv1.py:aed0772c9ec9a272:chunk:5",
+     "dense": 0.0,
+     "sparse": 0.9797,
+     "fused": 0.29391,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "fastapi/fastapi:tests/test_tutorial/test_dependencies/test_tutorial008d.py:b39131c7014041ce:chunk:0",
+     "dense": 0.8209,
+     "sparse": 0.0,
+     "fused": 0.57463,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "fastapi/fastapi:tests/test_exception_handlers.py:7e24d421da69cebf:chunk:0",
+     "dense": 0.8406,
+     "sparse": 0.0,
+     "fused": 0.5884199999999999,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "fastapi/fastapi:tests/test_tutorial/test_header_params/test_tutorial001.py:9d1be51e8195a91d:chunk:1",
+     "dense": 0.8203,
+     "sparse": 0.0,
+     "fused": 0.57421,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs/en/docs/tutorial/testing.md:9316c819d8f82c7a:chunk:1",
+     "dense": 0.0,
+     "sparse": 0.9702,
+     "fused": 0.29106,
+     "relevant": true,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "fastapi/fastapi:tests/test_regex_deprecated_body.py:047d563c4e3269d8:chunk:1",
+     "dense": 0.0,
+     "sparse": 1.0,
+     "fused": 0.3,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "fastapi/fastapi:tests/test_starlette_exception.py:057ac9c6d7c2a235:chunk:0",
+     "dense": 0.0,
+     "sparse": 0.9661,
+     "fused": 0.28983,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "fastapi/fastapi:tests/test_tutorial/test_dependencies/test_tutorial008d_an.py:1d68a9b6a8d02add:chunk:0",
+     "dense": 0.8209,
+     "sparse": 0.0,
+     "fused": 0.57463,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "fastapi/fastapi:tests/test_tutorial/test_body/test_tutorial001.py:6ddabe6512773cb3:chunk:13",
+     "dense": 0.0,
+     "sparse": 0.9636,
+     "fused": 0.28908,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    }
+   ]
+  },
+  {
+   "task_id": "eih-phase1-test-033",
+   "split": "val",
+   "strategy": "hybrid",
+   "mode": "hybrid",
+   "configured_threshold": 0.6,
+   "top_k": 7,
+   "max_context_chunks": 7,
+   "candidates": [
+    {
+     "chunk_id": "pallets/flask:src/flask/app.py:efe961e9c223dbba:chunk:22",
+     "dense": 0.912,
+     "sparse": 0.8946,
+     "fused": 0.9067799999999999,
+     "relevant": true,
+     "in_dense": true,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:tests/test_testing.py:57715cab1ba6470c:chunk:23",
+     "dense": 0.0,
+     "sparse": 0.9108,
+     "fused": 0.27324,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:src/flask/testing.py:dc11576f76cfed1e:chunk:14",
+     "dense": 0.8495,
+     "sparse": 0.8897,
+     "fused": 0.86156,
+     "relevant": true,
+     "in_dense": true,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:tests/test_testing.py:57715cab1ba6470c:chunk:24",
+     "dense": 0.0,
+     "sparse": 0.8853,
+     "fused": 0.26559,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:docs/testing.rst:80883af068924f1f:chunk:8",
+     "dense": 0.8993,
+     "sparse": 0.8864,
+     "fused": 0.89543,
+     "relevant": true,
+     "in_dense": true,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:docs/api.rst:08650a7a23f8b2f0:chunk:8",
+     "dense": 0.8584,
+     "sparse": 0.0,
+     "fused": 0.60088,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "pallets/flask:tests/test_cli.py:054fc879c3a7c2e1:chunk:12",
+     "dense": 0.8479,
+     "sparse": 0.0,
+     "fused": 0.59353,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "pallets/flask:tests/test_testing.py:57715cab1ba6470c:chunk:22",
+     "dense": 0.8716,
+     "sparse": 0.9532,
+     "fused": 0.89608,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:examples/tutorial/tests/conftest.py:2778b7c035d917bb:chunk:3",
+     "dense": 0.8698,
+     "sparse": 1.0,
+     "fused": 0.90886,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": true
+    }
+   ]
+  },
+  {
+   "task_id": "eih-phase1-test-034",
+   "split": "dev",
+   "strategy": "hybrid",
+   "mode": "hybrid",
+   "configured_threshold": 0.6,
+   "top_k": 7,
+   "max_context_chunks": 7,
+   "candidates": [
+    {
+     "chunk_id": "fastapi/fastapi:tests/test_dependency_security_overrides.py:5b4841c30705b29f:chunk:9",
+     "dense": 0.0,
+     "sparse": 0.9173,
+     "fused": 0.27519,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "fastapi/fastapi:tests/test_additional_responses_bad.py:b6a1303079524f20:chunk:0",
+     "dense": 0.8147,
+     "sparse": 0.0,
+     "fused": 0.57029,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs/zh/docs/advanced/testing-dependencies.md:4f377926c80da206:chunk:5",
+     "dense": 0.0,
+     "sparse": 0.9282,
+     "fused": 0.27846,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs/en/docs/advanced/testing-dependencies.md:bfa4a90aa7f20961:chunk:3",
+     "dense": 0.8572,
+     "sparse": 0.0,
+     "fused": 0.6000399999999999,
+     "relevant": true,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "fastapi/fastapi:tests/test_dependency_security_overrides.py:5b4841c30705b29f:chunk:8",
+     "dense": 0.0,
+     "sparse": 0.9173,
+     "fused": 0.27519,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "fastapi/fastapi:tests/test_dependency_overrides.py:9afde813a95a3f46:chunk:27",
+     "dense": 0.8076,
+     "sparse": 0.0,
+     "fused": 0.5653199999999999,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "fastapi/fastapi:tests/test_dependency_overrides.py:9afde813a95a3f46:chunk:24",
+     "dense": 0.8143,
+     "sparse": 0.0,
+     "fused": 0.57001,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "fastapi/fastapi:tests/test_dependency_overrides.py:9afde813a95a3f46:chunk:23",
+     "dense": 0.8124,
+     "sparse": 0.0,
+     "fused": 0.56868,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "fastapi/fastapi:tests/test_tutorial/test_dependencies/test_tutorial008d.py:b39131c7014041ce:chunk:0",
+     "dense": 0.8026,
+     "sparse": 0.0,
+     "fused": 0.56182,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs/em/docs/advanced/testing-dependencies.md:d1c6fa084c5ecd26:chunk:5",
+     "dense": 0.0,
+     "sparse": 0.9397,
+     "fused": 0.28191,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "fastapi/fastapi:tests/test_dependency_overrides.py:9afde813a95a3f46:chunk:26",
+     "dense": 0.8069,
+     "sparse": 0.0,
+     "fused": 0.5648299999999999,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs/en/docs/advanced/testing-dependencies.md:bfa4a90aa7f20961:chunk:5",
+     "dense": 0.0,
+     "sparse": 0.9101,
+     "fused": 0.27303,
+     "relevant": true,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs/zh/docs/advanced/testing-dependencies.md:4f377926c80da206:chunk:3",
+     "dense": 0.0,
+     "sparse": 0.9406,
+     "fused": 0.28218,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs/em/docs/advanced/testing-dependencies.md:d1c6fa084c5ecd26:chunk:3",
+     "dense": 0.0,
+     "sparse": 1.0,
+     "fused": 0.3,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    }
+   ]
+  },
+  {
+   "task_id": "eih-phase1-test-035",
+   "split": "dev",
+   "strategy": "hybrid",
+   "mode": "hybrid",
+   "configured_threshold": 0.6,
+   "top_k": 7,
+   "max_context_chunks": 7,
+   "candidates": [
+    {
+     "chunk_id": "pallets/flask:tests/test_appctx.py:4e40c0ab6c7b7bd0:chunk:14",
+     "dense": 0.0,
+     "sparse": 0.9606,
+     "fused": 0.28818,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:docs/api.rst:08650a7a23f8b2f0:chunk:16",
+     "dense": 0.0,
+     "sparse": 0.9546,
+     "fused": 0.28637999999999997,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:tests/test_appctx.py:4e40c0ab6c7b7bd0:chunk:4",
+     "dense": 0.8703,
+     "sparse": 1.0,
+     "fused": 0.9092099999999999,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:tests/test_appctx.py:4e40c0ab6c7b7bd0:chunk:5",
+     "dense": 0.8686,
+     "sparse": 0.9738,
+     "fused": 0.9001600000000001,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:docs/appcontext.rst:6ed25a4ff0d4de95:chunk:4",
+     "dense": 0.8516,
+     "sparse": 0.9983,
+     "fused": 0.89561,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:tests/test_reqctx.py:8c19e1468ed3360e:chunk:9",
+     "dense": 0.0,
+     "sparse": 0.9291,
+     "fused": 0.27873,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:src/flask/globals.py:5dd419992b4198f2:chunk:0",
+     "dense": 0.8305,
+     "sparse": 0.0,
+     "fused": 0.5813499999999999,
+     "relevant": true,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "pallets/flask:tests/test_reqctx.py:8c19e1468ed3360e:chunk:8",
+     "dense": 0.0,
+     "sparse": 0.9444,
+     "fused": 0.28332,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:tests/test_reqctx.py:8c19e1468ed3360e:chunk:4",
+     "dense": 0.8388,
+     "sparse": 0.0,
+     "fused": 0.5871599999999999,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "pallets/flask:tests/test_reqctx.py:8c19e1468ed3360e:chunk:6",
+     "dense": 0.8348,
+     "sparse": 0.0,
+     "fused": 0.58436,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "pallets/flask:docs/reqcontext.rst:af99d77d335c3dc8:chunk:4",
+     "dense": 0.8525,
+     "sparse": 0.0,
+     "fused": 0.59675,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    }
+   ]
+  },
+  {
+   "task_id": "eih-phase1-test-037",
+   "split": "dev",
+   "strategy": "hybrid",
+   "mode": "hybrid",
+   "configured_threshold": 0.6,
+   "top_k": 7,
+   "max_context_chunks": 7,
+   "candidates": [
+    {
+     "chunk_id": "pallets/flask:tests/test_basic.py:362436050fd06040:chunk:12",
+     "dense": 0.8647,
+     "sparse": 0.0,
+     "fused": 0.60529,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "psf/requests:docs/user/advanced.rst:8fcb54b1f76f1df0:chunk:2",
+     "dense": 0.0,
+     "sparse": 0.9535,
+     "fused": 0.28604999999999997,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:tests/test_basic.py:362436050fd06040:chunk:23",
+     "dense": 0.8457,
+     "sparse": 0.0,
+     "fused": 0.59199,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "psf/requests:tests/test_requests.py:8e553d75084306fd:chunk:37",
+     "dense": 0.0,
+     "sparse": 0.9731,
+     "fused": 0.29192999999999997,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:tests/test_testing.py:57715cab1ba6470c:chunk:13",
+     "dense": 0.8547,
+     "sparse": 0.0,
+     "fused": 0.59829,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "pallets/flask:tests/test_basic.py:362436050fd06040:chunk:26",
+     "dense": 0.0,
+     "sparse": 0.9536,
+     "fused": 0.28608,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:tests/test_testing.py:57715cab1ba6470c:chunk:10",
+     "dense": 0.844,
+     "sparse": 0.0,
+     "fused": 0.5908,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "pallets/flask:tests/test_reqctx.py:8c19e1468ed3360e:chunk:10",
+     "dense": 0.0,
+     "sparse": 1.0,
+     "fused": 0.3,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:tests/test_testing.py:57715cab1ba6470c:chunk:12",
+     "dense": 0.0,
+     "sparse": 0.9664,
+     "fused": 0.28992,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:tests/test_testing.py:57715cab1ba6470c:chunk:14",
+     "dense": 0.0,
+     "sparse": 0.9594,
+     "fused": 0.28782,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:tests/test_basic.py:362436050fd06040:chunk:19",
+     "dense": 0.8346,
+     "sparse": 0.0,
+     "fused": 0.58422,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "pallets/flask:tests/test_testing.py:57715cab1ba6470c:chunk:11",
+     "dense": 0.8479,
+     "sparse": 0.0,
+     "fused": 0.59353,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "pallets/flask:tests/test_reqctx.py:8c19e1468ed3360e:chunk:11",
+     "dense": 0.0,
+     "sparse": 0.9555,
+     "fused": 0.28665,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "pallets/flask:tests/test_helpers.py:b32707890afb8b12:chunk:24",
+     "dense": 0.8655,
+     "sparse": 0.0,
+     "fused": 0.60585,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    }
+   ]
+  },
+  {
+   "task_id": "eih-phase1-test-038",
+   "split": "dev",
+   "strategy": "hybrid",
+   "mode": "hybrid",
+   "configured_threshold": 0.6,
+   "top_k": 7,
+   "max_context_chunks": 7,
+   "candidates": [
+    {
+     "chunk_id": "fastapi/fastapi:docs/en/docs/tutorial/testing.md:9316c819d8f82c7a:chunk:2",
+     "dense": 0.8532,
+     "sparse": 0.0,
+     "fused": 0.5972399999999999,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "fastapi/fastapi:tests/test_route_scope.py:2d69b31ee4b809ba:chunk:0",
+     "dense": 0.8221,
+     "sparse": 0.0,
+     "fused": 0.57547,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "fastapi/fastapi:tests/test_dependency_class.py:2a201a9022afd97e:chunk:0",
+     "dense": 0.8231,
+     "sparse": 0.0,
+     "fused": 0.57617,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs/zh/docs/tutorial/testing.md:fbdd645dfc273f5a:chunk:2",
+     "dense": 0.8232,
+     "sparse": 0.0,
+     "fused": 0.57624,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs/em/docs/advanced/async-tests.md:31105b3b47784e4c:chunk:2",
+     "dense": 0.0,
+     "sparse": 0.8948,
+     "fused": 0.26844,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs/en/docs/tutorial/testing.md:9316c819d8f82c7a:chunk:1",
+     "dense": 0.0,
+     "sparse": 0.8669,
+     "fused": 0.26006999999999997,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs_src/async_tests/test_main.py:2e93af9c56b1fb1d:chunk:0",
+     "dense": 0.0,
+     "sparse": 0.9004,
+     "fused": 0.27011999999999997,
+     "relevant": true,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs/en/docs/advanced/async-tests.md:cec0e3691f9e090f:chunk:0",
+     "dense": 0.8218,
+     "sparse": 0.853,
+     "fused": 0.8311599999999999,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs/de/docs/advanced/async-tests.md:0d4857b8b977d950:chunk:2",
+     "dense": 0.0,
+     "sparse": 0.8801,
+     "fused": 0.26403,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs/en/docs/advanced/async-tests.md:cec0e3691f9e090f:chunk:2",
+     "dense": 0.8398,
+     "sparse": 1.0,
+     "fused": 0.8878599999999999,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": true
+    },
+    {
+     "chunk_id": "fastapi/fastapi:tests/test_tutorial/test_dependencies/test_tutorial008d_an.py:1d68a9b6a8d02add:chunk:0",
+     "dense": 0.8186,
+     "sparse": 0.0,
+     "fused": 0.57302,
+     "relevant": false,
+     "in_dense": true,
+     "in_sparse": false
+    },
+    {
+     "chunk_id": "fastapi/fastapi:docs/en/docs/advanced/async-tests.md:cec0e3691f9e090f:chunk:12",
+     "dense": 0.0,
+     "sparse": 0.91,
+     "fused": 0.273,
+     "relevant": false,
+     "in_dense": false,
+     "in_sparse": true
+    }
+   ]
+  }
+ ]
+}
