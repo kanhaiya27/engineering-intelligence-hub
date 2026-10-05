@@ -15,6 +15,7 @@ Systems Under Evaluation:
 from __future__ import annotations
 
 import datetime
+import time
 import json
 from pathlib import Path
 from typing import Any, Dict, List, Optional
@@ -54,6 +55,13 @@ M5_RAW_DIR = DEFAULT_RAW_DIR
 M5_PROCESSED_DIR = DEFAULT_PROCESSED_DIR
 
 
+_CLASSIFICATION_FIELDS = ("sdlc_stage", "task_type", "complexity", "criticality")
+
+
+def _value(x: Any) -> Any:
+    return x.value if hasattr(x, "value") else x
+
+
 class M5BenchmarkRunner:
     """
     Orchestrates multi-system benchmark execution across dataset splits.
@@ -86,6 +94,9 @@ class M5BenchmarkRunner:
         self._coverage_eval = EvidenceCoverageEvaluator()
         self._consistency_eval = EvidenceConsistencyEvaluator()
 
+        from intelligence.classifier import RuleBasedTaskClassifier
+
+        self._classifier = RuleBasedTaskClassifier()
         self._pipe_a: Optional[BaselineRAGPipeline] = None
         self._pipe_b: Optional[BaselineRAGPipeline] = None
         self._pipe_quality: Optional[QualityAwareRAGPipeline] = None
@@ -160,23 +171,41 @@ class M5BenchmarkRunner:
         """
         Execute one task through the designated system pipeline.
         """
-        req = EngTaskRequest(
-            task_id=task.task_id,
-            query=task.query,
-            repository=task.repository,
-            quality_threshold_override=task.expected_quality_threshold,
-        )
+        # Systems A and B are not task-aware (original plan §7.1), so they get no
+        # classification. Systems C, D and E classify the query with the REAL
+        # rule-based classifier: the plan's classification is "automatically
+        # inferred" (contribution C1, §6.2). This runner used to hand C-E the
+        # benchmark's answer-key labels and quality threshold — an oracle the
+        # system never has in use, which would inflate the task-awareness gain
+        # Δ(B→C). The benchmark threshold is still what scores success
+        # (_evaluate_trial); the system's own gate uses the classifier's threshold.
+        req = EngTaskRequest(task_id=task.task_id, query=task.query, repository=task.repository)
+        clf, classification_info = None, None
+        if system_id not in (SystemID.BASELINE_A.value, SystemID.BASELINE_B.value):
+            t0 = time.perf_counter()
+            clf = self._classifier.classify(req)
+            classification_info = {
+                "source": self._classifier.classifier_name,
+                "classification_ms": round((time.perf_counter() - t0) * 1000.0, 3),
+                "predicted": {k: _value(getattr(clf, k)) for k in _CLASSIFICATION_FIELDS},
+                "agreement_with_benchmark": {
+                    k: _value(getattr(clf, k)) == _value(getattr(task, k)) for k in _CLASSIFICATION_FIELDS
+                },
+                "quality_threshold_used": clf.quality_threshold,
+            }
 
-        clf = TaskClassification(
-            task_id=task.task_id,
-            sdlc_stage=task.sdlc_stage.value if hasattr(task.sdlc_stage, "value") else str(task.sdlc_stage),
-            task_type=task.task_type.value if hasattr(task.task_type, "value") else str(task.task_type),
-            complexity=task.complexity.value if hasattr(task.complexity, "value") else str(task.complexity),
-            criticality=task.criticality.value if hasattr(task.criticality, "value") else str(task.criticality),
-            security_sensitivity=task.security_sensitivity,
-            quality_threshold=task.expected_quality_threshold,
-        )
+        response = self._dispatch(system_id, req, clf, llm_provider)
+        if classification_info is not None:
+            response.metadata["classification"] = classification_info
+        return response
 
+    def _dispatch(
+        self,
+        system_id: str,
+        req: EngTaskRequest,
+        clf: Optional[TaskClassification],
+        llm_provider: BaseLLMProvider,
+    ) -> EngTaskResponse:
         if system_id == SystemID.BASELINE_A.value:
             pipe_a = self._get_pipeline_a(llm_provider)
             return pipe_a.execute(request=req, classification=clf, skip_retrieval=True)
@@ -393,6 +422,7 @@ class M5BenchmarkRunner:
             quality_per_second=qps,
             generated_answer=response.answer,
             metadata={
+                "classification": md.get("classification"),
                 "sdlc_stage": task.sdlc_stage.value if hasattr(task.sdlc_stage, "value") else str(task.sdlc_stage),
                 "repository": task.repository,
                 "complexity": task.complexity.value if hasattr(task.complexity, "value") else str(task.complexity),

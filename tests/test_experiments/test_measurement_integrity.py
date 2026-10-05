@@ -170,3 +170,32 @@ def test_graph_preflight_passes_for_the_full_wave1_graph(runner):
     runner._graph_store = _store(6, 4228)
     info = runner.graph_preflight()
     assert info["repository_nodes"] == 6 and info["file_nodes"] == 4228
+
+
+# ----------------------------------------------------------------------------- real classifier for C/D/E
+@pytest.mark.parametrize("system_id", ["system_c", "system_d", "system_e"])
+def test_task_aware_systems_use_the_real_classifier_not_the_answer_key(runner, task, monkeypatch, system_id):
+    seen = {}
+
+    def fake_dispatch(sid, req, clf, llm):
+        seen.update(req=req, clf=clf)
+        return response()
+
+    monkeypatch.setattr(runner, "_dispatch", fake_dispatch)
+    resp = runner._execute_system(system_id, task, runner.llm_provider)
+    expected = runner._classifier.classify(EngTaskRequest(task_id=task.task_id, query=task.query,
+                                                          repository=task.repository))
+    assert seen["req"].quality_threshold_override is None, "the benchmark threshold must not leak into the system"
+    assert seen["clf"].model_dump(exclude={"classified_at", "reasons"}) == \
+        expected.model_dump(exclude={"classified_at", "reasons"})
+    info = resp.metadata["classification"]
+    assert info["source"] == "rule_based_task_classifier" and info["classification_ms"] >= 0
+    assert set(info["agreement_with_benchmark"]) == {"sdlc_stage", "task_type", "complexity", "criticality"}
+
+
+@pytest.mark.parametrize("system_id", ["baseline_a", "baseline_b"])
+def test_non_task_aware_baselines_get_no_classification(runner, task, monkeypatch, system_id):
+    seen = {}
+    monkeypatch.setattr(runner, "_dispatch", lambda sid, req, clf, llm: seen.update(clf=clf) or response())
+    resp = runner._execute_system(system_id, task, runner.llm_provider)
+    assert seen["clf"] is None and "classification" not in resp.metadata
