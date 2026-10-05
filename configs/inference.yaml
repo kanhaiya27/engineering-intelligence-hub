@@ -33,5 +33,6 @@ options:
   temperature: 0.0
   seed: 42
 
-max_output_tokens: 1024   # part of the num_ctx budget; trials record whether an answer hit it
+max_output_tokens: 2048   # original plan's value. 1,024 (2026-10-05) cut off a real answer at exactly 1,024
+                          # tokens (audit run, dev task 010); 2,048 + the p99 widest-rung prompt (~9.0K) still fits 12,288
 keep_alive: 30m

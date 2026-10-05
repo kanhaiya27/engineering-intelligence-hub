@@ -301,8 +301,12 @@ def m5_executor(provider_name: Optional[str], manifest_path: Optional[str], spli
     if mismatches and (provider_name or "").lower() != "mock":
         raise RuntimeError(f"Manifest does not match the runtime settings: {mismatches}")
     runner.graph_info = None
-    if set(systems or []) & {"system_d", "system_e", "system_e_routed"} and (provider_name or "").lower() != "mock":
+    real = (provider_name or "").lower() != "mock"
+    if set(systems or []) & {"system_d", "system_e", "system_e_routed"} and real:
         runner.graph_info = runner.graph_preflight()  # raises if the graph is missing/incomplete
+    # One-time loading (BM25 index, encoders, reranker) happens here, untimed, never
+    # inside a measured trial (original plan §10.4).
+    runner.warm_up_info = runner.warm_up(systems or []) if real else None
     tasks = {t.task_id: t for t in load_split_tasks(split)}
 
     def execute(unit: Dict[str, Any]) -> Dict[str, Any]:
@@ -400,6 +404,7 @@ def main(argv: Optional[Iterable[str]] = None) -> None:
                   "manifest_hash": runner.manifest.compute_hash(),
                   "frozen_variables": runner.manifest.frozen_variables.model_dump(),
                   "knowledge_graph": runner.graph_info,
+                  "warm_up": runner.warm_up_info,
                   "provider": args.provider or settings.model.default_provider}
         queue = JobQueue(run_dir, config, plan, execute, ThermalGuard(read_temp=nvml_temp),
                          provenance=collect_provenance, log=lambda m: print(m, flush=True))

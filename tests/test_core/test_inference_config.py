@@ -30,7 +30,7 @@ def test_every_consumer_reads_the_one_config():
 
 def test_current_values_are_the_decided_ones():
     c = inference_config()
-    assert (c.num_ctx, c.num_gpu, c.max_output_tokens, c.temperature, c.seed) == (12288, 999, 1024, 0.0, 42)
+    assert (c.num_ctx, c.num_gpu, c.max_output_tokens, c.temperature, c.seed) == (12288, 999, 2048, 0.0, 42)
     assert c.routing_ladder == {"small": "qwen2.5-coder:1.5b", "medium": "qwen2.5-coder:3b",
                                 "large": "qwen2.5-coder:7b"}
 

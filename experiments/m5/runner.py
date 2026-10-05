@@ -169,6 +169,36 @@ class M5BenchmarkRunner:
             self._graph_store = Neo4jGraphStore(uri=gs.uri, username=gs.username, password=gs.password)
         return self._graph_store
 
+    def warm_up(self, system_ids: List[str]) -> Dict[str, Any]:
+        """Load every retriever, index and model the given systems use, untimed.
+
+        Original plan §10.4: one-time model loading is reported separately and never
+        charged to a query. Without this, the first retrieval of each pipeline built
+        the BM25 index (48,046 chunks) and loaded the encoders inside a measured trial
+        (16–18 s instead of ~0.2 s on 2026-10-05). Returns what was warmed and how long.
+        """
+        query = "How is the application configured?"  # fixed warm-up query, not a benchmark task
+        t0, warmed = time.perf_counter(), []
+        if SystemID.BASELINE_B.value in system_ids:
+            pipe = self._get_pipeline_b(self.llm_provider)
+            pipe.retriever.retrieve(query=query, strategy=RetrievalStrategyConfig(
+                strategy_name="hybrid", mode=RetrievalMode.HYBRID, top_k=5), task_id="warm-up")
+            warmed.append("baseline_b:hybrid")
+        task_aware = [s for s in system_ids if s not in (SystemID.BASELINE_A.value, SystemID.BASELINE_B.value)]
+        if task_aware:
+            pipes = [self._get_pipeline_quality(self.llm_provider)]
+            if SystemID.SYSTEM_E_ROUTED.value in system_ids:
+                pipes.append(self._get_pipeline_routed(self.llm_provider))
+            clf = self._classifier.classify(EngTaskRequest(task_id="warm-up", query=query))
+            graph_ok = bool(set(task_aware) - {SystemID.SYSTEM_C.value})
+            for pipe in pipes:
+                for name, cfg in pipe.adaptive_pipeline.list_strategies().items():
+                    mode = ExperimentMode.SYSTEM_D if graph_ok else ExperimentMode.SYSTEM_C
+                    pipe.adaptive_pipeline.retrieve(query=query, classification=clf, experiment_mode=mode,
+                                                    override_strategy=cfg, task_id="warm-up")
+                    warmed.append(name)
+        return {"warmed": sorted(set(warmed)), "seconds": round(time.perf_counter() - t0, 2)}
+
     def graph_preflight(self) -> Dict[str, Any]:
         """Refuse D/E runs unless the populated wave-1 graph is reachable.
 
