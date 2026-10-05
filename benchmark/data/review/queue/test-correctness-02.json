@@ -1,0 +1,179 @@
+{
+  "batch_id": "test-correctness-02",
+  "created_at": "2026-10-05T19:04:37.987992+00:00",
+  "purpose": "test_correctness_pass",
+  "assigned_to": [
+    "Radhesh",
+    "Avaneesh Kumar Verma"
+  ],
+  "items": [
+    {
+      "item_id": "eih-phase1-dev-027",
+      "kind": "existing_task",
+      "split": "test",
+      "repository": "pallets/flask",
+      "commit_sha": "c12a5d874c5a014495eb2db8a73f40037bc813ac",
+      "sdlc_stage": "development",
+      "task_type": "code_generation",
+      "complexity": "medium",
+      "criticality": "medium",
+      "query": "Write a Flask Blueprint `auth_bp` with `/login` and `/logout` endpoints.",
+      "proposed_answer": "```python\nfrom flask import Blueprint, jsonify, request\n\nauth_bp = Blueprint('auth', __name__, url_prefix='/auth')\n\n@auth_bp.route('/login', methods=['POST'])\ndef login():\n    return jsonify({'message': 'Logged in successfully'})\n\n@auth_bp.route('/logout', methods=['POST'])\ndef logout():\n    return jsonify({'message': 'Logged out successfully'})\n```",
+      "acceptable_alternatives": [
+        "Defining Blueprint('auth', __name__, url_prefix='/auth') with /login and /logout routes."
+      ],
+      "evidence": [
+        {
+          "file": "src/flask/blueprints.py",
+          "start_line": 20,
+          "end_line": 70,
+          "text": "        self,\n        name: str,\n        import_name: str,\n        static_folder: str | os.PathLike[str] | None = None,\n        static_url_path: str | None = None,\n        template_folder: str | os.PathLike[str] | None = None,\n        url_prefix: str | None = None,\n        subdomain: str | None = None,\n        url_defaults: dict[str, t.Any] | None = None,\n        root_path: str | None = None,\n        cli_group: str | None = _sentinel,  # type: ignore\n    ) -> None:\n        super().__init__(\n            name,\n            import_name,\n            static_folder,\n            static_url_path,\n            template_folder,\n            url_prefix,\n            subdomain,\n            url_defaults,\n            root_path,\n            cli_group,\n        )\n\n        #: The Click command group for registering CLI commands for this\n        #: object. The commands are available from the ``flask`` command\n        #: once the application has been discovered and blueprints have\n        #: been registered.\n        self.cli = AppGroup()\n\n        # Set the name of the Click group in case someone wants to add\n        # the app's commands to another CLI tool.\n        self.cli.name = self.name\n\n    def get_send_file_max_age(self, filename: str | None) -> int | None:\n        \"\"\"Used by :func:`send_file` to determine the ``max_age`` cache\n        value for a given file path if it wasn't passed.\n\n        By default, this returns :data:`SEND_FILE_MAX_AGE_DEFAULT` from\n        the configuration of :data:`~flask.current_app`. This defaults\n        to ``None``, which tells the browser to use conditional requests\n        instead of a timed cache, which is usually preferable.\n\n        Note this is a duplicate of the same method in the Flask\n        class.\n\n        .. versionchanged:: 2.0\n            The default configuration is ``None`` instead of 12 hours.\n\n        .. versionadded:: 0.9",
+          "span_sha256": "sha256:68645e2c498fd9e13602a8795a32015faa666b2805fbeccbe468e2fbd68e062b"
+        }
+      ],
+      "drafted_by": "lead_researcher (pilot benchmark, Aug 2026)",
+      "requested_by": null,
+      "status_note": "existing benchmark task"
+    },
+    {
+      "item_id": "eih-phase1-dev-029",
+      "kind": "existing_task",
+      "split": "test",
+      "repository": "pallets/flask",
+      "commit_sha": "c12a5d874c5a014495eb2db8a73f40037bc813ac",
+      "sdlc_stage": "development",
+      "task_type": "code_generation",
+      "complexity": "medium",
+      "criticality": "medium",
+      "query": "Write a Flask template filter `format_datetime` registered via `@app.template_filter()`.",
+      "proposed_answer": "```python\nfrom datetime import datetime\nfrom flask import Flask\n\napp = Flask(__name__)\n\n@app.template_filter('format_datetime')\ndef format_datetime_filter(value: datetime, fmt: str = '%Y-%m-%d %H:%M') -> str:\n    if not value:\n        return ''\n    return value.strftime(fmt)\n```",
+      "acceptable_alternatives": [
+        "Using @app.template_filter('format_datetime') to format datetime values via strftime."
+      ],
+      "evidence": [
+        {
+          "file": "src/flask/app.py",
+          "start_line": 900,
+          "end_line": 950,
+          "text": "        :internal:\n        \"\"\"\n        response = self.make_response(rv)\n        try:\n            response = self.process_response(response)\n            request_finished.send(\n                self, _async_wrapper=self.ensure_sync, response=response\n            )\n        except Exception:\n            if not from_error_handler:\n                raise\n            self.logger.exception(\n                \"Request finalizing failed with an error while handling an error\"\n            )\n        return response\n\n    def make_default_options_response(self) -> Response:\n        \"\"\"This method is called to create the default ``OPTIONS`` response.\n        This can be changed through subclassing to change the default\n        behavior of ``OPTIONS`` responses.\n\n        .. versionadded:: 0.7\n        \"\"\"\n        adapter = request_ctx.url_adapter\n        methods = adapter.allowed_methods()  # type: ignore[union-attr]\n        rv = self.response_class()\n        rv.allow.update(methods)\n        return rv\n\n    def ensure_sync(self, func: t.Callable[..., t.Any]) -> t.Callable[..., t.Any]:\n        \"\"\"Ensure that the function is synchronous for WSGI workers.\n        Plain ``def`` functions are returned as-is. ``async def``\n        functions are wrapped to run and wait for the response.\n\n        Override this method to change how the app runs async views.\n\n        .. versionadded:: 2.0\n        \"\"\"\n        if iscoroutinefunction(func):\n            return self.async_to_sync(func)\n\n        return func\n\n    def async_to_sync(\n        self, func: t.Callable[..., t.Coroutine[t.Any, t.Any, t.Any]]\n    ) -> t.Callable[..., t.Any]:\n        \"\"\"Return a sync function that will run the coroutine function.\n\n        .. code-block:: python\n\n            result = app.async_to_sync(func)(*args, **kwargs)",
+          "span_sha256": "sha256:de892474f53686f420aa8f89f774e0b561fb35c9a4f18c772535ec61162a0ee1"
+        }
+      ],
+      "drafted_by": "lead_researcher (pilot benchmark, Aug 2026)",
+      "requested_by": null,
+      "status_note": "existing benchmark task"
+    },
+    {
+      "item_id": "eih-phase1-ops-055",
+      "kind": "existing_task",
+      "split": "test",
+      "repository": "pallets/flask",
+      "commit_sha": "c12a5d874c5a014495eb2db8a73f40037bc813ac",
+      "sdlc_stage": "maintenance",
+      "task_type": "root_cause_assistance",
+      "complexity": "medium",
+      "criticality": "high",
+      "query": "Why does a Flask application behind a reverse proxy (Nginx/Traefik) generate `http://` instead of `https://` in `url_for`?",
+      "proposed_answer": "Root cause: The reverse proxy terminates TLS and forwards requests over plain HTTP without WSGI headers being translated. Fix: Apply Werkzeug's `ProxyFix` middleware (`from werkzeug.middleware.proxy_fix import ProxyFix; app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)`) so Flask trusts `X-Forwarded-Proto`.",
+      "acceptable_alternatives": [
+        "Reverse proxy terminates HTTPS; apply Werkzeug ProxyFix middleware to parse X-Forwarded-Proto headers."
+      ],
+      "evidence": [
+        {
+          "file": "docs/deploying/proxy_fix.rst",
+          "start_line": 1,
+          "end_line": 33,
+          "text": "Tell Flask it is Behind a Proxy\n===============================\n\nWhen using a reverse proxy, or many Python hosting platforms, the proxy\nwill intercept and forward all external requests to the local WSGI\nserver.\n\nFrom the WSGI server and Flask application's perspectives, requests are\nnow coming from the HTTP server to the local address, rather than from\nthe remote address to the external server address.\n\nHTTP servers should set ``X-Forwarded-`` headers to pass on the real\nvalues to the application. The application can then be told to trust and\nuse those values by wrapping it with the\n:doc:`werkzeug:middleware/proxy_fix` middleware provided by Werkzeug.\n\nThis middleware should only be used if the application is actually\nbehind a proxy, and should be configured with the number of proxies that\nare chained in front of it. Not all proxies set all the headers. Since\nincoming headers can be faked, you must set how many proxies are setting\neach header so the middleware knows what to trust.\n\n.. code-block:: python\n\n    from werkzeug.middleware.proxy_fix import ProxyFix\n\n    app.wsgi_app = ProxyFix(\n        app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1\n    )\n\nRemember, only apply this middleware if you are behind a proxy, and set\nthe correct number of proxies that set each header. It can be a security\nissue if you get this configuration wrong.",
+          "span_sha256": "sha256:f087b930b221e443accb3bf93dd24b82e9f76ae03706b360a138f4a176d8fe88"
+        }
+      ],
+      "drafted_by": "lead_researcher (pilot benchmark, Aug 2026)",
+      "requested_by": null,
+      "status_note": "existing benchmark task; task cites ['docs/deploying/proxy_fix.rst'] without lines - the WHOLE file is shown: if the answer is right, use `fix` with evidence_correct failed and name the exact lines in the note"
+    },
+    {
+      "item_id": "eih-phase1-ops-056",
+      "kind": "existing_task",
+      "split": "test",
+      "repository": "fastapi/fastapi",
+      "commit_sha": "1c3e6918750ccb3f20ea260e9a4238ce2c0e5f63",
+      "sdlc_stage": "maintenance",
+      "task_type": "error_analysis",
+      "complexity": "medium",
+      "criticality": "medium",
+      "query": "Diagnose this FastAPI warning: `CORSMiddleware should be added as the outermost middleware`.",
+      "proposed_answer": "Root cause: Middleware in Starlette executes in reverse order of addition. If `CORSMiddleware` is added before other custom middlewares (like authentication), earlier middlewares may intercept preflight `OPTIONS` requests before CORS headers are applied, causing browser CORS failures. Fix: Add CORSMiddleware last (or outermost) so CORS headers are added to all responses.",
+      "acceptable_alternatives": [
+        "CORSMiddleware must be outermost so OPTIONS preflight requests and CORS headers are handled before inner middlewares."
+      ],
+      "evidence": [
+        {
+          "file": "docs/en/docs/tutorial/cors.md",
+          "start_line": 1,
+          "end_line": 84,
+          "text": "# CORS (Cross-Origin Resource Sharing)\n\n<a href=\"https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS\" class=\"external-link\" target=\"_blank\">CORS or \"Cross-Origin Resource Sharing\"</a> refers to the situations when a frontend running in a browser has JavaScript code that communicates with a backend, and the backend is in a different \"origin\" than the frontend.\n\n## Origin\n\nAn origin is the combination of protocol (`http`, `https`), domain (`myapp.com`, `localhost`, `localhost.tiangolo.com`), and port (`80`, `443`, `8080`).\n\nSo, all these are different origins:\n\n* `http://localhost`\n* `https://localhost`\n* `http://localhost:8080`\n\nEven if they are all in `localhost`, they use different protocols or ports, so, they are different \"origins\".\n\n## Steps\n\nSo, let's say you have a frontend running in your browser at `http://localhost:8080`, and its JavaScript is trying to communicate with a backend running at `http://localhost` (because we don't specify a port, the browser will assume the default port `80`).\n\nThen, the browser will send an HTTP `OPTIONS` request to the backend, and if the backend sends the appropriate headers authorizing the communication from this different origin (`http://localhost:8080`) then the browser will let the JavaScript in the frontend send its request to the backend.\n\nTo achieve this, the backend must have a list of \"allowed origins\".\n\nIn this case, it would have to include `http://localhost:8080` for the frontend to work correctly.\n\n## Wildcards\n\nIt's also possible to declare the list as `\"*\"` (a \"wildcard\") to say that all are allowed.\n\nBut that will only allow certain types of communication, excluding everything that involves credentials: Cookies, Authorization headers like those used with Bearer Tokens, etc.\n\nSo, for everything to work correctly, it's better to specify explicitly the allowed origins.\n\n## Use `CORSMiddleware`\n\nYou can configure it in your **FastAPI** application using the `CORSMiddleware`.\n\n* Import `CORSMiddleware`.\n* Create a list of allowed origins (as strings).\n* Add it as a \"middleware\" to your **FastAPI** application.\n\nYou can also specify if your backend allows:\n\n* Credentials (Authorization headers, Cookies, etc).\n* Specific HTTP methods (`POST`, `PUT`) or all of them with the wildcard `\"*\"`.\n* Specific HTTP headers or all of them with the wildcard `\"*\"`.\n\n```Python hl_lines=\"2  6-11  13-19\"\n{!../../../docs_src/cors/tutorial001.py!}\n```\n\nThe default parameters used by the `CORSMiddleware` implementation are restrictive by default, so you'll need to explicitly enable particular origins, methods, or headers, in order for browsers to be permitted to use them in a Cross-Domain context.\n\nThe following arguments are supported:\n\n* `allow_origins` - A list of origins that should be permitted to make cross-origin requests. E.g. `['https://example.org', 'https://www.example.org']`. You can use `['*']` to allow any origin.\n* `allow_origin_regex` - A regex string to match against origins that should be permitted to make cross-origin requests. e.g. `'https://.*\\.example\\.org'`.\n* `allow_methods` - A list of HTTP methods that should be allowed for cross-origin requests. Defaults to `['GET']`. You can use `['*']` to allow all standard methods.\n* `allow_headers` - A list of HTTP request headers that should be supported for cross-origin requests. Defaults to `[]`. You can use `['*']` to allow all headers. The `Accept`, `Accept-Language`, `Content-Language` and `Content-Type` headers are always allowed for <a href=\"https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS#simple_requests\" class=\"external-link\" rel=\"noopener\" target=\"_blank\">simple CORS requests</a>.\n* `allow_credentials` - Indicate that cookies should be supported for cross-origin requests. Defaults to `False`. Also, `allow_origins` cannot be set to `['*']` for credentials to be allowed, origins must be specified.\n* `expose_headers` - Indicate any response headers that should be made accessible to the browser. Defaults to `[]`.\n* `max_age` - Sets a maximum time in seconds for browsers to cache CORS responses. Defaults to `600`.\n\nThe middleware responds to two particular types of HTTP request...\n\n### CORS preflight requests\n\nThese are any `OPTIONS` request with `Origin` and `Access-Control-Request-Method` headers.\n\nIn this case the middleware will intercept the incoming request and respond with appropriate CORS headers, and either a `200` or `400` response for informational purposes.\n\n### Simple requests\n\nAny request with an `Origin` header. In this case the middleware will pass the request through as normal, but will include appropriate CORS headers on the response.\n\n## More info\n\nFor more info about <abbr title=\"Cross-Origin Resource Sharing\">CORS</abbr>, check the <a href=\"https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS\" class=\"external-link\" target=\"_blank\">Mozilla CORS documentation</a>.\n\n!!! note \"Technical Details\"\n    You could also use `from starlette.middleware.cors import CORSMiddleware`.\n\n    **FastAPI** provides several middlewares in `fastapi.middleware` just as a convenience for you, the developer. But most of the available middlewares come directly from Starlette.",
+          "span_sha256": "sha256:741a57578886e712e4f7d3dcd5dddc6c18dd9f37411ce619c469230c4ca2a89c"
+        }
+      ],
+      "drafted_by": "lead_researcher (pilot benchmark, Aug 2026)",
+      "requested_by": null,
+      "status_note": "existing benchmark task; task cites ['docs/en/docs/tutorial/cors.md'] without lines - the WHOLE file is shown: if the answer is right, use `fix` with evidence_correct failed and name the exact lines in the note"
+    },
+    {
+      "item_id": "eih-phase1-ops-057",
+      "kind": "existing_task",
+      "split": "test",
+      "repository": "pallets/flask",
+      "commit_sha": "c12a5d874c5a014495eb2db8a73f40037bc813ac",
+      "sdlc_stage": "maintenance",
+      "task_type": "root_cause_assistance",
+      "complexity": "medium",
+      "criticality": "high",
+      "query": "Why does a database connection leak occur if `teardown_appcontext` is not registered in Flask?",
+      "proposed_answer": "Root cause: If a database connection is stored in `g.db` during a request and no `@app.teardown_appcontext` hook is registered to call `db.close()`, connections remain open in worker threads when requests finish or raise exceptions, eventually exhausting connection pool limits.",
+      "acceptable_alternatives": [
+        "teardown_appcontext ensures db connections in g are closed even on request exceptions, preventing connection leaks."
+      ],
+      "evidence": [
+        {
+          "file": "src/flask/app.py",
+          "start_line": 850,
+          "end_line": 890,
+          "text": "           moved to the new :meth:`full_dispatch_request`.\n        \"\"\"\n        req = request_ctx.request\n        if req.routing_exception is not None:\n            self.raise_routing_exception(req)\n        rule: Rule = req.url_rule  # type: ignore[assignment]\n        # if we provide automatic options for this URL and the\n        # request came with the OPTIONS method, reply automatically\n        if (\n            getattr(rule, \"provide_automatic_options\", False)\n            and req.method == \"OPTIONS\"\n        ):\n            return self.make_default_options_response()\n        # otherwise dispatch to the handler for that endpoint\n        view_args: dict[str, t.Any] = req.view_args  # type: ignore[assignment]\n        return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]\n\n    def full_dispatch_request(self) -> Response:\n        \"\"\"Dispatches the request and on top of that performs request\n        pre and postprocessing as well as HTTP exception catching and\n        error handling.\n\n        .. versionadded:: 0.7\n        \"\"\"\n        self._got_first_request = True\n\n        try:\n            request_started.send(self, _async_wrapper=self.ensure_sync)\n            rv = self.preprocess_request()\n            if rv is None:\n                rv = self.dispatch_request()\n        except Exception as e:\n            rv = self.handle_user_exception(e)\n        return self.finalize_request(rv)\n\n    def finalize_request(\n        self,\n        rv: ft.ResponseReturnValue | HTTPException,\n        from_error_handler: bool = False,\n    ) -> Response:\n        \"\"\"Given the return value from a view function this finalizes",
+          "span_sha256": "sha256:2ffb0934779844326c63e23848a15a0a43c11123908f95ecf678d1522eac07c6"
+        }
+      ],
+      "drafted_by": "lead_researcher (pilot benchmark, Aug 2026)",
+      "requested_by": null,
+      "status_note": "existing benchmark task"
+    },
+    {
+      "item_id": "eih-phase1-ops-060",
+      "kind": "existing_task",
+      "split": "test",
+      "repository": "fastapi/fastapi",
+      "commit_sha": "1c3e6918750ccb3f20ea260e9a4238ce2c0e5f63",
+      "sdlc_stage": "maintenance",
+      "task_type": "root_cause_assistance",
+      "complexity": "medium",
+      "criticality": "high",
+      "query": "Why does Uvicorn raise `TypeError: 'FastAPI' object is not callable` in older ASGI setups?",
+      "proposed_answer": "Root cause: Passing the module object or class rather than the instantiated application instance or import string (e.g. `uvicorn main:app` where `app` was not instantiated with `app = FastAPI()`). In ASGI v3, the application instance itself must be an async callable `app(scope, receive, send)`.",
+      "acceptable_alternatives": [
+        "The app was not instantiated as app = FastAPI() or incorrect import path passed to uvicorn."
+      ],
+      "evidence": [
+        {
+          "file": "fastapi/applications.py",
+          "start_line": 100,
+          "end_line": 140,
+          "text": "        ] = None,\n        title: Annotated[\n            str,\n            Doc(\n                \"\"\"\n                The title of the API.\n\n                It will be added to the generated OpenAPI (e.g. visible at `/docs`).\n\n                Read more in the\n                [FastAPI docs for Metadata and Docs URLs](https://fastapi.tiangolo.com/tutorial/metadata/#metadata-for-api).\n\n                **Example**\n\n                ```python\n                from fastapi import FastAPI\n\n                app = FastAPI(title=\"ChimichangApp\")\n                ```\n                \"\"\"\n            ),\n        ] = \"FastAPI\",\n        summary: Annotated[\n            Optional[str],\n            Doc(\n                \"\"\"\n                A short summary of the API.\n\n                It will be added to the generated OpenAPI (e.g. visible at `/docs`).\n\n                Read more in the\n                [FastAPI docs for Metadata and Docs URLs](https://fastapi.tiangolo.com/tutorial/metadata/#metadata-for-api).\n\n                **Example**\n\n                ```python\n                from fastapi import FastAPI\n\n                app = FastAPI(summary=\"Deadpond's favorite app. Nuff said.\")\n                ```\n                \"\"\"",
+          "span_sha256": "sha256:c767085183ee89ff404c7ad3e893fdb9da4a33a5885693e437bc02c66d7e9365"
+        }
+      ],
+      "drafted_by": "lead_researcher (pilot benchmark, Aug 2026)",
+      "requested_by": null,
+      "status_note": "existing benchmark task"
+    }
+  ]
+}

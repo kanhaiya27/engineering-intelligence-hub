@@ -46,6 +46,8 @@ def show(batch, item, store: ReviewStore) -> str:
     ]
     if item.acceptable_alternatives:
         out += ["", "ALSO ACCEPTED"] + [f"  - {a}" for a in item.acceptable_alternatives]
+    if not item.evidence:
+        out += ["", "EVIDENCE  (none can be shown - see the note above)"]
     for e in item.evidence:
         out += ["", f"EVIDENCE  {e.file}  lines {e.start_line}-{e.end_line}"]
         out += [f"{n:>6} | {line}" for n, line in enumerate(e.text.splitlines(), start=e.start_line)]
@@ -129,7 +131,8 @@ def main(argv=None) -> int:
                 raise ReviewError(f"unknown task ids {missing}")
             labels = {l["task_id"]: l for l in json.loads(rl.LABELS_PATH.read_text(encoding="utf-8"))["labels"]}
             items = [item_from_task(tasks[i], split_of.get(i, "unassigned"), args.drafted_by, args.requested_by,
-                                    labels.get(i)) for i in ids]
+                                    labels.get(i), allow_evidence_defects=args.purpose == "test_correctness_pass")
+                     for i in ids]
             assign = store.reviewers() if args.assign == "all" else [
                 store.resolve_reviewer(a) for a in args.assign.split(",") if a.strip()]
             batch = ReviewBatch(batch_id=args.batch, created_at=datetime.now(timezone.utc).isoformat(),

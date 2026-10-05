@@ -1,0 +1,171 @@
+{
+  "batch_id": "test-correctness-01",
+  "created_at": "2026-10-05T19:06:01.101879+00:00",
+  "purpose": "test_correctness_pass",
+  "assigned_to": [
+    "Sanvi",
+    "Aayan"
+  ],
+  "items": [
+    {
+      "item_id": "eih-phase1-code-012",
+      "kind": "existing_task",
+      "split": "test",
+      "repository": "fastapi/fastapi",
+      "commit_sha": "1c3e6918750ccb3f20ea260e9a4238ce2c0e5f63",
+      "sdlc_stage": "architecture",
+      "task_type": "code_explanation",
+      "complexity": "medium",
+      "criticality": "medium",
+      "query": "Explain how APIRoute in fastapi/routing.py resolves and validates endpoint parameters.",
+      "proposed_answer": "In `fastapi/routing.py`, `APIRoute` inspects the path operation function's signature. It categorizes parameters into Path, Query, Header, Cookie, Body, and Depends using `get_param_sub_dependant` and `solve_dependencies`. During request handling, it runs Pydantic validators on extracted request values before invoking the endpoint callable.",
+      "acceptable_alternatives": [
+        "APIRoute analyzes function signatures, solves dependencies, validates input data against Pydantic models, and executes the route handler."
+      ],
+      "evidence": [
+        {
+          "file": "fastapi/routing.py",
+          "start_line": 150,
+          "end_line": 250,
+          "text": "        if isinstance(errors_, list):\n            errors.extend(errors_)\n        elif errors_:\n            errors.append(errors_)\n        if errors:\n            raise ResponseValidationError(\n                errors=_normalize_errors(errors), body=response_content\n            )\n\n        if hasattr(field, \"serialize\"):\n            return field.serialize(\n                value,\n                include=include,\n                exclude=exclude,\n                by_alias=by_alias,\n                exclude_unset=exclude_unset,\n                exclude_defaults=exclude_defaults,\n                exclude_none=exclude_none,\n            )\n\n        return jsonable_encoder(\n            value,\n            include=include,\n            exclude=exclude,\n            by_alias=by_alias,\n            exclude_unset=exclude_unset,\n            exclude_defaults=exclude_defaults,\n            exclude_none=exclude_none,\n        )\n    else:\n        return jsonable_encoder(response_content)\n\n\nasync def run_endpoint_function(\n    *, dependant: Dependant, values: Dict[str, Any], is_coroutine: bool\n) -> Any:\n    # Only called by get_request_handler. Has been split into its own function to\n    # facilitate profiling endpoints, since inner functions are harder to profile.\n    assert dependant.call is not None, \"dependant.call must be a function\"\n\n    if is_coroutine:\n        return await dependant.call(**values)\n    else:\n        return await run_in_threadpool(dependant.call, **values)\n\n\ndef get_request_handler(\n    dependant: Dependant,\n    body_field: Optional[ModelField] = None,\n    status_code: Optional[int] = None,\n    response_class: Union[Type[Response], DefaultPlaceholder] = Default(JSONResponse),\n    response_field: Optional[ModelField] = None,\n    response_model_include: Optional[IncEx] = None,\n    response_model_exclude: Optional[IncEx] = None,\n    response_model_by_alias: bool = True,\n    response_model_exclude_unset: bool = False,\n    response_model_exclude_defaults: bool = False,\n    response_model_exclude_none: bool = False,\n    dependency_overrides_provider: Optional[Any] = None,\n) -> Callable[[Request], Coroutine[Any, Any, Response]]:\n    assert dependant.call is not None, \"dependant.call must be a function\"\n    is_coroutine = asyncio.iscoroutinefunction(dependant.call)\n    is_body_form = body_field and isinstance(body_field.field_info, params.Form)\n    if isinstance(response_class, DefaultPlaceholder):\n        actual_response_class: Type[Response] = response_class.value\n    else:\n        actual_response_class = response_class\n\n    async def app(request: Request) -> Response:\n        response: Union[Response, None] = None\n        async with AsyncExitStack() as file_stack:\n            try:\n                body: Any = None\n                if body_field:\n                    if is_body_form:\n                        body = await request.form()\n                        file_stack.push_async_callback(body.close)\n                    else:\n                        body_bytes = await request.body()\n                        if body_bytes:\n                            json_body: Any = Undefined\n                            content_type_value = request.headers.get(\"content-type\")\n                            if not content_type_value:\n                                json_body = await request.json()\n                            else:\n                                message = email.message.Message()\n                                message[\"content-type\"] = content_type_value\n                                if message.get_content_maintype() == \"application\":\n                                    subtype = message.get_content_subtype()\n                                    if subtype == \"json\" or subtype.endswith(\"+json\"):\n                                        json_body = await request.json()\n                            if json_body != Undefined:\n                                body = json_body\n                            else:\n                                body = body_bytes\n            except json.JSONDecodeError as e:\n                validation_error = RequestValidationError(\n                    [\n                        {\n                            \"type\": \"json_invalid\",\n                            \"loc\": (\"body\", e.pos),",
+          "span_sha256": "sha256:75ecf3bf4d53744a828f203fb85e5819b67bfc4d6c11fc648bae0d39c7bbf835"
+        }
+      ],
+      "drafted_by": "lead_researcher (pilot benchmark, Aug 2026)",
+      "requested_by": null,
+      "status_note": "existing benchmark task"
+    },
+    {
+      "item_id": "eih-phase1-code-013",
+      "kind": "existing_task",
+      "split": "test",
+      "repository": "pallets/flask",
+      "commit_sha": "c12a5d874c5a014495eb2db8a73f40037bc813ac",
+      "sdlc_stage": "architecture",
+      "task_type": "code_explanation",
+      "complexity": "high",
+      "criticality": "high",
+      "query": "How does Flask implement the WSGI __call__ protocol in src/flask/app.py?",
+      "proposed_answer": "In `src/flask/app.py`, `Flask.__call__(environ, start_response)` delegates execution directly to `self.wsgi_app(environ, start_response)`. `wsgi_app` sets up the `RequestContext(self, environ)`, pushes it, calls `full_dispatch_request()`, handles exceptions with `handle_exception()`, and calls `start_response` on the generated WSGI response.",
+      "acceptable_alternatives": [
+        "Flask.__call__ calls wsgi_app, which creates RequestContext, dispatches the request, handles errors, and returns the WSGI response callable."
+      ],
+      "evidence": [],
+      "drafted_by": "lead_researcher (pilot benchmark, Aug 2026)",
+      "requested_by": null,
+      "status_note": "EVIDENCE DEFECT: pallets/flask:src/flask/app.py has 1498 lines; evidence ends at 1520. Cited: ['src/flask/app.py L1450-L1520']. Open the file at the pinned commit yourself; evidence_correct fails - use fix (name the right lines) or reject."
+    },
+    {
+      "item_id": "eih-phase1-code-019",
+      "kind": "existing_task",
+      "split": "test",
+      "repository": "pallets/flask",
+      "commit_sha": "c12a5d874c5a014495eb2db8a73f40037bc813ac",
+      "sdlc_stage": "architecture",
+      "task_type": "code_explanation",
+      "complexity": "high",
+      "criticality": "high",
+      "query": "How does Flask's Scaffold base class in src/flask/sansio/scaffold.py share configuration between Flask and Blueprint?",
+      "proposed_answer": "In `src/flask/sansio/scaffold.py`, `Scaffold` provides common registration hooks and methods inherited by both `Flask` and `Blueprint`. It defines decorators like `route`, `endpoint`, `before_request`, `after_request`, `teardown_request`, and `errorhandler` without binding directly to WSGI IO.",
+      "acceptable_alternatives": [
+        "Scaffold is the shared base class for Flask and Blueprint providing route, hook, and errorhandler registration."
+      ],
+      "evidence": [
+        {
+          "file": "src/flask/sansio/scaffold.py",
+          "start_line": 20,
+          "end_line": 100,
+          "text": "\nif t.TYPE_CHECKING:  # pragma: no cover\n    from click import Group\n\n# a singleton sentinel value for parameter defaults\n_sentinel = object()\n\nF = t.TypeVar(\"F\", bound=t.Callable[..., t.Any])\nT_after_request = t.TypeVar(\"T_after_request\", bound=ft.AfterRequestCallable[t.Any])\nT_before_request = t.TypeVar(\"T_before_request\", bound=ft.BeforeRequestCallable)\nT_error_handler = t.TypeVar(\"T_error_handler\", bound=ft.ErrorHandlerCallable)\nT_teardown = t.TypeVar(\"T_teardown\", bound=ft.TeardownCallable)\nT_template_context_processor = t.TypeVar(\n    \"T_template_context_processor\", bound=ft.TemplateContextProcessorCallable\n)\nT_url_defaults = t.TypeVar(\"T_url_defaults\", bound=ft.URLDefaultCallable)\nT_url_value_preprocessor = t.TypeVar(\n    \"T_url_value_preprocessor\", bound=ft.URLValuePreprocessorCallable\n)\nT_route = t.TypeVar(\"T_route\", bound=ft.RouteCallable)\n\n\ndef setupmethod(f: F) -> F:\n    f_name = f.__name__\n\n    def wrapper_func(self: Scaffold, *args: t.Any, **kwargs: t.Any) -> t.Any:\n        self._check_setup_finished(f_name)\n        return f(self, *args, **kwargs)\n\n    return t.cast(F, update_wrapper(wrapper_func, f))\n\n\nclass Scaffold:\n    \"\"\"Common behavior shared between :class:`~flask.Flask` and\n    :class:`~flask.blueprints.Blueprint`.\n\n    :param import_name: The import name of the module where this object\n        is defined. Usually :attr:`__name__` should be used.\n    :param static_folder: Path to a folder of static files to serve.\n        If this is set, a static route will be added.\n    :param static_url_path: URL prefix for the static route.\n    :param template_folder: Path to a folder containing template files.\n        for rendering. If this is set, a Jinja loader will be added.\n    :param root_path: The path that static, template, and resource files\n        are relative to. Typically not set, it is discovered based on\n        the ``import_name``.\n\n    .. versionadded:: 2.0\n    \"\"\"\n\n    cli: Group\n    name: str\n    _static_folder: str | None = None\n    _static_url_path: str | None = None\n\n    def __init__(\n        self,\n        import_name: str,\n        static_folder: str | os.PathLike[str] | None = None,\n        static_url_path: str | None = None,\n        template_folder: str | os.PathLike[str] | None = None,\n        root_path: str | None = None,\n    ):\n        #: The name of the package or module that this object belongs\n        #: to. Do not change this once it is set by the constructor.\n        self.import_name = import_name\n\n        self.static_folder = static_folder  # type: ignore\n        self.static_url_path = static_url_path\n\n        #: The path to the templates folder, relative to\n        #: :attr:`root_path`, to add to the template loader. ``None`` if\n        #: templates should not be added.\n        self.template_folder = template_folder\n\n        if root_path is None:\n            root_path = get_root_path(self.import_name)\n\n        #: Absolute path to the package on the filesystem. Used to look\n        #: up resources contained in the package.\n        self.root_path = root_path",
+          "span_sha256": "sha256:a9a5ad7c91b89f80ac7d5ec89ae597259cb7a376d3cd93f97702cb5df3c85d0d"
+        }
+      ],
+      "drafted_by": "lead_researcher (pilot benchmark, Aug 2026)",
+      "requested_by": null,
+      "status_note": "existing benchmark task"
+    },
+    {
+      "item_id": "eih-phase1-code-020",
+      "kind": "existing_task",
+      "split": "test",
+      "repository": "fastapi/fastapi",
+      "commit_sha": "1c3e6918750ccb3f20ea260e9a4238ce2c0e5f63",
+      "sdlc_stage": "architecture",
+      "task_type": "code_explanation",
+      "complexity": "medium",
+      "criticality": "medium",
+      "query": "How does FastAPI handle WebSocket routes in fastapi/routing.py?",
+      "proposed_answer": "In `fastapi/routing.py`, `APIWebSocketRoute` handles WebSocket connections. It validates WebSocket dependencies, passes the active `websocket: WebSocket` object to the endpoint handler, and handles WebSocketDisconnect exceptions gracefully.",
+      "acceptable_alternatives": [
+        "FastAPI creates APIWebSocketRoute instances to manage WebSocket handshakes, dependency injection, and disconnections."
+      ],
+      "evidence": [
+        {
+          "file": "fastapi/routing.py",
+          "start_line": 350,
+          "end_line": 420,
+          "text": "    return app\n\n\nclass APIWebSocketRoute(routing.WebSocketRoute):\n    def __init__(\n        self,\n        path: str,\n        endpoint: Callable[..., Any],\n        *,\n        name: Optional[str] = None,\n        dependencies: Optional[Sequence[params.Depends]] = None,\n        dependency_overrides_provider: Optional[Any] = None,\n    ) -> None:\n        self.path = path\n        self.endpoint = endpoint\n        self.name = get_name(endpoint) if name is None else name\n        self.dependencies = list(dependencies or [])\n        self.path_regex, self.path_format, self.param_convertors = compile_path(path)\n        self.dependant = get_dependant(path=self.path_format, call=self.endpoint)\n        for depends in self.dependencies[::-1]:\n            self.dependant.dependencies.insert(\n                0,\n                get_parameterless_sub_dependant(depends=depends, path=self.path_format),\n            )\n\n        self.app = websocket_session(\n            get_websocket_app(\n                dependant=self.dependant,\n                dependency_overrides_provider=dependency_overrides_provider,\n            )\n        )\n\n    def matches(self, scope: Scope) -> Tuple[Match, Scope]:\n        match, child_scope = super().matches(scope)\n        if match != Match.NONE:\n            child_scope[\"route\"] = self\n        return match, child_scope\n\n\nclass APIRoute(routing.Route):\n    def __init__(\n        self,\n        path: str,\n        endpoint: Callable[..., Any],\n        *,\n        response_model: Any = Default(None),\n        status_code: Optional[int] = None,\n        tags: Optional[List[Union[str, Enum]]] = None,\n        dependencies: Optional[Sequence[params.Depends]] = None,\n        summary: Optional[str] = None,\n        description: Optional[str] = None,\n        response_description: str = \"Successful Response\",\n        responses: Optional[Dict[Union[int, str], Dict[str, Any]]] = None,\n        deprecated: Optional[bool] = None,\n        name: Optional[str] = None,\n        methods: Optional[Union[Set[str], List[str]]] = None,\n        operation_id: Optional[str] = None,\n        response_model_include: Optional[IncEx] = None,\n        response_model_exclude: Optional[IncEx] = None,\n        response_model_by_alias: bool = True,\n        response_model_exclude_unset: bool = False,\n        response_model_exclude_defaults: bool = False,\n        response_model_exclude_none: bool = False,\n        include_in_schema: bool = True,\n        response_class: Union[Type[Response], DefaultPlaceholder] = Default(\n            JSONResponse\n        ),\n        dependency_overrides_provider: Optional[Any] = None,\n        callbacks: Optional[List[BaseRoute]] = None,\n        openapi_extra: Optional[Dict[str, Any]] = None,\n        generate_unique_id_function: Union[",
+          "span_sha256": "sha256:0bd644977f0b9595c4b5b8a25d5db93d3c3b7d63ba08ab017e89f8ccce769a29"
+        }
+      ],
+      "drafted_by": "lead_researcher (pilot benchmark, Aug 2026)",
+      "requested_by": null,
+      "status_note": "existing benchmark task"
+    },
+    {
+      "item_id": "eih-phase1-dev-022",
+      "kind": "existing_task",
+      "split": "test",
+      "repository": "fastapi/fastapi",
+      "commit_sha": "1c3e6918750ccb3f20ea260e9a4238ce2c0e5f63",
+      "sdlc_stage": "development",
+      "task_type": "code_generation",
+      "complexity": "low",
+      "criticality": "low",
+      "query": "Write a FastAPI endpoint that accepts a Pydantic model `Item(name: str, price: float)` via POST at `/items/` and returns the created item with HTTP 201 status code.",
+      "proposed_answer": "```python\nfrom fastapi import FastAPI, status\nfrom pydantic import BaseModel\n\napp = FastAPI()\n\nclass Item(BaseModel):\n    name: str\n    price: float\n\n@app.post('/items/', response_model=Item, status_code=status.HTTP_201_CREATED)\nasync def create_item(item: Item):\n    return item\n```",
+      "acceptable_alternatives": [
+        "FastAPI endpoint using @app.post('/items/', status_code=201) accepting Item Pydantic model."
+      ],
+      "evidence": [
+        {
+          "file": "docs/en/docs/tutorial/body.md",
+          "start_line": 1,
+          "end_line": 213,
+          "text": "# Request Body\n\nWhen you need to send data from a client (let's say, a browser) to your API, you send it as a **request body**.\n\nA **request** body is data sent by the client to your API. A **response** body is the data your API sends to the client.\n\nYour API almost always has to send a **response** body. But clients don't necessarily need to send **request** bodies all the time.\n\nTo declare a **request** body, you use <a href=\"https://docs.pydantic.dev/\" class=\"external-link\" target=\"_blank\">Pydantic</a> models with all their power and benefits.\n\n!!! info\n    To send data, you should use one of: `POST` (the more common), `PUT`, `DELETE` or `PATCH`.\n\n    Sending a body with a `GET` request has an undefined behavior in the specifications, nevertheless, it is supported by FastAPI, only for very complex/extreme use cases.\n\n    As it is discouraged, the interactive docs with Swagger UI won't show the documentation for the body when using `GET`, and proxies in the middle might not support it.\n\n## Import Pydantic's `BaseModel`\n\nFirst, you need to import `BaseModel` from `pydantic`:\n\n=== \"Python 3.10+\"\n\n    ```Python hl_lines=\"2\"\n    {!> ../../../docs_src/body/tutorial001_py310.py!}\n    ```\n\n=== \"Python 3.8+\"\n\n    ```Python hl_lines=\"4\"\n    {!> ../../../docs_src/body/tutorial001.py!}\n    ```\n\n## Create your data model\n\nThen you declare your data model as a class that inherits from `BaseModel`.\n\nUse standard Python types for all the attributes:\n\n=== \"Python 3.10+\"\n\n    ```Python hl_lines=\"5-9\"\n    {!> ../../../docs_src/body/tutorial001_py310.py!}\n    ```\n\n=== \"Python 3.8+\"\n\n    ```Python hl_lines=\"7-11\"\n    {!> ../../../docs_src/body/tutorial001.py!}\n    ```\n\nThe same as when declaring query parameters, when a model attribute has a default value, it is not required. Otherwise, it is required. Use `None` to make it just optional.\n\nFor example, this model above declares a JSON \"`object`\" (or Python `dict`) like:\n\n```JSON\n{\n    \"name\": \"Foo\",\n    \"description\": \"An optional description\",\n    \"price\": 45.2,\n    \"tax\": 3.5\n}\n```\n\n...as `description` and `tax` are optional (with a default value of `None`), this JSON \"`object`\" would also be valid:\n\n```JSON\n{\n    \"name\": \"Foo\",\n    \"price\": 45.2\n}\n```\n\n## Declare it as a parameter\n\nTo add it to your *path operation*, declare it the same way you declared path and query parameters:\n\n=== \"Python 3.10+\"\n\n    ```Python hl_lines=\"16\"\n    {!> ../../../docs_src/body/tutorial001_py310.py!}\n    ```\n\n=== \"Python 3.8+\"\n\n    ```Python hl_lines=\"18\"\n    {!> ../../../docs_src/body/tutorial001.py!}\n    ```\n\n...and declare its type as the model you created, `Item`.\n\n## Results\n\nWith just that Python type declaration, **FastAPI** will:\n\n* Read the body of the request as JSON.\n* Convert the corresponding types (if needed).\n* Validate the data.\n    * If the data is invalid, it will return a nice and clear error, indicating exactly where and what was the incorrect data.\n* Give you the received data in the parameter `item`.\n    * As you declared it in the function to be of type `Item`, you will also have all the editor support (completion, etc) for all of the attributes and their types.\n* Generate <a href=\"https://json-schema.org\" class=\"external-link\" target=\"_blank\">JSON Schema</a> definitions for your model, you can also use them anywhere else you like if it makes sense for your project.\n* Those schemas will be part of the generated OpenAPI schema, and used by the automatic documentation <abbr title=\"User Interfaces\">UIs</abbr>.\n\n## Automatic docs\n\nThe JSON Schemas of your models will be part of your OpenAPI generated schema, and will be shown in the interactive API docs:\n\n<img src=\"/img/tutorial/body/image01.png\">\n\nAnd will be also used in the API docs inside each *path operation* that needs them:\n\n<img src=\"/img/tutorial/body/image02.png\">\n\n## Editor support\n\nIn your editor, inside your function you will get type hints and completion everywhere (this wouldn't happen if you received a `dict` instead of a Pydantic model):\n\n<img src=\"/img/tutorial/body/image03.png\">\n\nYou also get error checks for incorrect type operations:\n\n<img src=\"/img/tutorial/body/image04.png\">\n\nThis is not by chance, the whole framework was built around that design.\n\nAnd it was thoroughly tested at the design phase, before any implementation, to ensure it would work with all the editors.\n\nThere were even some changes to Pydantic itself to support this.\n\nThe previous screenshots were taken with <a href=\"https://code.visualstudio.com\" class=\"external-link\" target=\"_blank\">Visual Studio Code</a>.\n\nBut you would get the same editor support with <a href=\"https://www.jetbrains.com/pycharm/\" class=\"external-link\" target=\"_blank\">PyCharm</a> and most of the other Python editors:\n\n<img src=\"/img/tutorial/body/image05.png\">\n\n!!! tip\n    If you use <a href=\"https://www.jetbrains.com/pycharm/\" class=\"external-link\" target=\"_blank\">PyCharm</a> as your editor, you can use the <a href=\"https://github.com/koxudaxi/pydantic-pycharm-plugin/\" class=\"external-link\" target=\"_blank\">Pydantic PyCharm Plugin</a>.\n\n    It improves editor support for Pydantic models, with:\n\n    * auto-completion\n    * type checks\n    * refactoring\n    * searching\n    * inspections\n\n## Use the model\n\nInside of the function, you can access all the attributes of the model object directly:\n\n=== \"Python 3.10+\"\n\n    ```Python hl_lines=\"19\"\n    {!> ../../../docs_src/body/tutorial002_py310.py!}\n    ```\n\n=== \"Python 3.8+\"\n\n    ```Python hl_lines=\"21\"\n    {!> ../../../docs_src/body/tutorial002.py!}\n    ```\n\n## Request body + path parameters\n\nYou can declare path parameters and request body at the same time.\n\n**FastAPI** will recognize that the function parameters that match path parameters should be **taken from the path**, and that function parameters that are declared to be Pydantic models should be **taken from the request body**.\n\n=== \"Python 3.10+\"\n\n    ```Python hl_lines=\"15-16\"\n    {!> ../../../docs_src/body/tutorial003_py310.py!}\n    ```\n\n=== \"Python 3.8+\"\n\n    ```Python hl_lines=\"17-18\"\n    {!> ../../../docs_src/body/tutorial003.py!}\n    ```\n\n## Request body + path + query parameters\n\nYou can also declare **body**, **path** and **query** parameters, all at the same time.\n\n**FastAPI** will recognize each of them and take the data from the correct place.\n\n=== \"Python 3.10+\"\n\n    ```Python hl_lines=\"16\"\n    {!> ../../../docs_src/body/tutorial004_py310.py!}\n    ```\n\n=== \"Python 3.8+\"\n\n    ```Python hl_lines=\"18\"\n    {!> ../../../docs_src/body/tutorial004.py!}\n    ```\n\nThe function parameters will be recognized as follows:\n\n* If the parameter is also declared in the **path**, it will be used as a path parameter.\n* If the parameter is of a **singular type** (like `int`, `float`, `str`, `bool`, etc) it will be interpreted as a **query** parameter.\n* If the parameter is declared to be of the type of a **Pydantic model**, it will be interpreted as a request **body**.\n\n!!! note\n    FastAPI will know that the value of `q` is not required because of the default value `= None`.\n\n    The `Union` in `Union[str, None]` is not used by FastAPI, but will allow your editor to give you better support and detect errors.\n\n## Without Pydantic\n\nIf you don't want to use Pydantic models, you can also use **Body** parameters. See the docs for [Body - Multiple Parameters: Singular values in body](body-multiple-params.md#singular-values-in-body){.internal-link target=_blank}.",
+          "span_sha256": "sha256:6b5270719c4b26aaaeb7e734cbcf6953de546d166994428f5e44e64ba6e8fe6d"
+        }
+      ],
+      "drafted_by": "lead_researcher (pilot benchmark, Aug 2026)",
+      "requested_by": null,
+      "status_note": "existing benchmark task; task cites ['docs/en/docs/tutorial/body.md'] without lines - the WHOLE file is shown: if the answer is right, use `fix` with evidence_correct failed and name the exact lines in the note"
+    },
+    {
+      "item_id": "eih-phase1-dev-024",
+      "kind": "existing_task",
+      "split": "test",
+      "repository": "fastapi/fastapi",
+      "commit_sha": "1c3e6918750ccb3f20ea260e9a4238ce2c0e5f63",
+      "sdlc_stage": "development",
+      "task_type": "code_generation",
+      "complexity": "medium",
+      "criticality": "medium",
+      "query": "Write a FastAPI reusable dependency `verify_api_key` that checks the `X-API-Key` header and raises HTTPException 401 if missing or invalid.",
+      "proposed_answer": "```python\nfrom fastapi import Header, HTTPException, status\n\nAPI_KEY_SECRET = 'secret-key-123'\n\nasync def verify_api_key(x_api_key: str = Header(...)):\n    if x_api_key != API_KEY_SECRET:\n        raise HTTPException(\n            status_code=status.HTTP_401_UNAUTHORIZED,\n            detail='Invalid or missing API Key',\n        )\n    return x_api_key\n```",
+      "acceptable_alternatives": [
+        "Dependency function using Header(...) and raising HTTPException(status_code=401) on mismatch."
+      ],
+      "evidence": [
+        {
+          "file": "fastapi/params.py",
+          "start_line": 100,
+          "end_line": 140,
+          "text": "            kwargs[\"examples\"] = examples\n        if regex is not None:\n            warnings.warn(\n                \"`regex` has been deprecated, please use `pattern` instead\",\n                category=DeprecationWarning,\n                stacklevel=4,\n            )\n        current_json_schema_extra = json_schema_extra or extra\n        if PYDANTIC_VERSION < \"2.7.0\":\n            self.deprecated = deprecated\n        else:\n            kwargs[\"deprecated\"] = deprecated\n        if PYDANTIC_V2:\n            kwargs.update(\n                {\n                    \"annotation\": annotation,\n                    \"alias_priority\": alias_priority,\n                    \"validation_alias\": validation_alias,\n                    \"serialization_alias\": serialization_alias,\n                    \"strict\": strict,\n                    \"json_schema_extra\": current_json_schema_extra,\n                }\n            )\n            kwargs[\"pattern\"] = pattern or regex\n        else:\n            kwargs[\"regex\"] = pattern or regex\n            kwargs.update(**current_json_schema_extra)\n        use_kwargs = {k: v for k, v in kwargs.items() if v is not _Unset}\n\n        super().__init__(**use_kwargs)\n\n    def __repr__(self) -> str:\n        return f\"{self.__class__.__name__}({self.default})\"\n\n\nclass Path(Param):\n    in_ = ParamTypes.path\n\n    def __init__(\n        self,\n        default: Any = ...,",
+          "span_sha256": "sha256:e39299b191bfd78391e934637d90050241db03d76069ecb4e62cd8cffea20378"
+        }
+      ],
+      "drafted_by": "lead_researcher (pilot benchmark, Aug 2026)",
+      "requested_by": null,
+      "status_note": "existing benchmark task"
+    }
+  ]
+}

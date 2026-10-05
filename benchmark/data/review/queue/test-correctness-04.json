@@ -1,0 +1,163 @@
+{
+  "batch_id": "test-correctness-04",
+  "created_at": "2026-10-05T19:06:02.305190+00:00",
+  "purpose": "test_correctness_pass",
+  "assigned_to": [
+    "Aayan",
+    "Avaneesh Kumar Verma"
+  ],
+  "items": [
+    {
+      "item_id": "eih-phase1-rev-049",
+      "kind": "existing_task",
+      "split": "test",
+      "repository": "pallets/flask",
+      "commit_sha": "c12a5d874c5a014495eb2db8a73f40037bc813ac",
+      "sdlc_stage": "code_review",
+      "task_type": "defect_detection",
+      "complexity": "medium",
+      "criticality": "medium",
+      "query": "Review this Flask after_request hook: `@app.after_request def modify(response): response.headers['X-Custom'] = '1'`. What defect occurs if the function forgets to return `response`?",
+      "proposed_answer": "Defect: TypeError / WSGI crash. An `after_request` handler MUST return a response object (either modified or new). Returning `None` causes Flask's `process_response` to crash with `TypeError: after_request function did not return a valid response`.",
+      "acceptable_alternatives": [
+        "after_request functions must return the response object; returning None causes a 500 error."
+      ],
+      "evidence": [
+        {
+          "file": "src/flask/app.py",
+          "start_line": 1400,
+          "end_line": 1450,
+          "text": "        When using the shell, it may be easier to push and pop the\n        context manually to avoid indentation. ::\n\n            ctx = app.test_request_context(...)\n            ctx.push()\n            ...\n            ctx.pop()\n\n        Takes the same arguments as Werkzeug's\n        :class:`~werkzeug.test.EnvironBuilder`, with some defaults from\n        the application. See the linked Werkzeug docs for most of the\n        available arguments. Flask-specific behavior is listed here.\n\n        :param path: URL path being requested.\n        :param base_url: Base URL where the app is being served, which\n            ``path`` is relative to. If not given, built from\n            :data:`PREFERRED_URL_SCHEME`, ``subdomain``,\n            :data:`SERVER_NAME`, and :data:`APPLICATION_ROOT`.\n        :param subdomain: Subdomain name to append to\n            :data:`SERVER_NAME`.\n        :param url_scheme: Scheme to use instead of\n            :data:`PREFERRED_URL_SCHEME`.\n        :param data: The request body, either as a string or a dict of\n            form keys and values.\n        :param json: If given, this is serialized as JSON and passed as\n            ``data``. Also defaults ``content_type`` to\n            ``application/json``.\n        :param args: other positional arguments passed to\n            :class:`~werkzeug.test.EnvironBuilder`.\n        :param kwargs: other keyword arguments passed to\n            :class:`~werkzeug.test.EnvironBuilder`.\n        \"\"\"\n        from .testing import EnvironBuilder\n\n        builder = EnvironBuilder(self, *args, **kwargs)\n\n        try:\n            return self.request_context(builder.get_environ())\n        finally:\n            builder.close()\n\n    def wsgi_app(\n        self, environ: WSGIEnvironment, start_response: StartResponse\n    ) -> cabc.Iterable[bytes]:\n        \"\"\"The actual WSGI application. This is not implemented in\n        :meth:`__call__` so that middlewares can be applied without\n        losing a reference to the app object. Instead of doing this::\n\n            app = MyMiddleware(app)\n\n        It's a better idea to do this instead::",
+          "span_sha256": "sha256:702ef6afeaafb8cd1ef27a9eb60e515f10815e241009fd2e0b7b064fae532490"
+        }
+      ],
+      "drafted_by": "lead_researcher (pilot benchmark, Aug 2026)",
+      "requested_by": null,
+      "status_note": "existing benchmark task"
+    },
+    {
+      "item_id": "eih-phase1-rev-050",
+      "kind": "existing_task",
+      "split": "test",
+      "repository": "fastapi/fastapi",
+      "commit_sha": "1c3e6918750ccb3f20ea260e9a4238ce2c0e5f63",
+      "sdlc_stage": "code_review",
+      "task_type": "review_assistance",
+      "complexity": "medium",
+      "criticality": "medium",
+      "query": "Review this FastAPI response model: `class UserOut(BaseModel): id: int; email: str; password_hash: str; @app.get('/user', response_model=UserOut) ...`. What privacy defect is present?",
+      "proposed_answer": "Defect: Sensitive data exposure. The `response_model` includes `password_hash`, causing hashed credentials to be serialized and returned in the HTTP response. Fix: Remove `password_hash` from `UserOut` or use a dedicated public view model.",
+      "acceptable_alternatives": [
+        "password_hash is exposed in response_model; remove password fields from client response models."
+      ],
+      "evidence": [],
+      "drafted_by": "lead_researcher (pilot benchmark, Aug 2026)",
+      "requested_by": null,
+      "status_note": "EVIDENCE DEFECT: eih-phase1-rev-050: evidence file has no line numbers and is too long (486 lines) to show whole. Cited: ['docs/en/docs/tutorial/response-model.md LNone-LNone']. Open the file at the pinned commit yourself; evidence_correct fails - use fix (name the right lines) or reject."
+    },
+    {
+      "item_id": "eih-phase1-test-031",
+      "kind": "existing_task",
+      "split": "test",
+      "repository": "pallets/flask",
+      "commit_sha": "c12a5d874c5a014495eb2db8a73f40037bc813ac",
+      "sdlc_stage": "testing",
+      "task_type": "test_generation",
+      "complexity": "low",
+      "criticality": "medium",
+      "query": "Write a pytest unit test for Flask's test client verifying a 200 OK status code and JSON response body from a `/ping` route.",
+      "proposed_answer": "```python\nimport pytest\nfrom flask import Flask, jsonify\n\n@pytest.fixture\ndef app():\n    app = Flask(__name__)\n    @app.route('/ping')\n    def ping():\n        return jsonify({'ping': 'pong'})\n    return app\n\n@pytest.fixture\ndef client(app):\n    return app.test_client()\n\ndef test_ping(client):\n    response = client.get('/ping')\n    assert response.status_code == 200\n    assert response.get_json() == {'ping': 'pong'}\n```",
+      "acceptable_alternatives": [
+        "Pytest test function using app.test_client() checking response.status_code == 200 and response.get_json()."
+      ],
+      "evidence": [
+        {
+          "file": "src/flask/testing.py",
+          "start_line": 30,
+          "end_line": 80,
+          "text": "    :param app: The Flask application to configure the environment from.\n    :param path: URL path being requested.\n    :param base_url: Base URL where the app is being served, which\n        ``path`` is relative to. If not given, built from\n        :data:`PREFERRED_URL_SCHEME`, ``subdomain``,\n        :data:`SERVER_NAME`, and :data:`APPLICATION_ROOT`.\n    :param subdomain: Subdomain name to append to :data:`SERVER_NAME`.\n    :param url_scheme: Scheme to use instead of\n        :data:`PREFERRED_URL_SCHEME`.\n    :param json: If given, this is serialized as JSON and passed as\n        ``data``. Also defaults ``content_type`` to\n        ``application/json``.\n    :param args: other positional arguments passed to\n        :class:`~werkzeug.test.EnvironBuilder`.\n    :param kwargs: other keyword arguments passed to\n        :class:`~werkzeug.test.EnvironBuilder`.\n    \"\"\"\n\n    def __init__(\n        self,\n        app: Flask,\n        path: str = \"/\",\n        base_url: str | None = None,\n        subdomain: str | None = None,\n        url_scheme: str | None = None,\n        *args: t.Any,\n        **kwargs: t.Any,\n    ) -> None:\n        assert not (base_url or subdomain or url_scheme) or (\n            base_url is not None\n        ) != bool(\n            subdomain or url_scheme\n        ), 'Cannot pass \"subdomain\" or \"url_scheme\" with \"base_url\".'\n\n        if base_url is None:\n            http_host = app.config.get(\"SERVER_NAME\") or \"localhost\"\n            app_root = app.config[\"APPLICATION_ROOT\"]\n\n            if subdomain:\n                http_host = f\"{subdomain}.{http_host}\"\n\n            if url_scheme is None:\n                url_scheme = app.config[\"PREFERRED_URL_SCHEME\"]\n\n            url = urlsplit(path)\n            base_url = (\n                f\"{url.scheme or url_scheme}://{url.netloc or http_host}\"\n                f\"/{app_root.lstrip('/')}\"\n            )\n            path = url.path\n",
+          "span_sha256": "sha256:4dba54c81eae3e57b9c434490592c31dce3f61dde6b5a8c8f46a085404e190ce"
+        }
+      ],
+      "drafted_by": "lead_researcher (pilot benchmark, Aug 2026)",
+      "requested_by": null,
+      "status_note": "existing benchmark task"
+    },
+    {
+      "item_id": "eih-phase1-test-036",
+      "kind": "existing_task",
+      "split": "test",
+      "repository": "fastapi/fastapi",
+      "commit_sha": "1c3e6918750ccb3f20ea260e9a4238ce2c0e5f63",
+      "sdlc_stage": "testing",
+      "task_type": "test_failure_analysis",
+      "complexity": "medium",
+      "criticality": "medium",
+      "query": "What causes HTTP 422 Unprocessable Entity in FastAPI test client responses?",
+      "proposed_answer": "HTTP 422 is returned when incoming request data fails Pydantic schema validation (e.g. missing required fields, invalid datatypes, or constraint violations on Path/Query/Body parameters). The response body contains structured `detail` error lists.",
+      "acceptable_alternatives": [
+        "Pydantic validation failure on request parameters or body causes FastAPI to return status 422 Unprocessable Entity."
+      ],
+      "evidence": [],
+      "drafted_by": "lead_researcher (pilot benchmark, Aug 2026)",
+      "requested_by": null,
+      "status_note": "EVIDENCE DEFECT: fastapi/fastapi:fastapi/exception_handlers.py has 34 lines; evidence ends at 35. Cited: ['fastapi/exception_handlers.py L10-L35']. Open the file at the pinned commit yourself; evidence_correct fails - use fix (name the right lines) or reject."
+    },
+    {
+      "item_id": "eih-phase1-test-039",
+      "kind": "existing_task",
+      "split": "test",
+      "repository": "pallets/flask",
+      "commit_sha": "c12a5d874c5a014495eb2db8a73f40037bc813ac",
+      "sdlc_stage": "testing",
+      "task_type": "test_explanation",
+      "complexity": "low",
+      "criticality": "low",
+      "query": "What is the purpose of `client.session_transaction()` in Flask test suites?",
+      "proposed_answer": "`client.session_transaction()` is a context manager provided by `FlaskClient` that opens the session cookie, allows reading and directly modifying session keys in test code, and re-saves the signed session cookie upon exiting the block.",
+      "acceptable_alternatives": [
+        "session_transaction allows tests to inspect and modify session data directly in a with block."
+      ],
+      "evidence": [
+        {
+          "file": "src/flask/testing.py",
+          "start_line": 80,
+          "end_line": 120,
+          "text": "\n            if url.query:\n                sep = b\"?\" if isinstance(url.query, bytes) else \"?\"\n                path += sep + url.query\n\n        self.app = app\n        super().__init__(path, base_url, *args, **kwargs)\n\n    def json_dumps(self, obj: t.Any, **kwargs: t.Any) -> str:  # type: ignore\n        \"\"\"Serialize ``obj`` to a JSON-formatted string.\n\n        The serialization will be configured according to the config associated\n        with this EnvironBuilder's ``app``.\n        \"\"\"\n        return self.app.json.dumps(obj, **kwargs)\n\n\n_werkzeug_version = \"\"\n\n\ndef _get_werkzeug_version() -> str:\n    global _werkzeug_version\n\n    if not _werkzeug_version:\n        _werkzeug_version = importlib.metadata.version(\"werkzeug\")\n\n    return _werkzeug_version\n\n\nclass FlaskClient(Client):\n    \"\"\"Works like a regular Werkzeug test client but has knowledge about\n    Flask's contexts to defer the cleanup of the request context until\n    the end of a ``with`` block. For general information about how to\n    use this class refer to :class:`werkzeug.test.Client`.\n\n    .. versionchanged:: 0.12\n       `app.test_client()` includes preset default environment, which can be\n       set after instantiation of the `app.test_client()` object in\n       `client.environ_base`.\n\n    Basic usage is outlined in the :doc:`/testing` chapter.",
+          "span_sha256": "sha256:a9d3db9df69a240dc24a38c27f562439373aa55dfbddada1331473e30025182f"
+        }
+      ],
+      "drafted_by": "lead_researcher (pilot benchmark, Aug 2026)",
+      "requested_by": null,
+      "status_note": "existing benchmark task"
+    },
+    {
+      "item_id": "eih-phase1-test-040",
+      "kind": "existing_task",
+      "split": "test",
+      "repository": "fastapi/fastapi",
+      "commit_sha": "1c3e6918750ccb3f20ea260e9a4238ce2c0e5f63",
+      "sdlc_stage": "testing",
+      "task_type": "test_generation",
+      "complexity": "medium",
+      "criticality": "medium",
+      "query": "Write a unit test testing WebSocket communication in FastAPI using `TestClient.websocket_connect`.",
+      "proposed_answer": "```python\nfrom fastapi import FastAPI, WebSocket\nfrom fastapi.testclient import TestClient\n\napp = FastAPI()\n\n@app.websocket('/ws')\nasync def ws_endpoint(websocket: WebSocket):\n    await websocket.accept()\n    data = await websocket.receive_text()\n    await websocket.send_text(f'Echo: {data}')\n    await websocket.close()\n\ndef test_websocket():\n    client = TestClient(app)\n    with client.websocket_connect('/ws') as websocket:\n        websocket.send_text('Hello WS')\n        data = websocket.receive_text()\n        assert data == 'Echo: Hello WS'\n```",
+      "acceptable_alternatives": [
+        "TestClient websocket_connect context manager sending text and asserting received echo response."
+      ],
+      "evidence": [
+        {
+          "file": "docs/en/docs/advanced/websockets.md",
+          "start_line": 1,
+          "end_line": 224,
+          "text": "# WebSockets\n\nYou can use <a href=\"https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API\" class=\"external-link\" target=\"_blank\">WebSockets</a> with **FastAPI**.\n\n## Install `WebSockets`\n\nFirst you need to install `WebSockets`:\n\n<div class=\"termy\">\n\n```console\n$ pip install websockets\n\n---> 100%\n```\n\n</div>\n\n## WebSockets client\n\n### In production\n\nIn your production system, you probably have a frontend created with a modern framework like React, Vue.js or Angular.\n\nAnd to communicate using WebSockets with your backend you would probably use your frontend's utilities.\n\nOr you might have a native mobile application that communicates with your WebSocket backend directly, in native code.\n\nOr you might have any other way to communicate with the WebSocket endpoint.\n\n---\n\nBut for this example, we'll use a very simple HTML document with some JavaScript, all inside a long string.\n\nThis, of course, is not optimal and you wouldn't use it for production.\n\nIn production you would have one of the options above.\n\nBut it's the simplest way to focus on the server-side of WebSockets and have a working example:\n\n```Python hl_lines=\"2  6-38  41-43\"\n{!../../../docs_src/websockets/tutorial001.py!}\n```\n\n## Create a `websocket`\n\nIn your **FastAPI** application, create a `websocket`:\n\n```Python hl_lines=\"1  46-47\"\n{!../../../docs_src/websockets/tutorial001.py!}\n```\n\n!!! note \"Technical Details\"\n    You could also use `from starlette.websockets import WebSocket`.\n\n    **FastAPI** provides the same `WebSocket` directly just as a convenience for you, the developer. But it comes directly from Starlette.\n\n## Await for messages and send messages\n\nIn your WebSocket route you can `await` for messages and send messages.\n\n```Python hl_lines=\"48-52\"\n{!../../../docs_src/websockets/tutorial001.py!}\n```\n\nYou can receive and send binary, text, and JSON data.\n\n## Try it\n\nIf your file is named `main.py`, run your application with:\n\n<div class=\"termy\">\n\n```console\n$ fastapi dev main.py\n\n<span style=\"color: green;\">INFO</span>:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)\n```\n\n</div>\n\nOpen your browser at <a href=\"http://127.0.0.1:8000\" class=\"external-link\" target=\"_blank\">http://127.0.0.1:8000</a>.\n\nYou will see a simple page like:\n\n<img src=\"/img/tutorial/websockets/image01.png\">\n\nYou can type messages in the input box, and send them:\n\n<img src=\"/img/tutorial/websockets/image02.png\">\n\nAnd your **FastAPI** application with WebSockets will respond back:\n\n<img src=\"/img/tutorial/websockets/image03.png\">\n\nYou can send (and receive) many messages:\n\n<img src=\"/img/tutorial/websockets/image04.png\">\n\nAnd all of them will use the same WebSocket connection.\n\n## Using `Depends` and others\n\nIn WebSocket endpoints you can import from `fastapi` and use:\n\n* `Depends`\n* `Security`\n* `Cookie`\n* `Header`\n* `Path`\n* `Query`\n\nThey work the same way as for other FastAPI endpoints/*path operations*:\n\n=== \"Python 3.10+\"\n\n    ```Python hl_lines=\"68-69  82\"\n    {!> ../../../docs_src/websockets/tutorial002_an_py310.py!}\n    ```\n\n=== \"Python 3.9+\"\n\n    ```Python hl_lines=\"68-69  82\"\n    {!> ../../../docs_src/websockets/tutorial002_an_py39.py!}\n    ```\n\n=== \"Python 3.8+\"\n\n    ```Python hl_lines=\"69-70  83\"\n    {!> ../../../docs_src/websockets/tutorial002_an.py!}\n    ```\n\n=== \"Python 3.10+ non-Annotated\"\n\n    !!! tip\n        Prefer to use the `Annotated` version if possible.\n\n    ```Python hl_lines=\"66-67  79\"\n    {!> ../../../docs_src/websockets/tutorial002_py310.py!}\n    ```\n\n=== \"Python 3.8+ non-Annotated\"\n\n    !!! tip\n        Prefer to use the `Annotated` version if possible.\n\n    ```Python hl_lines=\"68-69  81\"\n    {!> ../../../docs_src/websockets/tutorial002.py!}\n    ```\n\n!!! info\n    As this is a WebSocket it doesn't really make sense to raise an `HTTPException`, instead we raise a `WebSocketException`.\n\n    You can use a closing code from the <a href=\"https://tools.ietf.org/html/rfc6455#section-7.4.1\" class=\"external-link\" target=\"_blank\">valid codes defined in the specification</a>.\n\n### Try the WebSockets with dependencies\n\nIf your file is named `main.py`, run your application with:\n\n<div class=\"termy\">\n\n```console\n$ fastapi dev main.py\n\n<span style=\"color: green;\">INFO</span>:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)\n```\n\n</div>\n\nOpen your browser at <a href=\"http://127.0.0.1:8000\" class=\"external-link\" target=\"_blank\">http://127.0.0.1:8000</a>.\n\nThere you can set:\n\n* The \"Item ID\", used in the path.\n* The \"Token\" used as a query parameter.\n\n!!! tip\n    Notice that the query `token` will be handled by a dependency.\n\nWith that you can connect the WebSocket and then send and receive messages:\n\n<img src=\"/img/tutorial/websockets/image05.png\">\n\n## Handling disconnections and multiple clients\n\nWhen a WebSocket connection is closed, the `await websocket.receive_text()` will raise a `WebSocketDisconnect` exception, which you can then catch and handle like in this example.\n\n=== \"Python 3.9+\"\n\n    ```Python hl_lines=\"79-81\"\n    {!> ../../../docs_src/websockets/tutorial003_py39.py!}\n    ```\n\n=== \"Python 3.8+\"\n\n    ```Python hl_lines=\"81-83\"\n    {!> ../../../docs_src/websockets/tutorial003.py!}\n    ```\n\nTo try it out:\n\n* Open the app with several browser tabs.\n* Write messages from them.\n* Then close one of the tabs.\n\nThat will raise the `WebSocketDisconnect` exception, and all the other clients will receive a message like:\n\n```\nClient #1596980209979 left the chat\n```\n\n!!! tip\n    The app above is a minimal and simple example to demonstrate how to handle and broadcast messages to several WebSocket connections.\n\n    But keep in mind that, as everything is handled in memory, in a single list, it will only work while the process is running, and will only work with a single process.\n\n    If you need something easy to integrate with FastAPI but that is more robust, supported by Redis, PostgreSQL or others, check <a href=\"https://github.com/encode/broadcaster\" class=\"external-link\" target=\"_blank\">encode/broadcaster</a>.\n\n## More info\n\nTo learn more about the options, check Starlette's documentation for:\n\n* <a href=\"https://www.starlette.io/websockets/\" class=\"external-link\" target=\"_blank\">The `WebSocket` class</a>.\n* <a href=\"https://www.starlette.io/endpoints/#websocketendpoint\" class=\"external-link\" target=\"_blank\">Class-based WebSocket handling</a>.",
+          "span_sha256": "sha256:06f997680734e99aa10c4b52f022d4d9ed766613bf98b4231a5e63312058653d"
+        }
+      ],
+      "drafted_by": "lead_researcher (pilot benchmark, Aug 2026)",
+      "requested_by": null,
+      "status_note": "existing benchmark task; task cites ['docs/en/docs/advanced/websockets.md'] without lines - the WHOLE file is shown: if the answer is right, use `fix` with evidence_correct failed and name the exact lines in the note"
+    }
+  ]
+}

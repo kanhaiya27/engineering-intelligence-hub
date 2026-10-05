@@ -415,6 +415,15 @@ def progress_report(store: ReviewStore, day: Optional[str] = None,
 # ---------------------------------------------------------------------------
 
 
+WHOLE_FILE_MAX_LINES = 400
+
+
+def _pinned_lines(repository: str, file: str) -> List[str]:
+    from benchmark import retrieval_labels as rl
+
+    return (rl.repo_dir(repository) / file).read_text(encoding="utf-8").splitlines()
+
+
 def snippet(repository: str, file: str, start: int, end: int) -> EvidenceSnippet:
     """Exact lines from the pinned checkout in .corpus_cache (refuses an unpinned checkout)."""
     from benchmark import retrieval_labels as rl
@@ -433,7 +442,7 @@ def snippet(repository: str, file: str, start: int, end: int) -> EvidenceSnippet
 
 
 def item_from_task(task: dict, split: str, drafted_by: str, requested_by: Optional[str] = None,
-                   label: Optional[dict] = None) -> ReviewItem:
+                   label: Optional[dict] = None, allow_evidence_defects: bool = False) -> ReviewItem:
     """Review item for an existing task, showing the exact lines its evidence cites.
 
     Some pilot tasks cite a documentation file without line numbers. For those, the lines
@@ -442,7 +451,25 @@ def item_from_task(task: dict, split: str, drafted_by: str, requested_by: Option
     """
     from experiments.m5.manifest import wave1_repository_pins
 
-    ev, from_label = [], []
+    if allow_evidence_defects:
+        # Correctness pass: a task whose cited evidence cannot be shown is still reviewed; the
+        # defect is stated and the reviewer opens the pinned file (two reviewers, fix or reject).
+        try:
+            return item_from_task(task, split, drafted_by, requested_by, label)
+        except (ReviewError, OSError) as exc:
+            cited = [f"{e.get('file_path')} L{e.get('line_start')}-L{e.get('line_end')}"
+                     for e in task.get("source_evidence", [])]
+            return ReviewItem(
+                item_id=task["task_id"], kind="existing_task", split=split, repository=task["repository"],
+                commit_sha=wave1_repository_pins()[task["repository"]], sdlc_stage=task["sdlc_stage"],
+                task_type=task["task_type"], complexity=task.get("complexity"), criticality=task.get("criticality"),
+                query=task["query"], proposed_answer=task["ground_truth"],
+                acceptable_alternatives=task.get("acceptable_alternatives", []), evidence=[],
+                drafted_by=drafted_by, requested_by=requested_by,
+                status_note=(f"EVIDENCE DEFECT: {exc}. Cited: {cited}. Open the file at the pinned commit "
+                             "yourself; evidence_correct fails - use fix (name the right lines) or reject."))
+
+    ev, from_label, whole = [], [], []
     for e in task.get("source_evidence", []):
         if not e.get("file_path"):
             continue
@@ -451,7 +478,15 @@ def item_from_task(task: dict, split: str, drafted_by: str, requested_by: Option
             continue
         spans = [s for s in (label or {}).get("required_evidence", []) if s["file"] == e["file_path"]]
         if not spans:
-            raise ReviewError(f"{task['task_id']} cites {e['file_path']} without line numbers and no label covers it")
+            # No label (e.g. a test task, labelled only right before the final run): show the whole
+            # file if it is short enough to read, and the reviewer names the lines in a `fix`.
+            n_lines = len(_pinned_lines(task["repository"], e["file_path"]))
+            if n_lines > WHOLE_FILE_MAX_LINES:
+                raise ReviewError(f"{task['task_id']}: evidence file has no line numbers and is too long "
+                                  f"({n_lines} lines) to show whole")
+            ev.append(snippet(task["repository"], e["file_path"], 1, n_lines))
+            whole.append(e["file_path"])
+            continue
         ev += [snippet(task["repository"], s["file"], s["start_line"], s["end_line"]) for s in spans]
         from_label.append(e["file_path"])
     if not ev:
@@ -459,6 +494,9 @@ def item_from_task(task: dict, split: str, drafted_by: str, requested_by: Option
     note = "existing benchmark task"
     if from_label:
         note += f"; task cites {from_label} without lines - lines shown are from its draft retrieval label"
+    if whole:
+        note += (f"; task cites {whole} without lines - the WHOLE file is shown: if the answer is right, "
+                 "use `fix` with evidence_correct failed and name the exact lines in the note")
     return ReviewItem(item_id=task["task_id"], kind="existing_task", split=split, repository=task["repository"],
                       commit_sha=wave1_repository_pins()[task["repository"]], sdlc_stage=task["sdlc_stage"],
                       task_type=task["task_type"], complexity=task.get("complexity"),

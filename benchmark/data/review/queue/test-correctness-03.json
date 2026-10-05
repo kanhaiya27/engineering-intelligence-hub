@@ -1,0 +1,171 @@
+{
+  "batch_id": "test-correctness-03",
+  "created_at": "2026-10-05T19:06:01.733071+00:00",
+  "purpose": "test_correctness_pass",
+  "assigned_to": [
+    "Sanvi",
+    "Radhesh"
+  ],
+  "items": [
+    {
+      "item_id": "eih-phase1-req-001",
+      "kind": "existing_task",
+      "split": "test",
+      "repository": "pallets/flask",
+      "commit_sha": "c12a5d874c5a014495eb2db8a73f40037bc813ac",
+      "sdlc_stage": "requirements",
+      "task_type": "requirement_understanding",
+      "complexity": "low",
+      "criticality": "medium",
+      "query": "What are the core requirements and design principles for application context vs request context in Flask?",
+      "proposed_answer": "Flask separates application context (AppContext) and request context (RequestContext). The AppContext manages application-level state (like current_app and g) during CLI commands, background jobs, or request handling. The RequestContext manages request-specific state (like request and session) during an active HTTP request.",
+      "acceptable_alternatives": [
+        "Flask uses AppContext for app-level state (current_app, g) and RequestContext for HTTP request data (request, session)."
+      ],
+      "evidence": [
+        {
+          "file": "docs/appcontext.rst",
+          "start_line": 1,
+          "end_line": 147,
+          "text": ".. currentmodule:: flask\n\nThe Application Context\n=======================\n\nThe application context keeps track of the application-level data during\na request, CLI command, or other activity. Rather than passing the\napplication around to each function, the :data:`current_app` and\n:data:`g` proxies are accessed instead.\n\nThis is similar to :doc:`/reqcontext`, which keeps track of\nrequest-level data during a request. A corresponding application context\nis pushed when a request context is pushed.\n\nPurpose of the Context\n----------------------\n\nThe :class:`Flask` application object has attributes, such as\n:attr:`~Flask.config`, that are useful to access within views and\n:doc:`CLI commands </cli>`. However, importing the ``app`` instance\nwithin the modules in your project is prone to circular import issues.\nWhen using the :doc:`app factory pattern </patterns/appfactories>` or\nwriting reusable :doc:`blueprints </blueprints>` or\n:doc:`extensions </extensions>` there won't be an ``app`` instance to\nimport at all.\n\nFlask solves this issue with the *application context*. Rather than\nreferring to an ``app`` directly, you use the :data:`current_app`\nproxy, which points to the application handling the current activity.\n\nFlask automatically *pushes* an application context when handling a\nrequest. View functions, error handlers, and other functions that run\nduring a request will have access to :data:`current_app`.\n\nFlask will also automatically push an app context when running CLI\ncommands registered with :attr:`Flask.cli` using ``@app.cli.command()``.\n\n\nLifetime of the Context\n-----------------------\n\nThe application context is created and destroyed as necessary. When a\nFlask application begins handling a request, it pushes an application\ncontext and a :doc:`request context </reqcontext>`. When the request\nends it pops the request context then the application context.\nTypically, an application context will have the same lifetime as a\nrequest.\n\nSee :doc:`/reqcontext` for more information about how the contexts work\nand the full life cycle of a request.\n\n\nManually Push a Context\n-----------------------\n\nIf you try to access :data:`current_app`, or anything that uses it,\noutside an application context, you'll get this error message:\n\n.. code-block:: pytb\n\n    RuntimeError: Working outside of application context.\n\n    This typically means that you attempted to use functionality that\n    needed to interface with the current application object in some way.\n    To solve this, set up an application context with app.app_context().\n\nIf you see that error while configuring your application, such as when\ninitializing an extension, you can push a context manually since you\nhave direct access to the ``app``. Use :meth:`~Flask.app_context` in a\n``with`` block, and everything that runs in the block will have access\nto :data:`current_app`. ::\n\n    def create_app():\n        app = Flask(__name__)\n\n        with app.app_context():\n            init_db()\n\n        return app\n\nIf you see that error somewhere else in your code not related to\nconfiguring the application, it most likely indicates that you should\nmove that code into a view function or CLI command.\n\n\nStoring Data\n------------\n\nThe application context is a good place to store common data during a\nrequest or CLI command. Flask provides the :data:`g object <g>` for this\npurpose. It is a simple namespace object that has the same lifetime as\nan application context.\n\n.. note::\n    The ``g`` name stands for \"global\", but that is referring to the\n    data being global *within a context*. The data on ``g`` is lost\n    after the context ends, and it is not an appropriate place to store\n    data between requests. Use the :data:`session` or a database to\n    store data across requests.\n\nA common use for :data:`g` is to manage resources during a request.\n\n1.  ``get_X()`` creates resource ``X`` if it does not exist, caching it\n    as ``g.X``.\n2.  ``teardown_X()`` closes or otherwise deallocates the resource if it\n    exists. It is registered as a :meth:`~Flask.teardown_appcontext`\n    handler.\n\nFor example, you can manage a database connection using this pattern::\n\n    from flask import g\n\n    def get_db():\n        if 'db' not in g:\n            g.db = connect_to_database()\n\n        return g.db\n\n    @app.teardown_appcontext\n    def teardown_db(exception):\n        db = g.pop('db', None)\n\n        if db is not None:\n            db.close()\n\nDuring a request, every call to ``get_db()`` will return the same\nconnection, and it will be closed automatically at the end of the\nrequest.\n\nYou can use :class:`~werkzeug.local.LocalProxy` to make a new context\nlocal from ``get_db()``::\n\n    from werkzeug.local import LocalProxy\n    db = LocalProxy(get_db)\n\nAccessing ``db`` will call ``get_db`` internally, in the same way that\n:data:`current_app` works.\n\n\nEvents and Signals\n------------------\n\nThe application will call functions registered with :meth:`~Flask.teardown_appcontext`\nwhen the application context is popped.\n\nThe following signals are sent: :data:`appcontext_pushed`,\n:data:`appcontext_tearing_down`, and :data:`appcontext_popped`.",
+          "span_sha256": "sha256:ebd60118322f4bd372b86446c3b4483bb348e6b12abead108f743769563a6244"
+        }
+      ],
+      "drafted_by": "lead_researcher (pilot benchmark, Aug 2026)",
+      "requested_by": null,
+      "status_note": "existing benchmark task; task cites ['docs/appcontext.rst'] without lines - the WHOLE file is shown: if the answer is right, use `fix` with evidence_correct failed and name the exact lines in the note"
+    },
+    {
+      "item_id": "eih-phase1-req-004",
+      "kind": "existing_task",
+      "split": "test",
+      "repository": "fastapi/fastapi",
+      "commit_sha": "1c3e6918750ccb3f20ea260e9a4238ce2c0e5f63",
+      "sdlc_stage": "requirements",
+      "task_type": "requirement_understanding",
+      "complexity": "medium",
+      "criticality": "medium",
+      "query": "What are the architectural requirements for FastAPI dependency injection using Depends?",
+      "proposed_answer": "FastAPI's dependency injection system requires a callable (function or class) passed to Depends(). Dependencies can be synchronous or asynchronous, can declare their own sub-dependencies hierarchically, and support yield for setup/teardown logic.",
+      "acceptable_alternatives": [
+        "Dependencies are declared as parameters using Depends(callable) and can be nested, async or sync, and use yield for teardown."
+      ],
+      "evidence": [
+        {
+          "file": "fastapi/params.py",
+          "start_line": 30,
+          "end_line": 70,
+          "text": "        alias: Optional[str] = None,\n        alias_priority: Union[int, None] = _Unset,\n        # TODO: update when deprecating Pydantic v1, import these types\n        # validation_alias: str | AliasPath | AliasChoices | None\n        validation_alias: Union[str, None] = None,\n        serialization_alias: Union[str, None] = None,\n        title: Optional[str] = None,\n        description: Optional[str] = None,\n        gt: Optional[float] = None,\n        ge: Optional[float] = None,\n        lt: Optional[float] = None,\n        le: Optional[float] = None,\n        min_length: Optional[int] = None,\n        max_length: Optional[int] = None,\n        pattern: Optional[str] = None,\n        regex: Annotated[\n            Optional[str],\n            deprecated(\n                \"Deprecated in FastAPI 0.100.0 and Pydantic v2, use `pattern` instead.\"\n            ),\n        ] = None,\n        discriminator: Union[str, None] = None,\n        strict: Union[bool, None] = _Unset,\n        multiple_of: Union[float, None] = _Unset,\n        allow_inf_nan: Union[bool, None] = _Unset,\n        max_digits: Union[int, None] = _Unset,\n        decimal_places: Union[int, None] = _Unset,\n        examples: Optional[List[Any]] = None,\n        example: Annotated[\n            Optional[Any],\n            deprecated(\n                \"Deprecated in OpenAPI 3.1.0 that now uses JSON Schema 2020-12, \"\n                \"although still supported. Use examples instead.\"\n            ),\n        ] = _Unset,\n        openapi_examples: Optional[Dict[str, Example]] = None,\n        deprecated: Union[deprecated, str, bool, None] = None,\n        include_in_schema: bool = True,\n        json_schema_extra: Union[Dict[str, Any], None] = None,\n        **extra: Any,\n    ):",
+          "span_sha256": "sha256:e50dc3c8d47b550566ffa7ae58550b59476e2676168b790c879d99c743db5225"
+        }
+      ],
+      "drafted_by": "lead_researcher (pilot benchmark, Aug 2026)",
+      "requested_by": null,
+      "status_note": "existing benchmark task"
+    },
+    {
+      "item_id": "eih-phase1-req-006",
+      "kind": "existing_task",
+      "split": "test",
+      "repository": "fastapi/fastapi",
+      "commit_sha": "1c3e6918750ccb3f20ea260e9a4238ce2c0e5f63",
+      "sdlc_stage": "requirements",
+      "task_type": "architecture_qa",
+      "complexity": "medium",
+      "criticality": "high",
+      "query": "How does FastAPI integrate Starlette ASGI architecture under the hood?",
+      "proposed_answer": "FastAPI inherits directly from Starlette (`class FastAPI(Starlette)`). It reuses Starlette's ASGI router, middleware stack, request/response models, background tasks, and event handlers while augmenting route handling with Pydantic validation and OpenAPI generation.",
+      "acceptable_alternatives": [
+        "FastAPI is a subclass of Starlette adding Pydantic data validation, dependency injection, and OpenAPI metadata on top of Starlette's ASGI foundation."
+      ],
+      "evidence": [
+        {
+          "file": "fastapi/applications.py",
+          "start_line": 30,
+          "end_line": 80,
+          "text": "from fastapi.openapi.utils import get_openapi\nfrom fastapi.params import Depends\nfrom fastapi.types import DecoratedCallable, IncEx\nfrom fastapi.utils import generate_unique_id\nfrom starlette.applications import Starlette\nfrom starlette.datastructures import State\nfrom starlette.exceptions import HTTPException\nfrom starlette.middleware import Middleware\nfrom starlette.middleware.base import BaseHTTPMiddleware\nfrom starlette.requests import Request\nfrom starlette.responses import HTMLResponse, JSONResponse, Response\nfrom starlette.routing import BaseRoute\nfrom starlette.types import ASGIApp, Lifespan, Receive, Scope, Send\nfrom typing_extensions import Annotated, Doc, deprecated\n\nAppType = TypeVar(\"AppType\", bound=\"FastAPI\")\n\n\nclass FastAPI(Starlette):\n    \"\"\"\n    `FastAPI` app class, the main entrypoint to use FastAPI.\n\n    Read more in the\n    [FastAPI docs for First Steps](https://fastapi.tiangolo.com/tutorial/first-steps/).\n\n    ## Example\n\n    ```python\n    from fastapi import FastAPI\n\n    app = FastAPI()\n    ```\n    \"\"\"\n\n    def __init__(\n        self: AppType,\n        *,\n        debug: Annotated[\n            bool,\n            Doc(\n                \"\"\"\n                Boolean indicating if debug tracebacks should be returned on server\n                errors.\n\n                Read more in the\n                [Starlette docs for Applications](https://www.starlette.io/applications/#instantiating-the-application).\n                \"\"\"\n            ),\n        ] = False,\n        routes: Annotated[\n            Optional[List[BaseRoute]],",
+          "span_sha256": "sha256:737535c01c54b1530948dd6818214ca49cf42e19b8c0cdfe7a4b72769c79b7fe"
+        }
+      ],
+      "drafted_by": "lead_researcher (pilot benchmark, Aug 2026)",
+      "requested_by": null,
+      "status_note": "existing benchmark task"
+    },
+    {
+      "item_id": "eih-phase1-req-007",
+      "kind": "existing_task",
+      "split": "test",
+      "repository": "pallets/flask",
+      "commit_sha": "c12a5d874c5a014495eb2db8a73f40037bc813ac",
+      "sdlc_stage": "requirements",
+      "task_type": "requirement_understanding",
+      "complexity": "medium",
+      "criticality": "medium",
+      "query": "What are the session cookie security requirements in Flask?",
+      "proposed_answer": "Flask signs session cookies cryptographically using its SECRET_KEY via its SecureCookieSerializer/itsdangerous. Required security settings include SESSION_COOKIE_SECURE (HTTPS only), SESSION_COOKIE_HTTPONLY, and SESSION_COOKIE_SAMESITE.",
+      "acceptable_alternatives": [
+        "Flask cryptographically signs cookies using SECRET_KEY and supports Secure, HttpOnly, and SameSite cookie attributes."
+      ],
+      "evidence": [
+        {
+          "file": "src/flask/sessions.py",
+          "start_line": 50,
+          "end_line": 100,
+          "text": "\n\n# TODO generic when Python > 3.8\nclass SecureCookieSession(CallbackDict, SessionMixin):  # type: ignore[type-arg]\n    \"\"\"Base class for sessions based on signed cookies.\n\n    This session backend will set the :attr:`modified` and\n    :attr:`accessed` attributes. It cannot reliably track whether a\n    session is new (vs. empty), so :attr:`new` remains hard coded to\n    ``False``.\n    \"\"\"\n\n    #: When data is changed, this is set to ``True``. Only the session\n    #: dictionary itself is tracked; if the session contains mutable\n    #: data (for example a nested dict) then this must be set to\n    #: ``True`` manually when modifying that data. The session cookie\n    #: will only be written to the response if this is ``True``.\n    modified = False\n\n    #: When data is read or written, this is set to ``True``. Used by\n    # :class:`.SecureCookieSessionInterface` to add a ``Vary: Cookie``\n    #: header, which allows caching proxies to cache different pages for\n    #: different users.\n    accessed = False\n\n    def __init__(self, initial: t.Any = None) -> None:\n        def on_update(self: te.Self) -> None:\n            self.modified = True\n            self.accessed = True\n\n        super().__init__(initial, on_update)\n\n    def __getitem__(self, key: str) -> t.Any:\n        self.accessed = True\n        return super().__getitem__(key)\n\n    def get(self, key: str, default: t.Any = None) -> t.Any:\n        self.accessed = True\n        return super().get(key, default)\n\n    def setdefault(self, key: str, default: t.Any = None) -> t.Any:\n        self.accessed = True\n        return super().setdefault(key, default)\n\n\nclass NullSession(SecureCookieSession):\n    \"\"\"Class used to generate nicer error messages if sessions are not\n    available.  Will still allow read-only access to the empty session\n    but fail on setting.\n    \"\"\"\n",
+          "span_sha256": "sha256:fb1ce9776eafd48742a3fee4e4b174e304c06bfb108b2765edf1b61962133e22"
+        }
+      ],
+      "drafted_by": "lead_researcher (pilot benchmark, Aug 2026)",
+      "requested_by": null,
+      "status_note": "existing benchmark task"
+    },
+    {
+      "item_id": "eih-phase1-rev-041",
+      "kind": "existing_task",
+      "split": "test",
+      "repository": "pallets/flask",
+      "commit_sha": "c12a5d874c5a014495eb2db8a73f40037bc813ac",
+      "sdlc_stage": "code_review",
+      "task_type": "defect_detection",
+      "complexity": "medium",
+      "criticality": "high",
+      "query": "Review this Flask snippet for security defects: `user_input = request.args.get('path'); return send_file('/var/data/' + user_input)`.",
+      "proposed_answer": "Defect: Path Traversal (CWE-22). Directly concatenating untrusted user input to a file path allows attackers to supply `../` sequences to read arbitrary files. Fix: Use Flask's `send_from_directory('/var/data', user_input)` or `werkzeug.utils.safe_join` to validate that the path stays within the base directory.",
+      "acceptable_alternatives": [
+        "Path traversal vulnerability allowing directory escape with ../; fix by using send_from_directory or safe_join."
+      ],
+      "evidence": [
+        {
+          "file": "src/flask/helpers.py",
+          "start_line": 450,
+          "end_line": 500,
+          "text": "        string to use instead of generating one.\n\n    .. versionchanged:: 2.0\n        Passing a file-like object that inherits from\n        :class:`~io.TextIOBase` will raise a :exc:`ValueError` rather\n        than sending an empty file.\n\n    .. versionadded:: 2.0\n        Moved the implementation to Werkzeug. This is now a wrapper to\n        pass some Flask-specific arguments.\n\n    .. versionchanged:: 1.1\n        ``filename`` may be a :class:`~os.PathLike` object.\n\n    .. versionchanged:: 1.1\n        Passing a :class:`~io.BytesIO` object supports range requests.\n\n    .. versionchanged:: 1.0.3\n        Filenames are encoded with ASCII instead of Latin-1 for broader\n        compatibility with WSGI servers.\n\n    .. versionchanged:: 1.0\n        UTF-8 filenames as specified in :rfc:`2231` are supported.\n\n    .. versionchanged:: 0.12\n        The filename is no longer automatically inferred from file\n        objects. If you want to use automatic MIME and etag support,\n        pass a filename via ``filename_or_fp`` or\n        ``attachment_filename``.\n\n    .. versionchanged:: 0.12\n        ``attachment_filename`` is preferred over ``filename`` for MIME\n        detection.\n\n    .. versionchanged:: 0.9\n        ``cache_timeout`` defaults to\n        :meth:`Flask.get_send_file_max_age`.\n\n    .. versionchanged:: 0.7\n        MIME guessing and etag support for file-like objects was\n        removed because it was unreliable. Pass a filename if you are\n        able to, otherwise attach an etag yourself.\n\n    .. versionchanged:: 0.5\n        The ``add_etags``, ``cache_timeout`` and ``conditional``\n        parameters were added. The default behavior is to add etags.\n\n    .. versionadded:: 0.2\n    \"\"\"\n    return werkzeug.utils.send_file(  # type: ignore[return-value]\n        **_prepare_send_file_kwargs(",
+          "span_sha256": "sha256:c9423dac9aaf55a43a62bcf40adc525bdcc9a513d62b2c42cebbb81a4a2620dd"
+        }
+      ],
+      "drafted_by": "lead_researcher (pilot benchmark, Aug 2026)",
+      "requested_by": null,
+      "status_note": "existing benchmark task"
+    },
+    {
+      "item_id": "eih-phase1-rev-042",
+      "kind": "existing_task",
+      "split": "test",
+      "repository": "fastapi/fastapi",
+      "commit_sha": "1c3e6918750ccb3f20ea260e9a4238ce2c0e5f63",
+      "sdlc_stage": "code_review",
+      "task_type": "defect_detection",
+      "complexity": "medium",
+      "criticality": "medium",
+      "query": "Review this FastAPI route: `items = []; @app.post('/items') async def add(item: str): items.append(item); return items`. What concurrency bug exists?",
+      "proposed_answer": "Defect: Global mutable state concurrency race condition. `items` is a global list shared across all asynchronous coroutines and worker threads without synchronization locks or thread safety, leading to race conditions and memory leaks across requests.",
+      "acceptable_alternatives": [
+        "Shared global mutable state causing race conditions and lack of isolation between concurrent requests."
+      ],
+      "evidence": [],
+      "drafted_by": "lead_researcher (pilot benchmark, Aug 2026)",
+      "requested_by": null,
+      "status_note": "EVIDENCE DEFECT: eih-phase1-rev-042: evidence file has no line numbers and is too long (430 lines) to show whole. Cited: ['docs/en/docs/async.md LNone-LNone']. Open the file at the pinned commit yourself; evidence_correct fails - use fix (name the right lines) or reject."
+    }
+  ]
+}
