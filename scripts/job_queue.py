@@ -292,16 +292,21 @@ def m5_executor(provider_name: Optional[str], manifest_path: Optional[str], spli
     manifest = None
     if manifest_path:
         manifest = ExperimentManifest(**json.loads(Path(manifest_path).read_text(encoding="utf-8")))
+    real = (provider_name or "").lower() != "mock"
+    if manifest is None and real:
+        # Real runs bind the live collection and graph identity into the manifest hash.
+        manifest = ExperimentManifest.create_default(live=True)
     runner = M5BenchmarkRunner(manifest=manifest, provider_name=provider_name)
     # A manifest that differs from what the pipelines actually run with would
     # certify settings that never ran: refuse it (mock runs are tests, not results).
+    # Real runs also check the live Qdrant collection and Neo4j graph (Step 1g).
     from experiments.m5.manifest import runtime_mismatches
 
-    mismatches = runtime_mismatches(runner.manifest)
-    if mismatches and (provider_name or "").lower() != "mock":
-        raise RuntimeError(f"Manifest does not match the runtime settings: {mismatches}")
+    if real:
+        mismatches = runtime_mismatches(runner.manifest, live=True)
+        if mismatches:
+            raise RuntimeError(f"Manifest does not match the runtime settings/data: {mismatches}")
     runner.graph_info = None
-    real = (provider_name or "").lower() != "mock"
     if set(systems or []) & {"system_d", "system_e", "system_e_routed"} and real:
         runner.graph_info = runner.graph_preflight()  # raises if the graph is missing/incomplete
     # One-time loading (BM25 index, encoders, reranker) happens here, untimed, never

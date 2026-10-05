@@ -76,6 +76,21 @@ until you answer. To answer, reply with the item ID and your choice. Answered it
   **Recommended: (b)**, recorded as a change in WORK_PLAN §5. E's attempt 0 then equals the new D.
   Decide before the Step 2 calibration.
 
+- [ ] **A3: Delete 2 test nodes from the live Neo4j graph?** `tests/test_api/test_graph_endpoints.py`
+  wrote `test:node:a` (File) and `test:node:b` (Module) plus 1 edge into the experiment graph and
+  never removed them. Live graph: 37,068 / 58,983; build report: 37,066 / 58,982. They link to
+  nothing real, so Mode R is unaffected, but the new manifest check (Step 1g) correctly
+  **refuses every real Mode Q run** until the graph equals its build report. The test now uses an
+  in-memory store.
+  **Recommended: yes**, delete exactly those 2 nodes and their edge (`MATCH (n) WHERE n.node_id IN
+  ['test:node:a','test:node:b'] DETACH DELETE n`), then re-check that the counts equal the report.
+- [ ] **A2: Primary success definition for CO₂e per successful task.** The current
+  `quality_constrained_success` needs composite ≥ threshold. The composite is 60% System E's own gate
+  signals, so a "success" partly means "passed E's gate".
+  **Recommended:** primary = correct (lexical F1 ≥ task threshold) **and** supported (cites ≥ 1
+  labelled evidence span, `evaluation/outcome.py`). Report the old definition as secondary. Fix it
+  before any test run.
+
 ## Plan decisions still open (WORK_PLAN §4)
 
 - [ ] **D4: Large-LLM baseline** (spec §7.3; a large model cannot run on 6 GB).
