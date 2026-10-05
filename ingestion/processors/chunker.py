@@ -2,18 +2,35 @@
 Engineering Intelligence Hub — Code and Documentation Aware Chunkers
 ====================================================================
 Implements structural boundary chunking for source code (functions, classes, methods,
-modules) and semantic section chunking for documentation and engineering history.
+modules) and semantic section chunking for documentation and engineering history
+(original plan §6.2: Python on AST symbol boundaries, oversized classes decomposed by
+method; Markdown/RST header-aware; configuration and text with provenance).
 
-Preserves exact source locations (start_line, end_line, file_path, symbol_name).
+Three guarantees (fixed 2026-10-05; before, 3,485 of 48,046 chunks were longer than the
+embedding model can read and content between top-level definitions was dropped):
+
+  1. **Size** — every chunk fits the embedding model's input window. Tokens are counted
+     with the embedding model's OWN tokenizer (BGE-small: 512 incl. [CLS]/[SEP]); the old
+     count used tiktoken (a GPT tokenizer), which undercounts code and docs for BGE, so
+     the tail of long chunks was silently never embedded.
+  2. **Coverage** — every non-blank line of a file is in a chunk: module code between
+     definitions, decorators, class bodies between methods and short import headers
+     (formerly dropped below `min_tokens_per_chunk`, which is now unused) are kept.
+  3. **Provenance** — every chunk carries its exact start_line / end_line, including the
+     pieces of a split unit (sub-chunks used to get the whole section's end line).
+
+Structure first, size second: a unit (function, class, method, section, paragraph) is
+split by lines only when it alone is larger than the window; a single line larger than
+the window is split by words. Split pieces keep their symbol / section name and record
+"part" / "parts".
 """
 
 from __future__ import annotations
 
 import ast
 import re
-from typing import List, Optional
-
-import tiktoken
+from functools import lru_cache
+from typing import Dict, List, Optional, Tuple
 
 from ingestion.base import BaseChunker
 from knowledge.schemas.artifacts import (
@@ -24,34 +41,190 @@ from knowledge.schemas.artifacts import (
     SourceFile,
 )
 
-
-def _get_tokenizer():
-    try:
-        return tiktoken.get_encoding("cl100k_base")
-    except Exception:
-        return None
+# BERT-style tokenizers add [CLS] and [SEP] to every input.
+_SPECIAL_TOKENS = 2
 
 
-TOKENIZER = _get_tokenizer()
+@lru_cache(maxsize=1)
+def _embedding_tokenizer():
+    """The tokenizer of the embedding model the chunks are embedded with."""
+    from transformers import AutoTokenizer
+
+    from core.config import settings
+
+    tok = AutoTokenizer.from_pretrained(settings.vector_store.embedding_model)
+    tok.model_max_length = 10**9  # counting only: no truncation, no length warnings
+    return tok
+
+
+def _content_tokens(text: str) -> int:
+    """Tokens of `text` for the embedding model, WITHOUT special tokens."""
+    if not text:
+        return 0
+    return len(_embedding_tokenizer()(text, add_special_tokens=False)["input_ids"])
 
 
 def estimate_tokens(text: str) -> int:
-    """Estimate token count for a text string."""
+    """Exact input length of `text` for the embedding model (incl. special tokens)."""
     if not text:
         return 0
-    if TOKENIZER:
-        try:
-            return len(TOKENIZER.encode(text, disallowed_special=()))
-        except Exception:
-            pass
-    # Fallback heuristic: 1 token ~= 4 characters or 0.75 words
-    return max(1, int(len(text) / 4))
+    return _content_tokens(text) + _SPECIAL_TOKENS
+
+
+def embedding_tokenizer_name() -> str:
+    from core.config import settings
+
+    return settings.vector_store.embedding_model
+
+
+# A unit is a structural piece of a file before size limits are applied:
+# (start_line, end_line, metadata)  — 1-based, inclusive.
+Unit = Tuple[int, int, Dict]
+
+
+class _Splitter:
+    """Packs lines into pieces that fit the embedding window, keeping exact line ranges."""
+
+    def __init__(self, max_tokens: int) -> None:
+        self.budget = max_tokens - _SPECIAL_TOKENS  # content tokens available per chunk
+
+    def fits(self, text: str) -> bool:
+        return _content_tokens(text) <= self.budget
+
+    def split(self, lines: List[str], first_line_no: int, overlap_lines: int = 0) -> List[Tuple[int, int, str]]:
+        """Split lines[i] (line number first_line_no + i) into (start, end, text) pieces.
+
+        BERT tokenisation never merges tokens across whitespace, so the tokens of lines
+        joined by newlines are the sum of the per-line tokens; pieces are packed with
+        that sum and every piece is checked with an exact count.
+        """
+        counts = [_content_tokens(l) for l in lines]
+        pieces: List[Tuple[int, int, str]] = []
+        i = 0
+        while i < len(lines):
+            if not lines[i].strip():
+                i += 1
+                continue
+            if counts[i] > self.budget:  # one line alone is too long: split it by words
+                pieces.extend(self._split_line(lines[i], first_line_no + i))
+                i += 1
+                continue
+            j, used = i, 0
+            while j < len(lines) and counts[j] <= self.budget and used + counts[j] <= self.budget:
+                used += counts[j]
+                j += 1
+            pieces.append(self._piece(lines, i, j - 1, first_line_no))
+            if j >= len(lines):
+                break
+            # optional overlap for sliding windows; always make progress
+            i = max(i + 1, j - overlap_lines) if overlap_lines and j - i > overlap_lines else j
+        return [p for p in pieces if p[2]]
+
+    @staticmethod
+    def _piece(lines: List[str], i: int, j: int, first_line_no: int) -> Tuple[int, int, str]:
+        while i < j and not lines[i].strip():
+            i += 1
+        while j > i and not lines[j].strip():
+            j -= 1
+        return first_line_no + i, first_line_no + j, "\n".join(lines[i: j + 1]).strip()
+
+    def _longest_fitting_prefix(self, text: str) -> int:
+        """Largest k such that text[:k] fits the budget (exact count, binary search)."""
+        lo, hi = 1, len(text)
+        while lo < hi:
+            mid = (lo + hi + 1) // 2
+            if _content_tokens(text[:mid]) <= self.budget:
+                lo = mid
+            else:
+                hi = mid - 1
+        return lo
+
+    def _split_line(self, line: str, line_no: int) -> List[Tuple[int, int, str]]:
+        pieces, buf, used = [], [], 0
+        for word in re.split(r"(\s+)", line):
+            if not word:
+                continue
+            n = _content_tokens(word)
+            if n > self.budget:  # a single "word" (e.g. minified code, base64): slice it
+                if buf:
+                    pieces.append((line_no, line_no, "".join(buf).strip()))
+                    buf, used = [], 0
+                rest = word
+                while rest:
+                    cut = self._longest_fitting_prefix(rest)
+                    pieces.append((line_no, line_no, rest[:cut]))
+                    rest = rest[cut:]
+                continue
+            if used + n > self.budget and buf:
+                pieces.append((line_no, line_no, "".join(buf).strip()))
+                buf, used = [], 0
+            buf.append(word)
+            used += n
+        if buf and "".join(buf).strip():
+            pieces.append((line_no, line_no, "".join(buf).strip()))
+        return pieces
+
+
+def _build_chunks(
+    artifact: BaseArtifact,
+    lines: List[str],
+    units: List[Unit],
+    splitter: _Splitter,
+    overlap_lines: int = 0,
+) -> List[KnowledgeChunk]:
+    chunks: List[KnowledgeChunk] = []
+    for start, end, meta in units:
+        unit_lines = lines[start - 1: end]
+        text = "\n".join(unit_lines).strip()
+        if not text:
+            continue
+        if splitter.fits(text):
+            s, e, t = _Splitter._piece(unit_lines, 0, len(unit_lines) - 1, start)
+            pieces = [(s, e, t)]
+        else:
+            pieces = splitter.split(unit_lines, start, overlap_lines=overlap_lines)
+        for part, (s, e, t) in enumerate(pieces, start=1):
+            idx = len(chunks)
+            extra = {"part": part, "parts": len(pieces)} if len(pieces) > 1 else {}
+            chunks.append(
+                KnowledgeChunk(
+                    chunk_id=f"{artifact.artifact_id}:chunk:{idx}",
+                    artifact_id=artifact.artifact_id,
+                    artifact_type=artifact.artifact_type,
+                    repository=artifact.repository,
+                    content=t,
+                    chunk_index=idx,
+                    start_line=s,
+                    end_line=e,
+                    token_count=estimate_tokens(t),
+                    metadata={
+                        **meta,
+                        **extra,
+                        "file_path": artifact.source_path,
+                        "token_counter": embedding_tokenizer_name(),
+                        **artifact.metadata,
+                    },
+                )
+            )
+    for c in chunks:
+        c.total_chunks = len(chunks)
+    return chunks
+
+
+def _def_start(node: ast.AST) -> int:
+    """First line of a definition, including its decorators."""
+    decorators = getattr(node, "decorator_list", []) or []
+    return min([node.lineno] + [d.lineno for d in decorators])
+
+
+def _def_end(node: ast.AST, n_lines: int) -> int:
+    return min(getattr(node, "end_lineno", None) or n_lines, n_lines)
 
 
 class CodeAwareChunker(BaseChunker):
     """
-    Code-aware chunker that uses AST parsing for Python and structural/line
-    sliding windows for other programming languages.
+    Code-aware chunker: AST symbol boundaries for Python, a token-bounded sliding window
+    for other languages (plan §10.6: tree-sitter for other languages is still to come).
     """
 
     def __init__(
@@ -63,271 +236,61 @@ class CodeAwareChunker(BaseChunker):
         self.max_tokens_per_chunk = max_tokens_per_chunk
         self.min_tokens_per_chunk = min_tokens_per_chunk
         self.overlap_lines = overlap_lines
+        self._splitter = _Splitter(max_tokens_per_chunk)
 
     @property
     def chunker_name(self) -> str:
         return "code_aware_ast_chunker"
 
-    def _chunk_python_ast(
-        self,
-        artifact: BaseArtifact,
-        content: str,
-        lines: List[str],
-    ) -> List[KnowledgeChunk]:
-        """Chunk Python code using AST boundary detection."""
-        chunks: List[KnowledgeChunk] = []
-        try:
-            tree = ast.parse(content)
-        except Exception:
-            return self._chunk_sliding_window(artifact, lines)
-
-        # Collect top-level definitions
-        nodes = []
-        for node in tree.body:
-            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
-                nodes.append(node)
-
+    def _python_units(self, tree: ast.Module, lines: List[str]) -> Optional[List[Unit]]:
+        n = len(lines)
+        nodes = sorted(
+            (nd for nd in tree.body if isinstance(nd, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef))),
+            key=_def_start,
+        )
         if not nodes:
-            return self._chunk_sliding_window(artifact, lines)
+            return None
+        base = {"language": "python"}
+        units: List[Unit] = []
+        cursor = 1
+        for k, node in enumerate(nodes):
+            start, end = _def_start(node), _def_end(node, n)
+            if cursor < start:
+                gap = "<module_preamble>" if k == 0 else "<module_code>"
+                units.append((cursor, start - 1, {**base, "symbol_name": gap,
+                                                  "chunk_type": "module_header" if k == 0 else "module_code"}))
+            text = "\n".join(lines[start - 1: end])
+            methods = [m for m in getattr(node, "body", []) if isinstance(m, (ast.FunctionDef, ast.AsyncFunctionDef))]
+            if isinstance(node, ast.ClassDef) and methods and not self._splitter.fits(text):
+                units.extend(self._class_units(node, methods, start, end, n, base))
+            else:
+                units.append((start, end, {**base, "symbol_name": node.name,
+                                           "chunk_type": "class" if isinstance(node, ast.ClassDef) else "function"}))
+            cursor = end + 1
+        if cursor <= n:
+            units.append((cursor, n, {**base, "symbol_name": "<module_trailer>", "chunk_type": "module_trailer"}))
+        return units
 
-        # Sort nodes by line number
-        nodes.sort(key=lambda n: n.lineno)
-
-        chunk_idx = 0
-        last_end_line = 0
-
-        # Module preamble (imports, docstrings, module-level variables before first node)
-        first_node_start = nodes[0].lineno
-        if first_node_start > 1:
-            preamble_lines = lines[: first_node_start - 1]
-            preamble_text = "\n".join(preamble_lines).strip()
-            if preamble_text and estimate_tokens(preamble_text) >= self.min_tokens_per_chunk:
-                chunks.append(
-                    KnowledgeChunk(
-                        chunk_id=f"{artifact.artifact_id}:chunk:{chunk_idx}",
-                        artifact_id=artifact.artifact_id,
-                        artifact_type=artifact.artifact_type,
-                        repository=artifact.repository,
-                        content=preamble_text,
-                        chunk_index=chunk_idx,
-                        start_line=1,
-                        end_line=first_node_start - 1,
-                        token_count=estimate_tokens(preamble_text),
-                        metadata={
-                            "symbol_name": "<module_preamble>",
-                            "chunk_type": "module_header",
-                            "file_path": artifact.source_path,
-                            "language": "python",
-                            **artifact.metadata,
-                        },
-                    )
-                )
-                chunk_idx += 1
-            last_end_line = first_node_start - 1
-
-        # Process each top-level AST node
-        for node in nodes:
-            start_l = node.lineno
-            end_l = getattr(node, "end_lineno", start_l + len(ast.unparse(node).splitlines()) if hasattr(ast, "unparse") else len(lines))
-            end_l = min(end_l, len(lines))
-
-            # Include any comments / decorator lines directly preceding if present
-            node_lines = lines[start_l - 1 : end_l]
-            node_text = "\n".join(node_lines).strip()
-
-            symbol_name = node.name
-            chunk_type = "class" if isinstance(node, ast.ClassDef) else "function"
-
-            token_cnt = estimate_tokens(node_text)
-
-            # If the class or function is excessively large, sub-chunk or break it down
-            if token_cnt > self.max_tokens_per_chunk and isinstance(node, ast.ClassDef):
-                # Sub-chunk class methods
-                method_chunks = self._chunk_class_methods(artifact, node, lines, chunk_idx)
-                if method_chunks:
-                    chunks.extend(method_chunks)
-                    chunk_idx += len(method_chunks)
-                    last_end_line = end_l
-                    continue
-
-            chunks.append(
-                KnowledgeChunk(
-                    chunk_id=f"{artifact.artifact_id}:chunk:{chunk_idx}",
-                    artifact_id=artifact.artifact_id,
-                    artifact_type=artifact.artifact_type,
-                    repository=artifact.repository,
-                    content=node_text,
-                    chunk_index=chunk_idx,
-                    start_line=start_l,
-                    end_line=end_l,
-                    token_count=token_cnt,
-                    metadata={
-                        "symbol_name": symbol_name,
-                        "chunk_type": chunk_type,
-                        "file_path": artifact.source_path,
-                        "language": "python",
-                        **artifact.metadata,
-                    },
-                )
-            )
-            chunk_idx += 1
-            last_end_line = end_l
-
-        # Remaining trailing module code if any
-        if last_end_line < len(lines):
-            trailing_lines = lines[last_end_line:]
-            trailing_text = "\n".join(trailing_lines).strip()
-            if trailing_text and estimate_tokens(trailing_text) >= self.min_tokens_per_chunk:
-                chunks.append(
-                    KnowledgeChunk(
-                        chunk_id=f"{artifact.artifact_id}:chunk:{chunk_idx}",
-                        artifact_id=artifact.artifact_id,
-                        artifact_type=artifact.artifact_type,
-                        repository=artifact.repository,
-                        content=trailing_text,
-                        chunk_index=chunk_idx,
-                        start_line=last_end_line + 1,
-                        end_line=len(lines),
-                        token_count=estimate_tokens(trailing_text),
-                        metadata={
-                            "symbol_name": "<module_trailer>",
-                            "chunk_type": "module_trailer",
-                            "file_path": artifact.source_path,
-                            "language": "python",
-                            **artifact.metadata,
-                        },
-                    )
-                )
-
-        # Set total_chunks for all
-        total = len(chunks)
-        for c in chunks:
-            c.total_chunks = total
-
-        return chunks if chunks else self._chunk_sliding_window(artifact, lines)
-
-    def _chunk_class_methods(
-        self,
-        artifact: BaseArtifact,
-        class_node: ast.ClassDef,
-        lines: List[str],
-        start_chunk_idx: int,
-    ) -> List[KnowledgeChunk]:
-        """Sub-chunk large classes into method chunks."""
-        chunks: List[KnowledgeChunk] = []
-        methods = [n for n in class_node.body if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef))]
-        if not methods:
-            return []
-
-        idx = start_chunk_idx
-        class_header_lines = lines[class_node.lineno - 1 : methods[0].lineno - 1]
-        header_text = "\n".join(class_header_lines).strip()
-        if header_text:
-            chunks.append(
-                KnowledgeChunk(
-                    chunk_id=f"{artifact.artifact_id}:chunk:{idx}",
-                    artifact_id=artifact.artifact_id,
-                    artifact_type=artifact.artifact_type,
-                    repository=artifact.repository,
-                    content=header_text,
-                    chunk_index=idx,
-                    start_line=class_node.lineno,
-                    end_line=methods[0].lineno - 1,
-                    token_count=estimate_tokens(header_text),
-                    metadata={
-                        "symbol_name": f"{class_node.name}.<header>",
-                        "chunk_type": "class_header",
-                        "file_path": artifact.source_path,
-                        "language": "python",
-                        **artifact.metadata,
-                    },
-                )
-            )
-            idx += 1
-
+    @staticmethod
+    def _class_units(node: ast.ClassDef, methods: List[ast.AST], start: int, end: int, n: int,
+                     base: Dict) -> List[Unit]:
+        """Oversized class -> header, each method, and the class body between/after methods."""
+        units: List[Unit] = []
+        first = _def_start(methods[0])
+        if start < first:
+            units.append((start, first - 1, {**base, "symbol_name": f"{node.name}.<header>",
+                                             "chunk_type": "class_header"}))
+        cursor = first
         for m in methods:
-            m_start = m.lineno
-            m_end = getattr(m, "end_lineno", m_start + len(ast.unparse(m).splitlines()) if hasattr(ast, "unparse") else len(lines))
-            m_end = min(m_end, len(lines))
-            m_lines = lines[m_start - 1 : m_end]
-            m_text = "\n".join(m_lines).strip()
-            chunks.append(
-                KnowledgeChunk(
-                    chunk_id=f"{artifact.artifact_id}:chunk:{idx}",
-                    artifact_id=artifact.artifact_id,
-                    artifact_type=artifact.artifact_type,
-                    repository=artifact.repository,
-                    content=m_text,
-                    chunk_index=idx,
-                    start_line=m_start,
-                    end_line=m_end,
-                    token_count=estimate_tokens(m_text),
-                    metadata={
-                        "symbol_name": f"{class_node.name}.{m.name}",
-                        "chunk_type": "method",
-                        "file_path": artifact.source_path,
-                        "language": "python",
-                        **artifact.metadata,
-                    },
-                )
-            )
-            idx += 1
-
-        return chunks
-
-    def _chunk_sliding_window(
-        self,
-        artifact: BaseArtifact,
-        lines: List[str],
-    ) -> List[KnowledgeChunk]:
-        """Safe fallback sliding window chunker."""
-        chunks: List[KnowledgeChunk] = []
-        total_lines = len(lines)
-        if total_lines == 0:
-            return []
-
-        # Target ~40 lines per chunk with overlap
-        target_lines_per_chunk = 40
-        step = max(1, target_lines_per_chunk - self.overlap_lines)
-
-        chunk_idx = 0
-        for start_idx in range(0, total_lines, step):
-            end_idx = min(start_idx + target_lines_per_chunk, total_lines)
-            chunk_lines = lines[start_idx:end_idx]
-            chunk_text = "\n".join(chunk_lines).strip()
-
-            if not chunk_text:
-                continue
-
-            chunks.append(
-                KnowledgeChunk(
-                    chunk_id=f"{artifact.artifact_id}:chunk:{chunk_idx}",
-                    artifact_id=artifact.artifact_id,
-                    artifact_type=artifact.artifact_type,
-                    repository=artifact.repository,
-                    content=chunk_text,
-                    chunk_index=chunk_idx,
-                    start_line=start_idx + 1,
-                    end_line=end_idx,
-                    token_count=estimate_tokens(chunk_text),
-                    metadata={
-                        "symbol_name": None,
-                        "chunk_type": "code_block",
-                        "file_path": artifact.source_path,
-                        **artifact.metadata,
-                    },
-                )
-            )
-            chunk_idx += 1
-
-            if end_idx >= total_lines:
-                break
-
-        total = len(chunks)
-        for c in chunks:
-            c.total_chunks = total
-
-        return chunks
+            m_start, m_end = _def_start(m), _def_end(m, n)
+            if cursor < m_start:
+                units.append((cursor, m_start - 1, {**base, "symbol_name": f"{node.name}.<body>",
+                                                    "chunk_type": "class_body"}))
+            units.append((m_start, m_end, {**base, "symbol_name": f"{node.name}.{m.name}", "chunk_type": "method"}))
+            cursor = m_end + 1
+        if cursor <= end:
+            units.append((cursor, end, {**base, "symbol_name": f"{node.name}.<body>", "chunk_type": "class_body"}))
+        return units
 
     def chunk(self, artifact: BaseArtifact) -> List[KnowledgeChunk]:
         content = artifact.raw_content or ""
@@ -335,21 +298,26 @@ class CodeAwareChunker(BaseChunker):
         if not lines:
             return []
 
-        # Check if Python source
-        is_python = False
-        if isinstance(artifact, SourceFile) and artifact.language == ProgrammingLanguage.PYTHON:
-            is_python = True
-        elif artifact.source_path and artifact.source_path.endswith(".py"):
-            is_python = True
-
+        is_python = (
+            (isinstance(artifact, SourceFile) and artifact.language == ProgrammingLanguage.PYTHON)
+            or bool(artifact.source_path and artifact.source_path.endswith(".py"))
+        )
         if is_python:
-            return self._chunk_python_ast(artifact, content, lines)
-        return self._chunk_sliding_window(artifact, lines)
+            try:
+                units = self._python_units(ast.parse(content), lines)
+            except (SyntaxError, ValueError):
+                units = None
+            if units:
+                return _build_chunks(artifact, lines, units, self._splitter)
+
+        # Non-Python (or unparsable) code: token-bounded sliding window with line overlap.
+        window = [(1, len(lines), {"symbol_name": None, "chunk_type": "code_block"})]
+        return _build_chunks(artifact, lines, window, self._splitter, overlap_lines=self.overlap_lines)
 
 
 class DocAwareChunker(BaseChunker):
     """
-    Heading-aware chunker for Markdown, RST, and plain text documentation.
+    Heading-aware chunker for Markdown, RST, plain text and configuration files.
     """
 
     def __init__(
@@ -359,10 +327,43 @@ class DocAwareChunker(BaseChunker):
     ) -> None:
         self.max_tokens_per_chunk = max_tokens_per_chunk
         self.min_tokens_per_chunk = min_tokens_per_chunk
+        self._splitter = _Splitter(max_tokens_per_chunk)
 
     @property
     def chunker_name(self) -> str:
         return "doc_aware_heading_chunker"
+
+    @staticmethod
+    def _sections(lines: List[str]) -> List[Tuple[str, int, int]]:
+        """(title, start_line, end_line) per heading section (Markdown '#' or RST underline)."""
+        heading_pattern = re.compile(r"^(#{1,6})\s+(.+)$")
+        rst_heading_chars = set("=-~`#*^+\"':")
+        sections: List[Tuple[str, int, int]] = []
+        title, start = "Introduction", 1
+        for i, line in enumerate(lines, start=1):
+            m = heading_pattern.match(line)
+            nxt = lines[i] if i < len(lines) else ""
+            is_rst = bool(line.strip()) and len(nxt) >= 3 and all(c == nxt[0] for c in nxt) and nxt[0] in rst_heading_chars
+            if (m or is_rst) and i > start:
+                sections.append((title, start, i - 1))
+            if m or is_rst:
+                title, start = (m.group(2) if m else line.strip()), i
+        sections.append((title, start, len(lines)))
+        return sections
+
+    @staticmethod
+    def _paragraphs(start: int, end: int, lines: List[str]) -> List[Tuple[int, int]]:
+        """Blank-line separated paragraphs of lines[start..end] as (first, last) line numbers."""
+        paras, first = [], None
+        for ln in range(start, end + 1):
+            if lines[ln - 1].strip():
+                first = ln if first is None else first
+            elif first is not None:
+                paras.append((first, ln - 1))
+                first = None
+        if first is not None:
+            paras.append((first, end))
+        return paras
 
     def chunk(self, artifact: BaseArtifact) -> List[KnowledgeChunk]:
         content = artifact.raw_content or ""
@@ -370,128 +371,28 @@ class DocAwareChunker(BaseChunker):
         if not lines:
             return []
 
-        # Find heading lines (# Heading, ## Heading, ### Heading, or underline headings)
-        heading_pattern = re.compile(r"^(#{1,6})\s+(.+)$")
-        rst_heading_chars = set("=-~`#*^+\"':")
-
-        sections: List[tuple[str, int, int, List[str]]] = []  # (heading_title, start_l, end_l, lines)
-        current_heading = "Introduction"
-        current_start = 1
-        current_lines: List[str] = []
-
-        for i, line in enumerate(lines, start=1):
-            m = heading_pattern.match(line)
-            is_rst_heading = False
-            if i < len(lines) and len(lines[i]) >= 3 and all(c == lines[i][0] for c in lines[i]) and lines[i][0] in rst_heading_chars:
-                is_rst_heading = True
-
-            if m or is_rst_heading:
-                if current_lines:
-                    sections.append((current_heading, current_start, i - 1, current_lines))
-                    current_lines = []
-                current_heading = m.group(2) if m else line.strip()
-                current_start = i
-
-            current_lines.append(line)
-
-        if current_lines:
-            sections.append((current_heading, current_start, len(lines), current_lines))
-
-        chunks: List[KnowledgeChunk] = []
-        chunk_idx = 0
-
-        for title, start_l, end_l, sec_lines in sections:
-            sec_text = "\n".join(sec_lines).strip()
-            if not sec_text:
+        units: List[Unit] = []
+        for title, start, end in self._sections(lines):
+            text = "\n".join(lines[start - 1: end]).strip()
+            if not text:
                 continue
-
-            sec_tokens = estimate_tokens(sec_text)
-            if sec_tokens <= self.max_tokens_per_chunk:
-                chunks.append(
-                    KnowledgeChunk(
-                        chunk_id=f"{artifact.artifact_id}:chunk:{chunk_idx}",
-                        artifact_id=artifact.artifact_id,
-                        artifact_type=artifact.artifact_type,
-                        repository=artifact.repository,
-                        content=sec_text,
-                        chunk_index=chunk_idx,
-                        start_line=start_l,
-                        end_line=end_l,
-                        token_count=sec_tokens,
-                        metadata={
-                            "section_title": title,
-                            "chunk_type": "doc_section",
-                            "file_path": artifact.source_path,
-                            **artifact.metadata,
-                        },
-                    )
-                )
-                chunk_idx += 1
-            else:
-                # Sub-split long section by paragraphs
-                paragraphs = sec_text.split("\n\n")
-                sub_buf: List[str] = []
-                sub_tokens = 0
-                sub_start = start_l
-
-                for p in paragraphs:
-                    p_tok = estimate_tokens(p)
-                    if sub_tokens + p_tok > self.max_tokens_per_chunk and sub_buf:
-                        buf_text = "\n\n".join(sub_buf).strip()
-                        chunks.append(
-                            KnowledgeChunk(
-                                chunk_id=f"{artifact.artifact_id}:chunk:{chunk_idx}",
-                                artifact_id=artifact.artifact_id,
-                                artifact_type=artifact.artifact_type,
-                                repository=artifact.repository,
-                                content=buf_text,
-                                chunk_index=chunk_idx,
-                                start_line=sub_start,
-                                end_line=end_l,
-                                token_count=estimate_tokens(buf_text),
-                                metadata={
-                                    "section_title": title,
-                                    "chunk_type": "doc_paragraph_block",
-                                    "file_path": artifact.source_path,
-                                    **artifact.metadata,
-                                },
-                            )
-                        )
-                        chunk_idx += 1
-                        sub_buf = [p]
-                        sub_tokens = p_tok
-                    else:
-                        sub_buf.append(p)
-                        sub_tokens += p_tok
-
-                if sub_buf:
-                    buf_text = "\n\n".join(sub_buf).strip()
-                    chunks.append(
-                        KnowledgeChunk(
-                            chunk_id=f"{artifact.artifact_id}:chunk:{chunk_idx}",
-                            artifact_id=artifact.artifact_id,
-                            artifact_type=artifact.artifact_type,
-                            repository=artifact.repository,
-                            content=buf_text,
-                            chunk_index=chunk_idx,
-                            start_line=sub_start,
-                            end_line=end_l,
-                            token_count=estimate_tokens(buf_text),
-                            metadata={
-                                "section_title": title,
-                                "chunk_type": "doc_paragraph_block",
-                                "file_path": artifact.source_path,
-                                **artifact.metadata,
-                            },
-                        )
-                    )
-                    chunk_idx += 1
-
-        total = len(chunks)
-        for c in chunks:
-            c.total_chunks = total
-
-        return chunks
+            if self._splitter.fits(text):
+                units.append((start, end, {"section_title": title, "chunk_type": "doc_section"}))
+                continue
+            # Too long: pack whole paragraphs into blocks; a paragraph that is itself too
+            # long becomes its own unit and is split by lines in _build_chunks.
+            block: Optional[List[int]] = None
+            for p_start, p_end in self._paragraphs(start, end, lines):
+                candidate = (block[0] if block else p_start, p_end)
+                if block and self._splitter.fits("\n".join(lines[candidate[0] - 1: candidate[1]])):
+                    block[1] = p_end
+                    continue
+                if block:
+                    units.append((block[0], block[1], {"section_title": title, "chunk_type": "doc_paragraph_block"}))
+                block = [p_start, p_end]
+            if block:
+                units.append((block[0], block[1], {"section_title": title, "chunk_type": "doc_paragraph_block"}))
+        return _build_chunks(artifact, lines, units, self._splitter)
 
 
 class UniversalChunker(BaseChunker):
