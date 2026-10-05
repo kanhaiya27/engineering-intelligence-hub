@@ -119,8 +119,11 @@ analysis), SWE-bench Multimodal (diagram track) — used as the spec describes, 
 | C15 | 2026-10-05 | Plan §9.2 latency decomposition recorded per trial (T_query, T_retrieval, T_rerank, T_context, T_generation) | audit (restore) | It was missing |
 | C16 | 2026-10-05 | `system_e_routed` (E + task-aware model routing) added for RQ4 | audit (restore) | Plan C1 / Fig. 6.1 routing; no experiment could run RQ4 |
 | C17 | 2026-10-05 | Output limit back to the plan's 2,048 tokens; untimed warm-up before trials | evidence | 1,024 cut off a real answer; one-time loading leaked 16–18 s into a measured trial (plan §10.4) |
-| C19 | 2026-10-05 | Missing evaluator scores are recorded as missing (None), excluded from quality aggregates and counted; the runner used to fill 0.50. Correctness is plain token F1: an unexplained ×1.5 "scale" (capped at 1.0) is removed | fix (Step 1d) | Invented numbers; the ×1.5 inflated every correctness score and appears in no plan or source |
 | C18 | 2026-10-05 | README title and research questions restored to the original (they had become "Task-Aware Energy-Efficient RAG" and a generic research question); two-laptop tooling removed/archived | audit (restore) | Original plan |
+| C19 | 2026-10-05 | Missing evaluator scores are recorded as missing (None), excluded from quality aggregates and counted; the runner used to fill 0.50. Correctness is plain token F1: an unexplained ×1.5 "scale" (capped at 1.0) is removed | fix (Step 1d) | Invented numbers; the ×1.5 inflated every correctness score and appears in no plan or source |
+| C20 | 2026-10-05 | Every Mode Q trial is measured with one counter-only NVML window over the whole trial (retrieval, embedding, reranking, all generations); model loads are subtracted and reported separately but counted in CO₂e per successful task. The single-sample reranker estimate is no longer needed | fix (Step 1h) | Plan §2.2/§6.3: full-pipeline energy; retrieval energy was not measured |
+| C21 | 2026-10-05 | The manifest binds the retrieval/inference/models config hashes, the task, split and label files, the graph build report and (live) the collection point count and graph node/edge counts; real runs refuse any mismatch | fix (Step 1g) | Plan §7.2: everything not under study is frozen and hashed |
+| C22 | 2026-10-05 | RQ3 outcome measured independently of System E's gate: cited line spans vs the human-checked evidence spans (`evaluation/outcome.py`); refusals reported separately | fix (Step 1f) | The gate's own evaluators scored the outcome (circular) |
 
 ## 6. Routine
 

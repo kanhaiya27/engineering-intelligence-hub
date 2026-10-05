@@ -246,3 +246,20 @@ def test_routed_pipeline_routes_over_the_configured_ladder(runner):
     ladder = inference_config().routing_ladder
     assert pipe.model_router.ladder == [ladder["small"], ladder["medium"], ladder["large"]]
     assert runner._get_pipeline_quality(runner.llm_provider).model_router is None, "A-E keep the fixed model"
+
+
+# ----------------------------------------------------------------------------- Step 1h
+def test_whole_trial_gpu_energy_replaces_generation_only_and_excludes_model_loads(runner, task):
+    md = {"generation_energy_measured_joules": 400.0, "energy_tier": "ESTIMATED",  # had a rerank sample
+          "trial_gpu_energy": {"energy_j": 500.0, "duration_s": 12.0},
+          "cold_starts": [{"attempt": 0, "energy": {"energy_j": 50.0}}]}
+    t = runner._evaluate_trial("system_e", task, response(metadata=md, energy_joules=410.0), 0, "dev")
+    assert t.trial_gpu_energy_measured_joules == 500.0
+    assert t.model_load_energy_joules == 50.0 and t.model_loads == 1
+    assert t.gpu_energy_joules == 450.0, "whole trial minus the model load"
+    assert t.retrieval_gpu_energy_joules == 50.0, "trial - loads - generation"
+    assert t.energy_tier == "MEASURED", "the rerank sample is replaced by the measured window"
+
+
+def test_no_trial_meter_for_mock_providers(runner):
+    assert runner._trial_meter(runner.llm_provider) is None

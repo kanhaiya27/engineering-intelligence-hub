@@ -281,7 +281,13 @@ class M5BenchmarkRunner:
         # Utilisation comes from psutil.cpu_times() snapshots, which (unlike
         # cpu_percent) no other call inside the window can reset.
         cpu_start, t_window = psutil.cpu_times(), time.perf_counter()
-        response = self._dispatch(system_id, req, clf, llm_provider)
+        meter = self._trial_meter(llm_provider)
+        if meter is not None:
+            with meter:
+                response = self._dispatch(system_id, req, clf, llm_provider)
+            response.metadata["trial_gpu_energy"] = meter.result.to_dict()
+        else:
+            response = self._dispatch(system_id, req, clf, llm_provider)
         window_s = time.perf_counter() - t_window
         response.metadata["cpu_window"] = {
             "utilisation": _cpu_utilisation(cpu_start, psutil.cpu_times()),
@@ -291,6 +297,17 @@ class M5BenchmarkRunner:
         if classification_info is not None:
             response.metadata["classification"] = classification_info
         return response
+
+    @staticmethod
+    def _trial_meter(llm_provider: BaseLLMProvider):
+        """Counter-only NVML meter over the WHOLE trial (Step 1h): retrieval, embedding, BM25,
+        graph, reranking, every generation and escalation. Two counter reads, no power polling
+        (polling itself adds GPU power; nvml_meter.py OBSERVER EFFECT). Real local runs only."""
+        from sustainability.energy.nvml_meter import NvmlEnergyMeter, nvml_available
+
+        if getattr(llm_provider, "provider_name", None) != "ollama" or not nvml_available():
+            return None
+        return NvmlEnergyMeter(sample_interval_s=3600.0)
 
     def _dispatch(
         self,
@@ -477,6 +494,17 @@ class M5BenchmarkRunner:
         # counter; ESTIMATED if a rerank power sample is included), CPU energy,
         # CO2e and cost ESTIMATED; totals inherit the weakest tier.
         gpu_joules = response.energy_joules
+        trial_gpu = (md.get("trial_gpu_energy") or {}).get("energy_j")
+        retrieval_gpu = None
+        if trial_gpu is not None:
+            # Whole-trial GPU energy, MEASURED, minus model loads (reported separately, plan
+            # §10.4). This replaces generation-only energy + the single-sample rerank estimate,
+            # so retrieval (embedding, reranker) is now inside the measured total.
+            gpu_joules = trial_gpu - (load_j or 0.0)
+            gen_measured = md.get("generation_energy_measured_joules")
+            if gen_measured is not None:
+                retrieval_gpu = max(0.0, gpu_joules - gen_measured)
+            md["energy_tier"] = "MEASURED"
         cpu_window = md.get("cpu_window")
         cpu_joules = None
         if cpu_window and cpu_window.get("utilisation") is not None:
@@ -528,6 +556,8 @@ class M5BenchmarkRunner:
             total_energy_tier="ESTIMATED" if cpu_joules is not None else md.get("energy_tier"),
             gpu_max_temp_c=md.get("gpu_max_temp_c"),
             model_load_energy_joules=_round(load_j),
+            trial_gpu_energy_measured_joules=_round(trial_gpu),
+            retrieval_gpu_energy_joules=_round(retrieval_gpu),
             model_loads=len(loads),
             cost_usd=round(cost, 6),
             co2e_grams=round(co2e, 6),
