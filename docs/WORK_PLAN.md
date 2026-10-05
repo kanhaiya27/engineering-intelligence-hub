@@ -29,7 +29,8 @@ journal (TOSEM / TSE / EMSE). Details: `docs/PROJECT_REPORT.md`.
 | 0 | Foundation, corpus wave 1 (48,046 chunks), retrieval verified, M1–M5 pipeline | A + B | ✅ Done |
 | 1a | Environment audit, NVML energy meter, run provenance, VRAM study | A | ✅ Done (branch `feat/local-inference`, PR pending) |
 | 1b | OllamaProvider, routing wired into the pipeline, escalation 2→3, long-context probe, GPU job queue | A | 🟡 Next |
-| 3 | Knowledge-graph population for the wave-1 repos (System D is identical to C until this exists) | B | ⬜ Not started |
+| 3 | Knowledge-graph population for the wave-1 repos (System D is identical to C until this exists) | B | ✅ Built + dump in `C:\EIH_share
+eo4j.dump` (branch `feat/graph-populate-wave1`, PR pending); System D still needs the graph store wired in (A5) |
 | 4 | Benchmark: retrieval ground-truth labels for the 60 tasks, then EIH-SWE batch 1 | B | ⬜ Not started |
 | 5 | Mode R: retrieval metrics (Recall@K, MRR, nDCG) on the 60 tasks | A | ⬜ Blocked on B1 |
 | — | P0-3: re-calibrate on the validation split with live local models, re-freeze manifest | A | ⬜ After 1b |

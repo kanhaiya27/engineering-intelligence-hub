@@ -161,6 +161,18 @@ class BaseGraphStore(ABC):
         """
         ...
 
+    def upsert_nodes(self, nodes: List[GraphNode]) -> int:
+        """Upsert many nodes. Backends override this to batch; returns the count."""
+        for node in nodes:
+            self.upsert_node(node)
+        return len(nodes)
+
+    def upsert_edges(self, edges: List[GraphEdge]) -> int:
+        """Upsert many edges whose endpoints already exist. Backends override this to batch."""
+        for edge in edges:
+            self.upsert_edge(edge)
+        return len(edges)
+
     @abstractmethod
     def get_node(self, node_id: str, label: Optional[str] = None) -> Optional[GraphNode]:
         """

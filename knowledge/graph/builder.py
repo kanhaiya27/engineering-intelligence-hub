@@ -19,6 +19,7 @@ from knowledge.graph.base import (
     RelationshipType,
 )
 from knowledge.graph.extractor import ASTGraphExtractor
+from knowledge.graph.ids import file_node_id
 from knowledge.schemas.artifacts import (
     ArchitectureDecision,
     BaseArtifact,
@@ -57,7 +58,6 @@ class EngineeringGraphBuilder:
         edges: List[GraphEdge] = []
 
         repo = artifact.repository
-        commit = getattr(artifact, "commit_sha", None) or "latest"
         repo_node_id = f"repo:{repo}"
 
         # 1. SourceFile Artifact
@@ -102,7 +102,7 @@ class EngineeringGraphBuilder:
 
             # Link commit -> modified files
             for path in artifact.files_changed:
-                target_file_id = f"file:{repo}:{commit_sha}:{path}"
+                target_file_id = file_node_id(repo, path)
                 edges.append(GraphEdge(
                     source_id=commit_node_id,
                     target_id=target_file_id,
@@ -144,7 +144,7 @@ class EngineeringGraphBuilder:
 
             # Link PR -> modified files
             for path in artifact.files_changed:
-                target_file_id = f"file:{repo}:{commit}:{path}"
+                target_file_id = file_node_id(repo, path)
                 edges.append(GraphEdge(
                     source_id=pr_node_id,
                     target_id=target_file_id,
@@ -217,7 +217,7 @@ class EngineeringGraphBuilder:
             ))
 
             if artifact.source_path:
-                file_id = f"file:{repo}:{commit}:{artifact.source_path}"
+                file_id = file_node_id(repo, artifact.source_path)
                 edges.append(GraphEdge(
                     source_id=adr_node_id,
                     target_id=file_id,
@@ -263,55 +263,81 @@ class EngineeringGraphBuilder:
         repository_url: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
-        Build and persist knowledge graph for a complete repository and its artifacts.
+        Build and persist the knowledge graph for one repository.
+
+        Every node and edge is collected first. An edge is persisted only when
+        both endpoints are nodes of this build: Neo4j silently skips an edge
+        whose endpoint is missing, and the in-memory store invents an empty
+        placeholder node for it, so writing such edges would make the two stores
+        disagree and the reported counts untrue. Dropped edges are counted per
+        relationship type (mostly imports of modules outside the repository).
+
+        Returned counts are of what was written: unique nodes, unique edges.
         """
         start_time = time.perf_counter()
 
-        # 1. Create Root Repository Node
         repo_node_id = f"repo:{repository}"
-        repo_node = GraphNode(
-            node_id=repo_node_id,
-            label=NodeLabel.REPOSITORY,
-            properties={
-                "repository": repository,
-                "commit_sha": commit_sha or "latest",
-                "url": repository_url,
-            },
-        )
-        self.graph_store.upsert_node(repo_node)
-
-        total_nodes = 1
-        total_edges = 0
+        nodes: Dict[str, GraphNode] = {
+            repo_node_id: GraphNode(
+                node_id=repo_node_id,
+                label=NodeLabel.REPOSITORY,
+                properties={
+                    "repository": repository,
+                    "commit_sha": commit_sha or "latest",
+                    "url": repository_url,
+                },
+            )
+        }
+        candidate_edges: List[GraphEdge] = []
         failed_count = 0
 
-        # 2. Process all artifacts
         for art in artifacts:
             try:
-                nodes, edges = self.build_artifact_graph(art, repository_url=repository_url)
-                for n in nodes:
-                    self.graph_store.upsert_node(n)
-                    total_nodes += 1
-                for e in edges:
-                    self.graph_store.upsert_edge(e)
-                    total_edges += 1
+                art_nodes, art_edges = self.build_artifact_graph(art, repository_url=repository_url)
             except Exception as e:
                 failed_count += 1
                 logger.warning(f"Failed to extract graph from artifact {art.artifact_id}: {e}")
+                continue
+            for n in art_nodes:
+                nodes[n.node_id] = n
+            candidate_edges.extend(art_edges)
+
+        edges: Dict[Tuple[str, str, str], GraphEdge] = {}
+        dropped: Dict[str, int] = {}
+        for e in candidate_edges:
+            if e.source_id not in nodes or e.target_id not in nodes:
+                dropped[e.relationship] = dropped.get(e.relationship, 0) + 1
+                continue
+            edges[(e.source_id, e.target_id, e.relationship)] = e
+
+        self.graph_store.upsert_nodes(list(nodes.values()))
+        self.graph_store.upsert_edges(list(edges.values()))
 
         duration_ms = (time.perf_counter() - start_time) * 1000.0
+
+        nodes_by_label: Dict[str, int] = {}
+        for n in nodes.values():
+            nodes_by_label[n.label] = nodes_by_label.get(n.label, 0) + 1
+        edges_by_type: Dict[str, int] = {}
+        for e in edges.values():
+            edges_by_type[e.relationship] = edges_by_type.get(e.relationship, 0) + 1
 
         metrics = {
             "repository": repository,
             "commit_sha": commit_sha or "latest",
-            "total_nodes": total_nodes,
-            "total_edges": total_edges,
+            "total_nodes": len(nodes),
+            "total_edges": len(edges),
+            "nodes_by_label": dict(sorted(nodes_by_label.items())),
+            "edges_by_type": dict(sorted(edges_by_type.items())),
+            "edges_dropped_unresolved": dict(sorted(dropped.items())),
             "failed_artifacts": failed_count,
             "duration_ms": round(duration_ms, 2),
             "status": "completed",
         }
 
         logger.info(
-            f"Knowledge Graph built for '{repository}': {total_nodes} nodes, "
-            f"{total_edges} edges in {duration_ms:.2f}ms"
+            f"Knowledge Graph built for '{repository}': {len(nodes)} nodes, "
+            f"{len(edges)} edges ({sum(dropped.values())} unresolved edges dropped) "
+            f"in {duration_ms:.2f}ms"
         )
         return metrics

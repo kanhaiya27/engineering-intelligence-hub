@@ -2,13 +2,25 @@
 Tests for Knowledge Graph REST API Endpoints
 """
 
+import pytest
 from fastapi.testclient import TestClient
 
 from apps.api.main import app
+from apps.api.routers import graph as graph_router
 from apps.api.routers.graph import get_graph_store
 from knowledge.graph.base import GraphEdge, GraphNode, NodeLabel, RelationshipType
+from knowledge.graph.in_memory import InMemoryGraphStore
 
 client = TestClient(app)
+
+
+@pytest.fixture(autouse=True)
+def isolated_graph_store(monkeypatch):
+    """Never write test fixtures into the real Neo4j graph (it now connects via .env)."""
+    store = InMemoryGraphStore()
+    store.connect()
+    monkeypatch.setattr(graph_router, "_graph_store", store)
+    return store
 
 
 def test_graph_api_health():

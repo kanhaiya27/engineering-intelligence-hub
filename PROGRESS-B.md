@@ -19,6 +19,65 @@ measured (with numbers only if actually measured), what is blocked.
 
 ---
 
+## 2026-10-05 (evening) — B3: wave-1 knowledge graph populated and reachable
+
+**Done**
+- `feat/graph-populate-wave1` (WORK_PLAN B3): `scripts/build_graph.py` builds the graph
+  for the 6 wave-1 repos from the same files (`FileIngestionSource`) at the same commit
+  as `eih_knowledge`. It refuses to build if the checkout commit differs from the
+  indexed one, and checks that every indexed code file has a File node.
+- **Silent defects found by execution and fixed** (`knowledge/graph/`):
+  1. Builder keyed files `file:{repo}:{commit}:{path}`; the retriever looks up
+     `file:{repo}:{path}`, so **0 graph chunks were ever injected** and System D would
+     have equalled System C. Now one ID helper (`knowledge/graph/ids.py`).
+  2. `Neo4jGraphStore` read only OS env vars, never `.env`: on laptop-b it could not log
+     in, and the graph API silently served an empty in-memory graph (now a warning).
+  3. Module names used `rstrip(".py")` (`http.py` -> `htt`) and kept `src/`, so imports
+     never matched; relative imports were not resolved; CALLS targets never existed.
+  4. Builder counted attempted edges; Neo4j silently skips dangling edges and the
+     in-memory store invents placeholder nodes. Now unresolvable edges are dropped and
+     counted; reported counts are what the store holds.
+  5. `"test" in path` labelled every file of pytest (`src/_pytest/...`) as a Test.
+- Neo4j writes batched (UNWIND, MERGE on the indexed `Entity.node_id`).
+- Graph API tests now use an in-memory store, so test fixtures never enter the real graph.
+
+**Measured** (laptop-b, Neo4j 5.18.1 community; `experiments/results/graph_build/machine_B/graph_build_wave1.json`)
+- 36,169 nodes, 52,664 edges, read back from Neo4j = builder counts. Per repo
+  (nodes / edges / build s): flask 1,051 / 1,542 / 1.7; fastapi 6,721 / 10,940 / 4.0;
+  requests 737 / 1,034 / 2.4; pytest 5,899 / 8,699 / 14.4; sphinx 8,364 / 13,523 / 29.6;
+  pylint 13,397 / 16,926 / 63.4. Commits identical to the Qdrant index for all 6.
+- Retriever coverage: 4,228 / 4,228 indexed code files have a reachable File node.
+- End to end (real BGE + BM25 + Neo4j, one ad-hoc query, not a benchmark task):
+  hop 1 injected 2 graph chunks, hop 2 injected 4 (`flask.views` -> `MethodView`, `View`).
+- Dump: `C:\EIH_share
+eo4j.dump`, 8,725,314 bytes, SHA256 `840cdcf9…94a1`; restored
+  into a fresh volume -> 36,169 nodes / 52,664 edges. Restore steps in the share README.
+- Provenance caveat: the build ran from the uncommitted working tree (`git.dirty: true`,
+  base `a02e71b`); the code is the code in this branch's commit.
+- Tests: full suite 273 passed (incl. live Neo4j batch test).
+
+**Must pull (Laptop A)**
+- Restore `C:\EIH_share
+eo4j.dump` (replaces A's 2-node test fixture). `Neo4jGraphStore`
+  now uses `EIH_GRAPH_*` from `.env`, so `.env` must hold the password your container uses.
+
+**Findings for A (retrieval/, not changed by B)**
+- F6 Repository hub: the retriever expands both directions and every file hangs off
+  `repo:*`. For `src/flask/app.py`: depth 1 = 2 neighbours (one is the Repository node,
+  injected as "context"); depth 2 = 98 (17 without passing through Repository);
+  depth 3 = 280 (201). Escalation uses depth 2 and 3, so graph context is mostly
+  arbitrary sibling files. Suggest excluding `:Repository` from expansion paths.
+- System D still never gets a graph: the M5 runner and the API build
+  `AdaptiveRetrievalPipeline` without `graph_store` (A5 wiring).
+- Observation (one query): `graph_augmented` score_threshold 0.60 left 1 retrieved chunk
+  of top_k 7. For P0-3 calibration, not a result.
+
+**Next**
+- [ ] Human verification of the 35 draft labels.
+- [ ] WORK_PLAN B4: EIH-SWE batch 1.
+
+---
+
 ## 2026-10-05 (later) — Pulled Phase 1b; labels checkout-path fix
 
 **Done**

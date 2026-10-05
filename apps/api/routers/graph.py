@@ -29,6 +29,11 @@ def get_graph_store() -> BaseGraphStore:
         if neo.is_available():
             _graph_store = neo
         else:
+            # Not silent: an empty in-memory graph looks "available" to callers.
+            logger.warning(
+                f"Neo4j not reachable at {neo.uri}; graph API is serving an EMPTY "
+                "in-memory graph (check docker compose and EIH_GRAPH_* in .env)."
+            )
             in_mem = InMemoryGraphStore()
             in_mem.connect()
             _graph_store = in_mem

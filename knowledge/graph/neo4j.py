@@ -6,7 +6,6 @@ Production-grade Neo4j graph store implementing BaseGraphStore.
 
 from __future__ import annotations
 
-import os
 from typing import Any, Dict, List, Optional, Tuple
 
 try:
@@ -16,6 +15,7 @@ try:
 except ImportError:  # pragma: no cover
     _NEO4J_AVAILABLE = False
 
+from core.config import settings
 from core.exceptions import GraphStoreConnectionError
 from core.logging import get_logger
 from knowledge.graph.base import BaseGraphStore, GraphEdge, GraphNode
@@ -35,9 +35,13 @@ class Neo4jGraphStore(BaseGraphStore):
         password: Optional[str] = None,
         database: str = "neo4j",
     ) -> None:
-        self.uri = uri or os.getenv("EIH_GRAPH_URI", "bolt://localhost:7687")
-        self.username = username or os.getenv("EIH_GRAPH_USERNAME", "neo4j")
-        self.password = password or os.getenv("EIH_GRAPH_PASSWORD", "changeme")
+        # From settings, which read OS env vars AND .env. Reading os.getenv
+        # alone ignored .env, so on a machine with a non-default password the
+        # store could never log in and callers fell back to an empty graph.
+        graph_settings = settings.graph_store
+        self.uri = uri or graph_settings.uri
+        self.username = username or graph_settings.username
+        self.password = password or graph_settings.password or "changeme"
         self.database = database
         self._driver: Optional[neo4j.Driver] = None
 
@@ -119,6 +123,60 @@ class Neo4jGraphStore(BaseGraphStore):
             result = session.run(cypher, params)
             record = result.single()
             return record["id"] if record else node.node_id
+
+    # Rows per UNWIND statement in the batch upserts.
+    _BATCH_SIZE = 2000
+
+    @staticmethod
+    def _clean_label(label: str, default: str) -> str:
+        return "".join(c for c in label if c.isalnum() or c == "_") or default
+
+    def upsert_nodes(self, nodes: List[GraphNode]) -> int:
+        """Batch upsert. MERGE is on (:Entity {node_id}), which the uniqueness constraint indexes."""
+        if not self._driver:
+            self.connect()
+        by_label: Dict[str, List[Dict[str, Any]]] = {}
+        for node in nodes:
+            label = self._clean_label(node.label, "Entity")
+            by_label.setdefault(label, []).append(
+                {"node_id": node.node_id, "properties": node.properties}
+            )
+        with self._driver.session(database=self.database) as session:
+            for label, rows in by_label.items():
+                cypher = f"""
+                UNWIND $rows AS row
+                MERGE (n:Entity {{node_id: row.node_id}})
+                SET n += row.properties, n:{label}
+                """
+                for i in range(0, len(rows), self._BATCH_SIZE):
+                    session.run(cypher, {"rows": rows[i : i + self._BATCH_SIZE]}).consume()
+        return len(nodes)
+
+    def upsert_edges(self, edges: List[GraphEdge]) -> int:
+        """Batch upsert; returns the number of edges whose endpoints both exist (i.e. written)."""
+        if not self._driver:
+            self.connect()
+        by_type: Dict[str, List[Dict[str, Any]]] = {}
+        for edge in edges:
+            rel_type = self._clean_label(edge.relationship, "RELATED")
+            by_type.setdefault(rel_type, []).append(
+                {"src": edge.source_id, "tgt": edge.target_id, "properties": edge.properties}
+            )
+        written = 0
+        with self._driver.session(database=self.database) as session:
+            for rel_type, rows in by_type.items():
+                cypher = f"""
+                UNWIND $rows AS row
+                MATCH (a:Entity {{node_id: row.src}})
+                MATCH (b:Entity {{node_id: row.tgt}})
+                MERGE (a)-[r:{rel_type}]->(b)
+                SET r += row.properties
+                RETURN count(r) AS written
+                """
+                for i in range(0, len(rows), self._BATCH_SIZE):
+                    record = session.run(cypher, {"rows": rows[i : i + self._BATCH_SIZE]}).single()
+                    written += record["written"] if record else 0
+        return written
 
     def upsert_edge(self, edge: GraphEdge) -> None:
         if not self._driver:

@@ -1,0 +1,317 @@
+{
+  "study": "graph_build",
+  "tier": "MEASURED (counts read back from the store)",
+  "collection": "eih_knowledge",
+  "store": "neo4j",
+  "graph_server": [
+    {
+      "name": "Neo4j Kernel",
+      "version": "5.18.1",
+      "edition": "community"
+    }
+  ],
+  "totals": {
+    "nodes": 36169,
+    "edges": 52664,
+    "store_node_count": 36169,
+    "store_edge_count": 52664
+  },
+  "repositories": [
+    {
+      "repo_id": "flask",
+      "repository": "pallets/flask",
+      "checkout_commit": "c12a5d874c5a014495eb2db8a73f40037bc813ac",
+      "index_commits": [
+        "c12a5d874c5a014495eb2db8a73f40037bc813ac"
+      ],
+      "status": "completed",
+      "source_files_loaded": 81,
+      "graph": {
+        "commit_sha": "c12a5d874c5a014495eb2db8a73f40037bc813ac",
+        "total_nodes": 1051,
+        "total_edges": 1542,
+        "nodes_by_label": {
+          "Class": 64,
+          "File": 81,
+          "Function": 97,
+          "Method": 263,
+          "Module": 79,
+          "Repository": 1,
+          "Test": 466
+        },
+        "edges_by_type": {
+          "CALLS": 134,
+          "CONTAINS": 1050,
+          "DEPENDS_ON": 179,
+          "IMPORTS": 179
+        },
+        "edges_dropped_unresolved": {
+          "DEPENDS_ON": 787,
+          "IMPORTS": 787
+        },
+        "failed_artifacts": 0,
+        "duration_ms": 1397.91
+      },
+      "persisted_nodes_for_repository": 1051,
+      "retriever_coverage": {
+        "indexed_code_files": 81,
+        "with_file_node": 81,
+        "fraction": 1.0,
+        "missing_examples": []
+      },
+      "elapsed_seconds": 1.7
+    },
+    {
+      "repo_id": "fastapi",
+      "repository": "fastapi/fastapi",
+      "checkout_commit": "1c3e6918750ccb3f20ea260e9a4238ce2c0e5f63",
+      "index_commits": [
+        "1c3e6918750ccb3f20ea260e9a4238ce2c0e5f63"
+      ],
+      "status": "completed",
+      "source_files_loaded": 1124,
+      "graph": {
+        "commit_sha": "1c3e6918750ccb3f20ea260e9a4238ce2c0e5f63",
+        "total_nodes": 6721,
+        "total_edges": 10940,
+        "nodes_by_label": {
+          "Class": 593,
+          "File": 1124,
+          "Function": 1128,
+          "Method": 151,
+          "Module": 1117,
+          "Repository": 1,
+          "Test": 2607
+        },
+        "edges_by_type": {
+          "CALLS": 230,
+          "CONTAINS": 6720,
+          "DEPENDS_ON": 1995,
+          "IMPORTS": 1995
+        },
+        "edges_dropped_unresolved": {
+          "DEPENDS_ON": 6187,
+          "IMPORTS": 6187
+        },
+        "failed_artifacts": 0,
+        "duration_ms": 3164.63
+      },
+      "persisted_nodes_for_repository": 6721,
+      "retriever_coverage": {
+        "indexed_code_files": 1095,
+        "with_file_node": 1095,
+        "fraction": 1.0,
+        "missing_examples": []
+      },
+      "elapsed_seconds": 4.0
+    },
+    {
+      "repo_id": "requests",
+      "repository": "psf/requests",
+      "checkout_commit": "0e322af87745eff34caffe4df68456ebc20d9068",
+      "index_commits": [
+        "0e322af87745eff34caffe4df68456ebc20d9068"
+      ],
+      "status": "completed",
+      "source_files_loaded": 35,
+      "graph": {
+        "commit_sha": "0e322af87745eff34caffe4df68456ebc20d9068",
+        "total_nodes": 737,
+        "total_edges": 1034,
+        "nodes_by_label": {
+          "Class": 70,
+          "File": 35,
+          "Function": 72,
+          "Method": 161,
+          "Module": 35,
+          "Repository": 1,
+          "Test": 363
+        },
+        "edges_by_type": {
+          "CALLS": 112,
+          "CONTAINS": 736,
+          "DEPENDS_ON": 93,
+          "IMPORTS": 93
+        },
+        "edges_dropped_unresolved": {
+          "DEPENDS_ON": 508,
+          "IMPORTS": 508
+        },
+        "failed_artifacts": 0,
+        "duration_ms": 783.21
+      },
+      "persisted_nodes_for_repository": 737,
+      "retriever_coverage": {
+        "indexed_code_files": 35,
+        "with_file_node": 35,
+        "fraction": 1.0,
+        "missing_examples": []
+      },
+      "elapsed_seconds": 2.4
+    },
+    {
+      "repo_id": "pytest",
+      "repository": "pytest-dev/pytest",
+      "checkout_commit": "bbcec9c46509c417ef58e4849847b4aa43f4591e",
+      "index_commits": [
+        "bbcec9c46509c417ef58e4849847b4aa43f4591e"
+      ],
+      "status": "completed",
+      "source_files_loaded": 247,
+      "graph": {
+        "commit_sha": "bbcec9c46509c417ef58e4849847b4aa43f4591e",
+        "total_nodes": 5899,
+        "total_edges": 8699,
+        "nodes_by_label": {
+          "Class": 472,
+          "File": 247,
+          "Function": 554,
+          "Method": 1232,
+          "Module": 247,
+          "Repository": 1,
+          "Test": 3146
+        },
+        "edges_by_type": {
+          "CALLS": 1279,
+          "CONTAINS": 5898,
+          "DEPENDS_ON": 761,
+          "IMPORTS": 761
+        },
+        "edges_dropped_unresolved": {
+          "DEPENDS_ON": 3046,
+          "IMPORTS": 3046
+        },
+        "failed_artifacts": 0,
+        "duration_ms": 2838.17
+      },
+      "persisted_nodes_for_repository": 5899,
+      "retriever_coverage": {
+        "indexed_code_files": 242,
+        "with_file_node": 242,
+        "fraction": 1.0,
+        "missing_examples": []
+      },
+      "elapsed_seconds": 14.4
+    },
+    {
+      "repo_id": "sphinx",
+      "repository": "sphinx-doc/sphinx",
+      "checkout_commit": "0d912c85fd3ec385432fe707f6a0678425d1e841",
+      "index_commits": [
+        "0d912c85fd3ec385432fe707f6a0678425d1e841"
+      ],
+      "status": "completed",
+      "source_files_loaded": 666,
+      "graph": {
+        "commit_sha": "0d912c85fd3ec385432fe707f6a0678425d1e841",
+        "total_nodes": 8364,
+        "total_edges": 13523,
+        "nodes_by_label": {
+          "Class": 897,
+          "File": 666,
+          "Function": 669,
+          "Method": 3746,
+          "Module": 550,
+          "Repository": 1,
+          "Test": 1835
+        },
+        "edges_by_type": {
+          "CALLS": 1840,
+          "CONTAINS": 8363,
+          "DEPENDS_ON": 1660,
+          "IMPORTS": 1660
+        },
+        "edges_dropped_unresolved": {
+          "DEPENDS_ON": 5810,
+          "IMPORTS": 5810
+        },
+        "failed_artifacts": 0,
+        "duration_ms": 3549.5
+      },
+      "persisted_nodes_for_repository": 8364,
+      "retriever_coverage": {
+        "indexed_code_files": 634,
+        "with_file_node": 634,
+        "fraction": 1.0,
+        "missing_examples": []
+      },
+      "elapsed_seconds": 29.6
+    },
+    {
+      "repo_id": "pylint",
+      "repository": "pylint-dev/pylint",
+      "checkout_commit": "da1956664d6be3d008a90ad3f72bdd9d8a7ecfaa",
+      "index_commits": [
+        "da1956664d6be3d008a90ad3f72bdd9d8a7ecfaa"
+      ],
+      "status": "completed",
+      "source_files_loaded": 2190,
+      "graph": {
+        "commit_sha": "da1956664d6be3d008a90ad3f72bdd9d8a7ecfaa",
+        "total_nodes": 13397,
+        "total_edges": 16926,
+        "nodes_by_label": {
+          "Class": 2306,
+          "File": 2190,
+          "Function": 797,
+          "Method": 1569,
+          "Module": 2170,
+          "Repository": 1,
+          "Test": 4364
+        },
+        "edges_by_type": {
+          "CALLS": 1448,
+          "CONTAINS": 13396,
+          "DEPENDS_ON": 1041,
+          "IMPORTS": 1041
+        },
+        "edges_dropped_unresolved": {
+          "DEPENDS_ON": 5684,
+          "IMPORTS": 5684
+        },
+        "failed_artifacts": 0,
+        "duration_ms": 3553.67
+      },
+      "persisted_nodes_for_repository": 13397,
+      "retriever_coverage": {
+        "indexed_code_files": 2141,
+        "with_file_node": 2141,
+        "fraction": 1.0,
+        "missing_examples": []
+      },
+      "elapsed_seconds": 63.4
+    }
+  ],
+  "provenance": {
+    "recorded_at_utc": "2026-10-05T08:24:32+00:00",
+    "machine_id": "laptop-b",
+    "platform": "Windows-10-10.0.26200-SP0",
+    "python": "3.11.9",
+    "gpu": {
+      "name": "NVIDIA GeForce RTX 5050 Laptop GPU",
+      "driver": "617.14",
+      "vram_total_mib": 8151,
+      "power_default_limit_w": 80.0,
+      "power_max_limit_w": 115.0,
+      "compute_capability": "12.0"
+    },
+    "torch": {
+      "torch": "2.11.0+cu128",
+      "cuda": "12.8",
+      "cudnn": 91900,
+      "cuda_available": true
+    },
+    "ollama": null,
+    "git": {
+      "sha": "a02e71bf28f82a1fbd3f35aa078e303a37bb1737",
+      "branch": "feat/graph-populate-wave1",
+      "dirty": true
+    },
+    "sustainability_config": {
+      "carbon_region": "custom",
+      "carbon_intensity_gco2_per_kwh": 713.0,
+      "cpu_tdp_watts": 45.0,
+      "gpu_tdp_watts": 115.0
+    }
+  }
+}
