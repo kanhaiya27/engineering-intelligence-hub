@@ -106,10 +106,14 @@ def compute_system_summary(task_aggregates: List[Dict[str, Any]]) -> Dict[str, A
 def co2e_per_successful_task(
     trials: Sequence[Any],
     carbon_intensity_gco2_per_kwh: float,
-    success: Callable[[Any], Optional[bool]] = lambda t: t.quality_constrained_success,
+    success: Callable[[Any], Optional[bool]] = lambda t: t.grounded_success,
 ) -> Dict[str, Any]:
     """
-    The plan's headline metric (§9.3, contribution C4), [DERIVED]:
+    The plan's headline metric (§9.3, contribution C4), [DERIVED]. Success is the PRIMARY
+    definition decided on 2026-10-06 (A2): correct AND cites labelled evidence
+    (TrialResult.grounded_success). Pass `success=lambda t: t.quality_constrained_success` for the
+    secondary, gate-based definition.
+
 
         CO2e per successful task = (CO2e of ALL trials + CO2e of every model load/reload)
                                    / number of successful trials
@@ -146,7 +150,7 @@ def co2e_per_successful_task(
 
 def co2e_per_successful_task_by_system(
     trials: Sequence[Any], carbon_intensity_gco2_per_kwh: float,
-    success: Callable[[Any], Optional[bool]] = lambda t: t.quality_constrained_success,
+    success: Callable[[Any], Optional[bool]] = lambda t: t.grounded_success,
 ) -> Dict[str, Dict[str, Any]]:
     by: Dict[str, List[Any]] = {}
     for t in trials:

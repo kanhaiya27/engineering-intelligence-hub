@@ -105,8 +105,8 @@ def test_min_detectable_effect():
 
 
 def _trial(system, co2e, success, load_j=None, loads=0):
-    return SimpleNamespace(system_id=system, co2e_grams=co2e, quality_constrained_success=success,
-                           model_load_energy_joules=load_j, model_loads=loads)
+    return SimpleNamespace(system_id=system, co2e_grams=co2e, grounded_success=success,
+                           quality_constrained_success=None, model_load_energy_joules=load_j, model_loads=loads)
 
 
 def test_co2e_per_successful_task_counts_every_trial_and_loads():

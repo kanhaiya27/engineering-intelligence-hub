@@ -464,6 +464,14 @@ class M5BenchmarkRunner:
                 success_type = "QUALITY_FAILURE"
                 qc_success = False
 
+        # PRIMARY success (A2): correct AND cites labelled evidence. Independent of E's gate.
+        if is_refusal:
+            grounded_success = False if gt_exists else None
+        elif task_corr is None or indep.supported is None:
+            grounded_success = None
+        else:
+            grounded_success = bool(task_corr >= thresh and indep.supported)
+
         # Telemetry extraction
         # No fallbacks: a missing measurement fails the trial loudly (the job
         # queue records it as an error) instead of being replaced by an invented
@@ -578,6 +586,7 @@ class M5BenchmarkRunner:
             cited_span_recall=_round(indep.cited_span_recall),
             cited_file_recall=_round(indep.cited_file_recall),
             answer_supported=indep.supported,
+            grounded_success=grounded_success,
             is_grounded_refusal=is_refusal,
             grounded_refusal_score=refusal_score,
             composite_quality=composite_q,

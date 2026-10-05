@@ -105,6 +105,11 @@ class TrialResult(BaseModel):
     cited_file_recall: Optional[float] = Field(default=None, description="[MEASURED] Share of labelled relevant files cited")
     answer_supported: Optional[bool] = Field(default=None, description="[MEASURED] Non-refusal answer citing >= 1 labelled span; None for refusals or without a label")
 
+    grounded_success: Optional[bool] = Field(
+        default=None, description="[DERIVED] PRIMARY success (decision A2, 2026-10-06): correct (task_correctness >= "
+                                  "the task's threshold) AND cites >= 1 labelled evidence span. False for a refusal of an "
+                                  "answerable task; None if correctness or the label is missing")
+
     # --- Refusal Metrics ---
     is_grounded_refusal: bool = Field(default=False, description="True if response issued an explicit INSUFFICIENT EVIDENCE refusal")
     grounded_refusal_score: float = Field(default=0.0, ge=0.0, le=1.0, description="Refusal precision score (0.50 neutral for missing evidence, 0.0 for unfounded refusal)")

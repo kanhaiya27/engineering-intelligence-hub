@@ -125,6 +125,7 @@ analysis), SWE-bench Multimodal (diagram track) — used as the spec describes, 
 | C21 | 2026-10-05 | The manifest binds the retrieval/inference/models config hashes, the task, split and label files, the graph build report and (live) the collection point count and graph node/edge counts; real runs refuse any mismatch | fix (Step 1g) | Plan §7.2: everything not under study is frozen and hashed |
 | C22 | 2026-10-05 | RQ3 outcome measured independently of System E's gate: cited line spans vs the human-checked evidence spans (`evaluation/outcome.py`); refusals reported separately | fix (Step 1f) | The gate's own evaluators scored the outcome (circular) |
 | C23 | 2026-10-06 | System D = System C's exact retrieval (same strategy, retriever, cut-offs) **plus graph context on every task** (hop depth 2 unless the strategy or an escalation step sets more). Before, D used the graph only when the policy picked a graph strategy (3 of 36 dev/val tasks), so Δ(C→D) measured the policy. Decided before any test-split use; Mode R rerun on dev/val (`mode-r-devval-2026-10-06-A1`): D now adds graph context on 28/36 tasks | Avaneesh (A1) | Plan §7.1: each system adds exactly one capability |
+| C24 | 2026-10-06 | Primary success (for CO₂e per successful task and success rates) = correct (lexical F1 ≥ the task's threshold) **and** cites ≥ 1 labelled evidence span (`TrialResult.grounded_success`). The gate-based `quality_constrained_success` (60% System E's own signals) is reported as secondary | Avaneesh (A2) | Success must not mean "passed E's gate" |
 
 ## 6. Routine
 

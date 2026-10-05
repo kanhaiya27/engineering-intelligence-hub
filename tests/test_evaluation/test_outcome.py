@@ -134,3 +134,28 @@ def test_metric_and_inter_rater_agreement():
     out = metric_agreement(ratings, m)
     assert out["n"] == 5 and out["spearman_rho"] == pytest.approx(1.0) and out["kendall_tau"] == pytest.approx(1.0)
     assert inter_rater_agreement(ratings)["A vs B"]["weighted_kappa"] == pytest.approx(1.0)
+
+
+def test_grounded_success_needs_correct_and_cited_labelled_evidence():
+    """A2: success = correct (F1 >= task threshold) AND cites a labelled evidence span."""
+    from experiments.m5.runner import M5BenchmarkRunner
+    from knowledge.schemas.benchmark import BenchmarkTask
+    from knowledge.schemas.tasks import EngTaskResponse, RetrievalResult
+
+    gt = "RequestContext push and pop manage the request context stack"
+    task = BenchmarkTask(task_id="eih-phase1-code-011", sdlc_stage="architecture", task_type="code_explanation",
+                         difficulty="medium", complexity="medium", criticality="medium", repository="pallets/flask",
+                         query="q", ground_truth=gt, expected_quality_threshold=0.6)
+    runner = M5BenchmarkRunner(provider_name="mock")
+
+    def trial(answer):
+        resp = EngTaskResponse(task_id=task.task_id, answer=answer,
+                               retrieval=RetrievalResult(task_id=task.task_id, strategy_used="h", chunks=[]),
+                               latency_ms=1.0, energy_joules=1.0, cost_usd=0.0, co2e_grams=0.0)
+        return runner._evaluate_trial("system_c", task, resp, trial_index=0, split_name="val")
+
+    assert trial(gt + " [src/flask/ctx.py:L370-L380]").grounded_success is True
+    assert trial(gt + " [src/flask/ctx.py:L1-L5]").grounded_success is False      # cites outside the label
+    assert trial(gt).grounded_success is False                                     # correct but uncited
+    assert trial("Something else [src/flask/ctx.py:L370-L380]").grounded_success is False  # cited, wrong
+    assert trial("INSUFFICIENT EVIDENCE").grounded_success is False                # refusal of answerable task
