@@ -78,10 +78,13 @@ def test_every_evidence_span_is_in_the_index(label_set):
 
 
 def test_status_counts_and_no_unreviewed_verified(label_set):
-    statuses = [l.label_status for l in label_set.labels]
-    assert "verified" not in statuses  # only a named human reviewer may set this
-    flagged = [l for l in label_set.labels if l.label_status == "flagged"]
-    assert [l.task_id for l in flagged] == ["eih-phase1-ops-052"]
+    from benchmark.retrieval_labels import VERIFIED
+
+    # only a named human reviewer may mark a label verified (benchmark/retrieval_labels.py VERIFIED)
+    verified = {l.task_id: l.verified_by for l in label_set.labels if l.label_status == "verified"}
+    assert verified == VERIFIED
+    # ops-052 was flagged until its task was replaced (benchmark v1.1, approved 2026-10-05)
+    assert [l.task_id for l in label_set.labels if l.label_status == "flagged"] == []
 
 
 def test_expected_citations_match_evidence(label_set):
