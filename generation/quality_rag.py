@@ -202,7 +202,10 @@ class QualityAwareRAGPipeline:
             # --- A. Retrieval Step ---
             retrieval_result: Optional[RetrievalResult] = None
             if current_strategy is not None:
-                # Use current_strategy override
+                # Run current_strategy as a CONFIG, not by name: escalated
+                # strategies (*_esc1, *_esc2_graph, *_esc_max) are built at run
+                # time and are not in the registry, so a name lookup used to fall
+                # back to plain "hybrid" on every escalation (finding F1).
                 retrieval_result = self.adaptive_pipeline.retrieve(
                     query=request.query,
                     classification=classification or TaskClassification(
@@ -215,7 +218,7 @@ class QualityAwareRAGPipeline:
                         quality_threshold=threshold,
                     ),
                     experiment_mode=experiment_mode,
-                    override_strategy_name=current_strategy.strategy_name,
+                    override_strategy=current_strategy,
                     task_id=request.task_id,
                 )
             else:
@@ -372,6 +375,7 @@ class QualityAwareRAGPipeline:
                 "cold_start": account.cold_start is not None,
                 "context_check": (gen_response.extra or {}).get("context_check"),
                 "strategy_used": current_strategy.strategy_name if current_strategy else "none",
+                "strategy_executed": retrieval_result.metadata.get("executed_strategy"),
                 "chunks_retrieved": len(retrieval_result.chunks),
                 "quality_score": report.aggregated_score,
                 "threshold": threshold,

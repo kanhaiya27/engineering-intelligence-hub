@@ -122,6 +122,7 @@ class AdaptiveRetrievalPipeline:
         experiment_mode: ExperimentMode = ExperimentMode.SYSTEM_D,
         override_strategy_name: Optional[str] = None,
         task_id: str = "adhoc",
+        override_strategy: Optional[RetrievalStrategyConfig] = None,
     ) -> RetrievalResult:
         """
         Execute adaptive retrieval for a classified engineering task.
@@ -135,9 +136,16 @@ class AdaptiveRetrievalPipeline:
         experiment_mode : ExperimentMode
             Controls retrieval behaviour (ablation modes).
         override_strategy_name : str, optional
-            Force a specific strategy by name (ablation experiments).
+            Force a specific strategy by name (ablation experiments). The name
+            must be in the registry; an unknown name raises
+            InvalidRetrievalStrategyError instead of silently running "hybrid".
         task_id : str
             Unique task ID for logging and correlation.
+        override_strategy : RetrievalStrategyConfig, optional
+            Run exactly this config, bypassing the registry. Used for escalated
+            strategies (``*_esc1``, ``*_esc2_graph``, ``*_esc_max``), which are
+            built at run time and are never registered. Takes precedence over
+            ``override_strategy_name``.
 
         Returns
         -------
@@ -157,11 +165,15 @@ class AdaptiveRetrievalPipeline:
             result.metadata["experiment_mode"] = ExperimentMode.BASELINE_B
             return result
 
-        # Resolve strategy via adaptive policy
-        strategy = self._policy.resolve(
-            classification=classification,
-            override_strategy_name=override_strategy_name,
-        )
+        # Resolve strategy: an explicit config runs as given; otherwise the
+        # adaptive policy resolves a registered one.
+        if override_strategy is not None:
+            strategy = override_strategy
+        else:
+            strategy = self._policy.resolve(
+                classification=classification,
+                override_strategy_name=override_strategy_name,
+            )
 
         if experiment_mode == ExperimentMode.SYSTEM_C:
             # Task-aware, no graph: strip graph_context flag
@@ -188,6 +200,17 @@ class AdaptiveRetrievalPipeline:
             result.metadata["experiment_mode"] = ExperimentMode.SYSTEM_D
 
         result.metadata["resolved_strategy"] = strategy.strategy_name
+        # What the retriever was actually given, so escalation can be verified
+        # as executing rather than only as named.
+        result.metadata["executed_strategy"] = {
+            "strategy_name": strategy.strategy_name,
+            "mode": str(getattr(strategy.mode, "value", strategy.mode)),
+            "top_k": strategy.top_k,
+            "max_context_chunks": strategy.max_context_chunks,
+            "include_graph_context": strategy.include_graph_context,
+            "enable_reranking": strategy.enable_reranking,
+            "reranker_type": str(getattr(strategy.reranker_type, "value", strategy.reranker_type)),
+        }
         result.metadata["task_type"] = classification.task_type
         result.metadata["criticality"] = classification.criticality
 

@@ -24,6 +24,7 @@ from dataclasses import dataclass
 from typing import Dict, Optional
 
 
+from core.exceptions import InvalidRetrievalStrategyError
 from core.logging import get_logger
 from knowledge.schemas.tasks import (
     CriticalityLevel,
@@ -130,7 +131,10 @@ class AdaptiveRetrievalPolicy:
         ----------
         classification : TaskClassification
         override_strategy_name : str, optional
-            Force a specific named strategy (ablation experiments).
+            Force a specific named strategy (ablation experiments). Must be in
+            the registry: an unknown name raises InvalidRetrievalStrategyError.
+            Silently running "hybrid" instead would record one strategy while
+            executing another (finding F1: escalation never strengthened retrieval).
 
         Returns
         -------
@@ -138,7 +142,12 @@ class AdaptiveRetrievalPolicy:
         """
         # 0. Explicit override for ablation studies
         if override_strategy_name:
-            return self._get_strategy(override_strategy_name, reason="explicit_override")
+            if override_strategy_name not in self._registry:
+                raise InvalidRetrievalStrategyError(
+                    f"Strategy '{override_strategy_name}' not found in registry.",
+                    details=f"Available: {sorted(self._registry)}",
+                )
+            return self._registry[override_strategy_name]
 
         # 1. Criticality escalation (CRITICAL or HIGH → stronger strategy)
         crit = classification.criticality
