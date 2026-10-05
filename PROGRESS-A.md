@@ -8,6 +8,36 @@ measured (with numbers only if actually measured), what is blocked.
 
 ---
 
+## 2026-10-05 (night, final) — restore-original-plan audit (one laptop from now on)
+
+Branch `restore-original-plan` (from `feat/m5-live-calibration`; tag `pre-audit` = state
+before). Avaneesh's decision: the whole project on this laptop only (WORK_PLAN C11).
+
+**Done**
+- Original plan frozen: `docs/original_plan.md` = the report's Markdown source as first
+  committed (b249b2d), checked against the 25/26 Aug PDF text.
+- Single config `configs/inference.yaml` for A–E + routing tiers; dead `configs/default.yaml`
+  and paid-API models removed.
+- Systems C–E now run the real task classifier (were given the answer key since 2026-08-20).
+- Plan §9.1 tiers (CO₂e, cost ESTIMATED), CPU energy restored (ESTIMATED), §9.2 latency
+  breakdown, truncation flag, untimed warm-up, RQ4 `system_e_routed`.
+- Output limit back to the plan's 2,048; two-laptop tooling removed/archived; README title
+  and RQ1–RQ8 restored; `docs/CITATION_AUDIT.md`.
+
+**Measured** (laptop-a, dev split only, scratch output — smoke checks, not results)
+- 12 units A/B/C × 4 tasks, max_output 1,024: 1 answer truncated at exactly 1,024 (A, task
+  010), max prompt 2,002 tokens, no refusals; first retrieval 16–18 s (cold load).
+- Same 12 units after the fixes, max_output 2,048: 0 truncated (task 010 completed at 1,134),
+  retrieval 31–654 ms, warm-up 46.9 s recorded separately; manifest `42791f0b4216e66f`.
+- Classifier vs benchmark labels on the 4 C trials: all 4 fields right on 1 task, 2 of 4 on
+  two, 0 of 4 on one.
+- Tests: full suite **323 passed**.
+
+**Next** — step 4 (chunk fix + re-ingest), step 5 (own graph builder); decisions D3, D9,
+D13–D16 in WORK_PLAN §4.
+
+---
+
 ## 2026-10-05 (late night) — Full audit against the original plan + A3 integrity fixes
 
 Branch `feat/m5-live-calibration` (task A3). Requested by Avaneesh: check everything
