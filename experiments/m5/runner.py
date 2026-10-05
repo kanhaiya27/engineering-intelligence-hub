@@ -461,6 +461,13 @@ class M5BenchmarkRunner:
             raise ValueError(f"Trial {system_id}/{task.task_id} has no {missing}; "
                              "refusing to substitute estimates.")
         lat = response.latency_ms
+        # Model loads (cold starts, routing reloads) measured by the provider. One record from
+        # the baseline pipelines (generation_cold_start), a list from the quality pipeline.
+        loads = list((response.metadata or {}).get("cold_starts") or [])
+        if (response.metadata or {}).get("generation_cold_start"):
+            loads.append(response.metadata["generation_cold_start"])
+        load_energies = [((c or {}).get("energy") or {}).get("energy_j") for c in loads]
+        load_j = sum(e for e in load_energies if e is not None) if loads else None
         in_tok = response.input_tokens or 0
         out_tok = response.output_tokens or 0
         tot_tok = in_tok + out_tok
@@ -520,6 +527,8 @@ class M5BenchmarkRunner:
             energy_tier=md.get("energy_tier"),
             total_energy_tier="ESTIMATED" if cpu_joules is not None else md.get("energy_tier"),
             gpu_max_temp_c=md.get("gpu_max_temp_c"),
+            model_load_energy_joules=_round(load_j),
+            model_loads=len(loads),
             cost_usd=round(cost, 6),
             co2e_grams=round(co2e, 6),
             task_correctness=_round(task_corr),
