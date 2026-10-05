@@ -50,12 +50,11 @@ class InMemoryGraphStore(BaseGraphStore):
         return node.node_id
 
     def upsert_edge(self, edge: GraphEdge) -> None:
-        if edge.source_id not in self._nodes:
-            # Auto-create source node placeholder if missing
-            self.upsert_node(GraphNode(node_id=edge.source_id, label="Unknown"))
-        if edge.target_id not in self._nodes:
-            # Auto-create target node placeholder if missing
-            self.upsert_node(GraphNode(node_id=edge.target_id, label="Unknown"))
+        if edge.source_id not in self._nodes or edge.target_id not in self._nodes:
+            # Same semantics as Neo4j (MATCH both endpoints): an edge to a missing node
+            # is not stored. This store used to invent "Unknown" placeholder nodes, so
+            # tests passed on graphs that Neo4j would silently store without the edge.
+            return
 
         # Deduplicate existing edge with same source, target, and relationship
         self._out_edges[edge.source_id] = [
@@ -151,6 +150,11 @@ class InMemoryGraphStore(BaseGraphStore):
                     self._out_edges[e.source_id] = [oe for oe in self._out_edges[e.source_id] if oe.target_id != node_id]
 
         return True
+
+    def clear(self) -> None:
+        self._nodes.clear()
+        self._out_edges.clear()
+        self._in_edges.clear()
 
     def count_nodes(self, label: Optional[str] = None) -> int:
         if label:

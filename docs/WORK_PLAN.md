@@ -57,9 +57,9 @@ Status: ✅ done · 🟡 started · ⬜ not started. Each step is one branch and
 | 2 | Local LLMs 1.5B / 3B / 7B installed, measured, routing wired; job queue; single config `configs/inference.yaml` | Phase 1 | ✅ PRs #4, #8, #10 + audit |
 | 3 | Measurement and validity fixes from the restore-original-plan audit (§5 C6–C7, C12–C18) | P0 audit | ✅ branches `feat/m5-live-calibration`, `restore-original-plan` (PRs to merge) |
 | 4 | **Fix oversized chunks**: 3,485 of 48,046 chunks exceeded BGE's 512-token window (wrong tokenizer, long functions/paragraphs/lines never split, code between definitions dropped, wrong sub-chunk line ranges). Fixed; re-ingested into `eih_knowledge_v2` (53,905 chunks, 0 over 512, every line covered); retrieved chunks now carry line ranges into the prompt and citation check | Phase 0 | ✅ branch `fix/ingestion-chunk-size` |
-| 5 | **Build our own knowledge-graph builder** and the graph for the 6 repositories (reachable by the graph retriever; expansion not via the Repository hub node) | Phase 3 | ⬜ |
+| 5 | **Own knowledge-graph builder** (AST + Git history) and the graph for the 6 repositories: 37,066 nodes / 58,982 edges in Neo4j, every indexed file has a node, graph preflight passes; System D now injects relation-stating graph context (it injected 0 chunks before) | Phase 3 | ✅ branch `feat/knowledge-graph-wave1` |
 | 6 | Finish answer locations (retrieval labels) for all 60 questions; fix or exclude ops-052 / ops-053; human check of the drafts; blind protocol for the 24 test questions | Phase 4 | 🟡 36 drafted |
-| 7 | **Calibration** on the 12 practice questions with the live 7B; freeze the manifest | P0-3 | ⬜ |
+| 7 | **Calibration** on the 12 practice questions with the live 7B; freeze the manifest. Must include the strategy score thresholds: with the current fixed thresholds 2–5 of the 36 dev+val questions get **zero** hybrid evidence (fused scores 0.58–0.96), which would starve C/D but not B (D17) | P0-3 | ⬜ |
 | 8 | Mode R on our questions: **implement** Recall@K, Precision@K, MRR, NDCG@K (not built yet — plan §9.2) and run them; re-measure reranker energy in batches | Phase 5 | ⬜ |
 | 9 | Mode Q: Systems A–E on the dev + practice questions | Phase 6 | ⬜ (job queue ready; A/B/C smoke-verified) |
 | 10 | System E + routing (1.5B→3B→7B) vs E for RQ4 | Phase 1 / RQ4 | 🟡 system implemented (`system_e_routed`), not yet run |
@@ -95,6 +95,7 @@ analysis), SWE-bench Multimodal (diagram track) — used as the spec describes, 
 | D13 | The original documents disagree with each other: EIH-SWE "~300–450 tasks" (report §11) vs "400–500" (spec §1, locked); "28 repositories" (report §8.1) vs 26 in `datasets/registry.yaml` since it was first committed; "21 task types" (report §6.2) vs 22 + `unknown` in the code since the first commit | Treat the spec's locked 400–500 as binding; correct the two counts in the paper text |
 | D14 | Quality metric "completeness" (plan §9.2) has no evaluator yet (evidence coverage is the closest) | Add a completeness evaluator, or define coverage as completeness in the paper |
 | D15 | Citations [9] and [10] could not be found; [2]'s DOI is unconfirmed (`docs/CITATION_AUDIT.md`) | Supply the exact citations or remove them before submission |
+| D17 | Strategy score thresholds (0.50–0.70) are uncalibrated: 2–5 of 36 dev+val questions get zero evidence under C/D strategies (measured 2026-10-05) | Calibrate thresholds in step 7 on dev/val only; never per-task |
 | D16 | System C's answer to dev task 010 differed between two runs (778 vs 292 tokens) at temperature 0, seed 42 | Calibration (3 trials per task) measures run-to-run variance before any claim |
 
 ## 5. Change register — every deviation from the original plan

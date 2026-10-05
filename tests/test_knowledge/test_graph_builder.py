@@ -1,133 +1,75 @@
-"""
-Tests for EngineeringGraphBuilder and Knowledge Graph Query Utilities
-"""
+"""Graph builder + store traversal: persisted counts, history artifacts, hub-free expansion, co-change."""
 
-import pytest
+from __future__ import annotations
 
-from knowledge.graph.base import NodeLabel
+from knowledge.graph.base import GraphEdge, GraphNode, NodeLabel, RelationshipType as R
 from knowledge.graph.builder import EngineeringGraphBuilder
+from knowledge.graph.extractor import commit_node_id, file_node_id
 from knowledge.graph.in_memory import InMemoryGraphStore
-from knowledge.graph.queries import (
-    find_issue_commits,
-    find_modified_files,
-    get_entity,
-    get_subgraph,
-)
-from knowledge.schemas.artifacts import (
-    ArchitectureDecision,
-    ArtifactType,
-    Commit,
-    Issue,
-    PullRequest,
-    SourceFile,
-)
+from knowledge.schemas.artifacts import ArtifactType, Commit, Issue, PullRequest
+
+REPO = "pallets/flask"
+FILES = [
+    ("src/flask/app.py", "from .ctx import AppContext\n\n\ndef make():\n    return AppContext()\n"),
+    ("src/flask/ctx.py", "class AppContext:\n    def push(self):\n        return 1\n"),
+    ("src/flask/json.py", "def dumps(x):\n    return str(x)\n"),
+    ("tests/test_ctx.py", "from flask.ctx import AppContext\n\n\ndef test_push():\n    AppContext().push()\n"),
+]
 
 
-@pytest.fixture
-def graph_setup():
+def build():
     store = InMemoryGraphStore()
-    store.connect()
-    builder = EngineeringGraphBuilder(graph_store=store)
-
-    code = """
-import sys
-class RouteHandler:
-    def handle_request(self):
-        return 'ok'
-"""
-    src = SourceFile(
-        artifact_id="art-src-1",
-        artifact_type=ArtifactType.SOURCE_CODE,
-        repository="pallets/flask",
-        commit_sha="4aa68d5",
-        source_path="src/flask/app.py",
-        raw_content=code,
-        language="python",
-    )
-
-    commit = Commit(
-        artifact_id="art-commit-1",
-        artifact_type=ArtifactType.COMMIT,
-        repository="pallets/flask",
-        sha="4aa68d5",
-        author_name="Armin Ronacher",
-        message="feat: improve routing",
-        committed_at="2024-01-01T00:00:00Z",
-        files_changed=["src/flask/app.py"],
-        insertions=10,
-        deletions=2,
-    )
-
-    issue = Issue(
-        artifact_id="art-issue-1",
-        artifact_type=ArtifactType.ISSUE,
-        repository="pallets/flask",
-        issue_number=123,
-        title="Routing bug with custom prefix",
-        author="user1",
-        resolved_by_commit="4aa68d5",
-        linked_pull_requests=["456"],
-    )
-
-    pr = PullRequest(
-        artifact_id="art-pr-1",
-        artifact_type=ArtifactType.PULL_REQUEST,
-        repository="pallets/flask",
-        pr_number=456,
-        title="Fix routing bug",
-        author="user2",
-        merge_commit_sha="4aa68d5",
-        files_changed=["src/flask/app.py"],
-    )
-
-    adr = ArchitectureDecision(
-        artifact_id="art-adr-1",
-        artifact_type=ArtifactType.ARCHITECTURE_DECISION,
-        repository="pallets/flask",
-        decision_id="ADR-001",
-        title="Use Scaffold base class",
-        status="accepted",
-        source_path="src/flask/app.py",
-    )
-
-    return {
-        "store": store,
-        "builder": builder,
-        "artifacts": [src, commit, issue, pr, adr],
-    }
+    builder = EngineeringGraphBuilder(store)
+    report = builder.build_repository_graph(REPO, "c12a5d8", FILES)
+    return store, builder, report
 
 
-def test_engineering_graph_builder_and_queries(graph_setup):
-    store = graph_setup["store"]
-    builder = graph_setup["builder"]
-    artifacts = graph_setup["artifacts"]
+def test_report_counts_match_the_store():
+    store, _, report = build()
+    assert report["nodes_written"] == store.count_nodes() and report["edges_written"] == store.count_edges()
+    assert report["files"] == 4 and report["edges_dropped_unresolved"] >= 0
 
-    metrics = builder.build_repository_graph(
-        repository="pallets/flask",
-        artifacts=artifacts,
-        commit_sha="4aa68d5",
-    )
 
-    assert metrics["status"] == "completed"
-    assert metrics["total_nodes"] > 5
-    assert metrics["total_edges"] > 5
+def test_history_artifacts_link_to_the_same_file_nodes():
+    store, builder, _ = build()
+    commit = Commit(artifact_id="c1", artifact_type=ArtifactType.COMMIT, repository=REPO, sha="4aa68d5",
+                    author_name="A", message="fix ctx push", committed_at="2024-01-01T00:00:00Z",
+                    files_changed=["src/flask/ctx.py", "src/flask/gone.py"], insertions=1, deletions=1)
+    issue = Issue(artifact_id="i1", artifact_type=ArtifactType.ISSUE, repository=REPO, issue_number=123,
+                  title="ctx bug", author="u", resolved_by_commit="4aa68d5", linked_pull_requests=["456"])
+    pr = PullRequest(artifact_id="p1", artifact_type=ArtifactType.PULL_REQUEST, repository=REPO, pr_number=456,
+                     title="Fix ctx", author="u", merge_commit_sha="4aa68d5", files_changed=["src/flask/ctx.py"])
+    rep = builder.build_history_graph([commit, issue, pr])
+    assert rep["edges_dropped_unresolved"] == 1, "the edge to the non-existent file is not stored"
+    mods = store.get_neighbours(commit_node_id(REPO, "4aa68d5"), relationship=R.MODIFIES)
+    assert [n.node_id for _, n in mods] == [file_node_id(REPO, "src/flask/ctx.py")]
+    resolved = store.get_neighbours(f"issue:{REPO}:123", relationship=R.RESOLVED_BY)
+    assert [n.node_id for _, n in resolved] == [commit_node_id(REPO, "4aa68d5")]
 
-    # 1. Query entity
-    repo_node = get_entity(store, "repo:pallets/flask")
-    assert repo_node is not None
-    assert repo_node.label == NodeLabel.REPOSITORY
 
-    # 2. Issue -> Commit query
-    commits = find_issue_commits(store, "issue:pallets/flask:123")
-    assert len(commits) == 1
-    assert commits[0].node_id == "commit:pallets/flask:4aa68d5"
+def test_expansion_never_routes_through_the_repository_hub():
+    store, _, _ = build()
+    found = {c["node"].node_id for c in store.expand(file_node_id(REPO, "src/flask/json.py"), max_depth=3)}
+    # json.py is only connected to the others via the Repository node: nothing may be reached
+    assert not any(n.startswith("file:") for n in found)
+    near_app = {c["node"].node_id: c for c in store.expand(file_node_id(REPO, "src/flask/app.py"), max_depth=2)}
+    assert file_node_id(REPO, "src/flask/ctx.py") in near_app
+    assert near_app[file_node_id(REPO, "src/flask/ctx.py")]["path"][0][0] == R.IMPORTS
 
-    # 3. Commit -> Modified Files query
-    mod_files = find_modified_files(store, "commit:pallets/flask:4aa68d5")
-    assert len(mod_files) == 1
-    assert mod_files[0].properties["file_path"] == "src/flask/app.py"
 
-    # 4. Subgraph extraction
-    subgraph = get_subgraph(store, "issue:pallets/flask:123", max_depth=2)
-    assert len(subgraph["nodes"]) >= 2
-    assert len(subgraph["edges"]) >= 1
+def test_co_changed_ranks_by_shared_commits_and_edges_to_missing_nodes_are_not_invented():
+    store = InMemoryGraphStore()
+    for p in ("a.py", "b.py", "c.py"):
+        store.upsert_node(GraphNode(file_node_id("o/r", p), NodeLabel.FILE, {"file_path": p}))
+    # c.py changes with a.py twice but also in 6 other commits (like a changelog): b.py ranks first
+    history = [["a.py", "b.py"], ["a.py", "b.py"], ["a.py", "c.py"], ["a.py", "c.py"]] + [["c.py"]] * 6
+    for i, touched in enumerate(history):
+        cid = commit_node_id("o/r", f"s{i}")
+        store.upsert_node(GraphNode(cid, NodeLabel.COMMIT))
+        for p in touched:
+            store.upsert_edge(GraphEdge(cid, file_node_id("o/r", p), R.MODIFIES))
+    ranked = [(n.properties["file_path"], k) for n, k in store.co_changed(file_node_id("o/r", "a.py"))]
+    assert ranked == [("b.py", 2), ("c.py", 2)]
+    assert store.co_changed(file_node_id("o/r", "a.py"), min_shared=3) == []
+    store.upsert_edge(GraphEdge(file_node_id("o/r", "a.py"), "file:o/r:missing.py", R.IMPORTS))
+    assert store.get_node("file:o/r:missing.py") is None

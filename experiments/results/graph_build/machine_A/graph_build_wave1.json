@@ -1,0 +1,284 @@
+{
+  "study": "graph_build_wave1",
+  "provenance": {
+    "recorded_at_utc": "2026-10-05T15:02:33+00:00",
+    "machine_id": "laptop-a",
+    "platform": "Windows-10-10.0.26300-SP0",
+    "python": "3.11.9",
+    "gpu": {
+      "name": "NVIDIA GeForce RTX 4050 Laptop GPU",
+      "driver": "617.14",
+      "vram_total_mib": 6141,
+      "power_default_limit_w": 80.0,
+      "power_max_limit_w": 140.0,
+      "compute_capability": "8.9"
+    },
+    "torch": {
+      "torch": "2.6.0+cu124",
+      "cuda": "12.4",
+      "cudnn": 90100,
+      "cuda_available": true
+    },
+    "ollama": null,
+    "git": {
+      "sha": "6a1db6acabc6461a3cb000232f40c62996809355",
+      "branch": "feat/knowledge-graph-wave1",
+      "dirty": true
+    },
+    "sustainability_config": {
+      "carbon_region": "custom",
+      "carbon_intensity_gco2_per_kwh": 713.0,
+      "cpu_tdp_watts": 45.0,
+      "gpu_tdp_watts": 80.0
+    }
+  },
+  "config": {
+    "wave": 1,
+    "reset": true,
+    "max_commits": 500,
+    "max_files_per_commit": 30,
+    "neo4j_uri": "bolt://localhost:7687",
+    "qdrant_collection": "eih_knowledge_v2"
+  },
+  "results": {
+    "read_back": {
+      "nodes": 37066,
+      "edges": 58982,
+      "nodes_by_label": {
+        "Repository": 6,
+        "File": 7109,
+        "Class": 4071,
+        "Function": 5930,
+        "Method": 9187,
+        "Test": 8193,
+        "Commit": 2570
+      },
+      "edges_by_type": {
+        "CONTAINS": 34490,
+        "IMPORTS": 5414,
+        "CALLS": 11012,
+        "TESTS": 1952,
+        "MODIFIES": 6114
+      }
+    },
+    "per_repository": [
+      {
+        "repository": "pallets/flask",
+        "commit_sha": "c12a5d874c5a014495eb2db8a73f40037bc813ac",
+        "nodes_written": 1509,
+        "edges_written": 2713,
+        "nodes_by_label": {
+          "Commit": 436,
+          "Test": 392,
+          "Method": 281,
+          "File": 190,
+          "Function": 153,
+          "Class": 56,
+          "Repository": 1
+        },
+        "edges_by_type": {
+          "MODIFIES": 1184,
+          "CONTAINS": 1072,
+          "CALLS": 227,
+          "IMPORTS": 171,
+          "TESTS": 59
+        },
+        "edges_dropped_unresolved": 0,
+        "python_parse_errors": 0,
+        "history": {
+          "commits_scanned": 500,
+          "commits_linked": 436,
+          "bulk_commits_skipped": 0,
+          "max_files_per_commit": 30
+        },
+        "files": 190,
+        "extract_seconds": 0.26,
+        "write_seconds": 0.84,
+        "qdrant_files": 188,
+        "qdrant_files_without_graph_node": 0,
+        "missing_examples": []
+      },
+      {
+        "repository": "fastapi/fastapi",
+        "commit_sha": "1c3e6918750ccb3f20ea260e9a4238ce2c0e5f63",
+        "nodes_written": 6910,
+        "edges_written": 10826,
+        "nodes_by_label": {
+          "File": 1953,
+          "Test": 1944,
+          "Function": 1768,
+          "Class": 593,
+          "Commit": 477,
+          "Method": 174,
+          "Repository": 1
+        },
+        "edges_by_type": {
+          "CONTAINS": 6432,
+          "IMPORTS": 1989,
+          "TESTS": 995,
+          "CALLS": 748,
+          "MODIFIES": 662
+        },
+        "edges_dropped_unresolved": 0,
+        "python_parse_errors": 0,
+        "history": {
+          "commits_scanned": 500,
+          "commits_linked": 477,
+          "bulk_commits_skipped": 6,
+          "max_files_per_commit": 30
+        },
+        "files": 1953,
+        "extract_seconds": 1.15,
+        "write_seconds": 1.36,
+        "qdrant_files": 1902,
+        "qdrant_files_without_graph_node": 0,
+        "missing_examples": []
+      },
+      {
+        "repository": "psf/requests",
+        "commit_sha": "0e322af87745eff34caffe4df68456ebc20d9068",
+        "nodes_written": 1092,
+        "edges_written": 1724,
+        "nodes_by_label": {
+          "Commit": 364,
+          "Test": 353,
+          "Method": 182,
+          "Function": 81,
+          "File": 61,
+          "Class": 50,
+          "Repository": 1
+        },
+        "edges_by_type": {
+          "CONTAINS": 727,
+          "MODIFIES": 507,
+          "CALLS": 376,
+          "IMPORTS": 89,
+          "TESTS": 25
+        },
+        "edges_dropped_unresolved": 0,
+        "python_parse_errors": 0,
+        "history": {
+          "commits_scanned": 500,
+          "commits_linked": 364,
+          "bulk_commits_skipped": 0,
+          "max_files_per_commit": 30
+        },
+        "files": 61,
+        "extract_seconds": 0.18,
+        "write_seconds": 0.6,
+        "qdrant_files": 61,
+        "qdrant_files_without_graph_node": 0,
+        "missing_examples": []
+      },
+      {
+        "repository": "pytest-dev/pytest",
+        "commit_sha": "bbcec9c46509c417ef58e4849847b4aa43f4591e",
+        "nodes_written": 6304,
+        "edges_written": 10170,
+        "nodes_by_label": {
+          "Test": 3010,
+          "Method": 1366,
+          "Function": 726,
+          "File": 517,
+          "Commit": 421,
+          "Class": 263,
+          "Repository": 1
+        },
+        "edges_by_type": {
+          "CONTAINS": 5882,
+          "CALLS": 2241,
+          "MODIFIES": 968,
+          "IMPORTS": 737,
+          "TESTS": 342
+        },
+        "edges_dropped_unresolved": 0,
+        "python_parse_errors": 0,
+        "history": {
+          "commits_scanned": 500,
+          "commits_linked": 421,
+          "bulk_commits_skipped": 7,
+          "max_files_per_commit": 30
+        },
+        "files": 517,
+        "extract_seconds": 1.4,
+        "write_seconds": 1.29,
+        "qdrant_files": 511,
+        "qdrant_files_without_graph_node": 0,
+        "missing_examples": []
+      },
+      {
+        "repository": "sphinx-doc/sphinx",
+        "commit_sha": "0d912c85fd3ec385432fe707f6a0678425d1e841",
+        "nodes_written": 8745,
+        "edges_written": 16137,
+        "nodes_by_label": {
+          "Method": 3920,
+          "Test": 1441,
+          "File": 1161,
+          "Class": 886,
+          "Function": 885,
+          "Commit": 451,
+          "Repository": 1
+        },
+        "edges_by_type": {
+          "CONTAINS": 8293,
+          "CALLS": 4563,
+          "MODIFIES": 1570,
+          "IMPORTS": 1477,
+          "TESTS": 234
+        },
+        "edges_dropped_unresolved": 0,
+        "python_parse_errors": 0,
+        "history": {
+          "commits_scanned": 500,
+          "commits_linked": 451,
+          "bulk_commits_skipped": 7,
+          "max_files_per_commit": 30
+        },
+        "files": 1161,
+        "extract_seconds": 2.14,
+        "write_seconds": 1.61,
+        "qdrant_files": 1116,
+        "qdrant_files_without_graph_node": 0,
+        "missing_examples": []
+      },
+      {
+        "repository": "pylint-dev/pylint",
+        "commit_sha": "da1956664d6be3d008a90ad3f72bdd9d8a7ecfaa",
+        "nodes_written": 12506,
+        "edges_written": 17412,
+        "nodes_by_label": {
+          "Method": 3264,
+          "File": 3227,
+          "Function": 2317,
+          "Class": 2223,
+          "Test": 1053,
+          "Commit": 421,
+          "Repository": 1
+        },
+        "edges_by_type": {
+          "CONTAINS": 12084,
+          "CALLS": 2857,
+          "MODIFIES": 1223,
+          "IMPORTS": 951,
+          "TESTS": 297
+        },
+        "edges_dropped_unresolved": 0,
+        "python_parse_errors": 19,
+        "history": {
+          "commits_scanned": 500,
+          "commits_linked": 421,
+          "bulk_commits_skipped": 4,
+          "max_files_per_commit": 30
+        },
+        "files": 3227,
+        "extract_seconds": 1.71,
+        "write_seconds": 1.97,
+        "qdrant_files": 3141,
+        "qdrant_files_without_graph_node": 0,
+        "missing_examples": []
+      }
+    ],
+    "seconds": 88.8
+  }
+}

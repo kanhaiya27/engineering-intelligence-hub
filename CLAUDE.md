@@ -136,8 +136,9 @@ uvicorn apps.api.main:app --reload --port 8000   # http://localhost:8000/docs
 Phase 0 and Phase 1 done: wave-1 corpus (6 repos, 48,046 chunks), local models
 (Qwen2.5-Coder 1.5B/3B/7B) measured, job queue, single config `configs/inference.yaml`.
 Measurement and validity fixes on `restore-original-plan` (real classifier for C–E, plan
-§9.1 tiers, CPU estimate, §9.2 latency breakdown, RQ4 routed system). Knowledge graph not
-yet built on this laptop (WORK_PLAN step 5: our own builder). **No real System A–E
+§9.1 tiers, CPU estimate, §9.2 latency breakdown, RQ4 routed system). Knowledge graph built
+(own builder, AST + Git history; 37,066 nodes / 58,982 edges in Neo4j; `python -m scripts.build_graph
+--wave 1 --reset`). **No real System A–E
 comparison has been run yet.** Deadlines: experiments complete 25 Oct 2026; final 15 Nov 2026.
 
 ## Measurement rules learned the hard way (Laptop A, RTX 4050, driver 617.14)
