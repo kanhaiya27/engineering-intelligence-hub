@@ -225,6 +225,41 @@ class GraphAugmentedRetriever(BaseRetriever):
             },
         )
 
+    def augment(self, base: RetrievalResult, hop_depth: int, task_id: str = "adhoc") -> RetrievalResult:
+        """Append graph context to an already-retrieved result, leaving its chunks untouched.
+
+        System D (WORK_PLAN C23): D's text evidence is exactly System C's for the same task
+        (same strategy, retriever and cut-offs); D only adds the graph context of the files C
+        retrieved, so delta(C -> D) isolates the knowledge graph.
+        """
+        start_time = time.perf_counter()
+        graph_chunks: List[RetrievedChunk] = []
+        visited, augmented = 0, False
+        if self._graph_store is not None:
+            graph_chunks, visited = self._expand_graph_context(
+                chunks=base.chunks, hop_depth=hop_depth, max_graph_chunks=_HEURISTIC_MAX_GRAPH_CHUNKS,
+                task_id=task_id,
+            )
+            augmented = True
+        else:
+            logger.warning(f"Task {task_id}: graph context requested but no graph_store configured.")
+        graph_ms = (time.perf_counter() - start_time) * 1000.0
+        return RetrievalResult(
+            task_id=task_id,
+            strategy_used=base.strategy_used,
+            chunks=list(base.chunks) + graph_chunks,
+            total_retrieved=len(base.chunks) + len(graph_chunks),
+            retrieval_latency_ms=round((base.retrieval_latency_ms or 0.0) + graph_ms, 2),
+            metadata={
+                **base.metadata,
+                "graph_augmented": augmented,
+                "graph_chunks_injected": len(graph_chunks),
+                "graph_nodes_visited": visited,
+                "graph_hop_depth": hop_depth,
+                "graph_expansion_ms": round(graph_ms, 3),
+            },
+        )
+
     def _expand_graph_context(
         self,
         chunks: List[RetrievedChunk],

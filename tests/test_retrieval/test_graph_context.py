@@ -51,3 +51,24 @@ def test_graph_chunks_state_the_relation_and_prefer_other_files():
     co = next(c for c in graph if c.metadata["graph_relation"] == "CO_CHANGED")
     assert "changed together in 2 commits" in co.content and co.source_path == "src/flask/json.py"
     assert result.metadata["graph_chunks_injected"] == len(graph) <= 4
+
+
+def test_augment_keeps_base_chunks_and_appends_graph_context():
+    """System D (C23): C's chunks unchanged and first; graph context appended after them."""
+    store = InMemoryGraphStore()
+    EngineeringGraphBuilder(store).build_repository_graph(REPO, "c12a5d8", FILES)
+    r = retriever_for(store)
+    base = r._hybrid.retrieve.return_value
+    out = r.augment(base.model_copy(deep=True), hop_depth=2, task_id="t")
+    assert [c.chunk_id for c in out.chunks[:1]] == [c.chunk_id for c in base.chunks]
+    graph = out.chunks[1:]
+    assert graph and all(c.metadata.get("graph_context") for c in graph)
+    assert out.metadata["graph_augmented"] is True and out.metadata["graph_hop_depth"] == 2
+    r._hybrid.retrieve.assert_not_called()  # augment never re-retrieves
+
+
+def test_augment_without_store_returns_base_unchanged():
+    r = retriever_for(None)
+    base = r._hybrid.retrieve.return_value
+    out = r.augment(base, hop_depth=2)
+    assert out.chunks == base.chunks and out.metadata["graph_augmented"] is False

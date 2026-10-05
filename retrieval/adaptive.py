@@ -44,6 +44,10 @@ logger = get_logger(__name__)
 # Default YAML path for strategy registry
 _DEFAULT_YAML_PATH = "configs/retrieval.yaml"
 
+# System D's graph hop depth when the task's strategy sets none: 2, the value every graph
+# strategy in configs/retrieval.yaml uses. Escalation can raise it (esc_max: 3).
+SYSTEM_D_MIN_HOP_DEPTH = 2
+
 
 class ExperimentMode(str, Enum):
     """
@@ -189,14 +193,22 @@ class AdaptiveRetrievalPipeline:
             )
             result.metadata["experiment_mode"] = ExperimentMode.SYSTEM_C
 
-        else:  # SYSTEM_D — full adaptive with graph augmentation
-            result = self._route_to_retriever(
+        else:  # SYSTEM_D — System C's retrieval + knowledge-graph context on EVERY task
+            # WORK_PLAN C23 (decided 2026-10-06): D adds exactly one capability over C (plan
+            # §7.1). Its text evidence is C's, retrieved with the same strategy, retriever and
+            # cut-offs; graph context for the retrieved files is appended. Before, D used the
+            # graph only when the policy picked a graph strategy (3 of 36 dev/val tasks), so
+            # delta(C -> D) measured the policy, not the graph.
+            base = self._route_to_retriever(
                 query=query,
-                strategy=strategy,
+                strategy=strategy.model_copy(update={"include_graph_context": False}),
                 classification=classification,
                 task_id=task_id,
-                use_graph=True,
+                use_graph=False,
             )
+            hop = max(strategy.graph_hop_depth, SYSTEM_D_MIN_HOP_DEPTH)
+            result = self._graph_aug.augment(base, hop_depth=hop, task_id=task_id)
+            strategy = strategy.model_copy(update={"include_graph_context": True, "graph_hop_depth": hop})
             result.metadata["experiment_mode"] = ExperimentMode.SYSTEM_D
 
         result.metadata["resolved_strategy"] = strategy.strategy_name
