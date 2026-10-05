@@ -69,8 +69,10 @@ class TrialResult(BaseModel):
         default=None, description="[MEASURED] NVML counter over the whole trial (retrieval + rerank + all "
                                   "generations + model loads); gpu_energy_joules = this minus model loads")
     retrieval_gpu_energy_joules: Optional[float] = Field(
-        default=None, description="[DERIVED] Whole-trial GPU energy minus generation energy minus model loads: "
-                                  "embedding, reranking and other non-generation GPU work")
+        default=None, description="[DERIVED] Whole-trial GPU energy minus generation energy minus model loads: ALL "
+                                  "non-generation GPU energy of the trial - retrieval compute (embedding, reranking; "
+                                  "~0.3-19 J/query in experiments/results/retrieval_energy) PLUS the GPU's draw while "
+                                  "it waits between steps at a raised power state. Not retrieval compute alone")
     gpu_max_temp_c: Optional[float] = Field(
         default=None, description="[MEASURED] Highest GPU temperature seen during the trial's generation calls")
     cost_usd: float = Field(description="[ESTIMATED] monetary cost; 0 for local inference")
