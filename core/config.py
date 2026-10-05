@@ -4,7 +4,8 @@ Engineering Intelligence Hub — Configuration Management
 Loads configuration from:
   1. Environment variables (highest priority — good for secrets)
   2. .env file (local development)
-  3. configs/default.yaml (project defaults)
+  3. Defaults in this file; generation settings (model, num_ctx, output limit,
+     temperature, ...) come from configs/inference.yaml via core/inference.py
 
 All settings are typed via Pydantic BaseSettings.
 
@@ -20,9 +21,10 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Dict, List, Optional
 
-import yaml
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+from core.inference import inference_config
 
 # Root of the project (two levels above this file: core/ → project root)
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -32,15 +34,6 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 # without passing it to each group, every EIH_<GROUP>_* line in .env was silently
 # ignored (only real OS environment variables were read).
 ENV_FILE = str(PROJECT_ROOT / ".env")
-
-
-def _load_yaml_defaults() -> Dict:
-    """Load YAML defaults from configs/default.yaml, silently ignoring missing file."""
-    yaml_path = PROJECT_ROOT / "configs" / "default.yaml"
-    if yaml_path.exists():
-        with open(yaml_path, "r", encoding="utf-8") as f:
-            return yaml.safe_load(f) or {}
-    return {}
 
 
 class APISettings(BaseSettings):
@@ -62,23 +55,28 @@ class APISettings(BaseSettings):
 class ModelSettings(BaseSettings):
     """Default model routing settings."""
 
-    # Local-only inference (RD-013): every system runs on the Ollama model ladder.
-    # The fixed model for Systems A-E is the 7B (decision 2026-10-05); model
-    # routing (routing/tier_router.py) is an added system compared against it.
+    # Local-only inference: every system runs on the Ollama model ladder. These
+    # defaults are NOT defined here: they come from configs/inference.yaml, the
+    # single source of truth for Systems A-E and the routing tiers.
     default_provider: str = Field(
-        default="ollama", description="Default LLM provider ID: ollama | openai | mock"
+        default_factory=lambda: inference_config().provider,
+        description="LLM provider ID: ollama | mock (tests only)",
     )
     default_model_id: str = Field(
-        default="qwen2.5-coder:7b", description="Fixed model for non-routed systems"
+        default_factory=lambda: inference_config().fixed_model,
+        description="Fixed model for Systems A-E",
     )
     fallback_model_id: str = Field(
-        default="qwen2.5-coder:3b", description="Fallback model for failed routing"
+        default_factory=lambda: inference_config().fallback_model,
+        description="Fallback model for failed routing",
     )
     max_tokens: int = Field(
-        default=1024, description="Maximum output tokens (part of the num_ctx 12288 budget)"
+        default_factory=lambda: inference_config().max_output_tokens,
+        description="Maximum output tokens",
     )
     temperature: float = Field(
-        default=0.0, description="Sampling temperature (0 = deterministic with a fixed seed)"
+        default_factory=lambda: inference_config().temperature,
+        description="Sampling temperature (0 = deterministic with a fixed seed)",
     )
     request_timeout_seconds: int = Field(
         default=120, description="Provider request timeout"

@@ -50,12 +50,25 @@ class TrialResult(BaseModel):
         description="[MEASURED] Direct GPU energy reading via NVML API (if available)",
     )
 
-    # --- 2. ESTIMATED METRICS (Modeled Proxies) ---
-    cpu_energy_joules: float = Field(description="[ESTIMATED] CPU energy derived from TDP proxy: TDP * latency")
-    gpu_energy_joules: float = Field(description="[ESTIMATED] GPU energy (NVML measured or TDP fallback)")
-    total_energy_joules: float = Field(description="[ESTIMATED] Total system energy = CPU + GPU energy")
-    cost_usd: float = Field(description="[ESTIMATED] Monetary API cost computed from pricing table")
-    co2e_grams: float = Field(description="[ESTIMATED] Carbon footprint based on UK grid carbon intensity")
+    # --- 2. ENERGY / COST / CARBON (tiers as defined in the original plan §9.1) ---
+    cpu_energy_joules: Optional[float] = Field(
+        default=None, description="[ESTIMATED] CPU TDP x system-wide CPU utilisation over the trial x duration")
+    gpu_energy_joules: float = Field(
+        description="GPU board energy: NVML-counter generation energy + rerank estimate if any; tier in energy_tier")
+    total_energy_joules: float = Field(
+        description="[ESTIMATED] GPU + CPU energy; tier in total_energy_tier")
+    energy_tier: Optional[str] = Field(
+        default=None, description="Tier of gpu_energy_joules: MEASURED, or ESTIMATED if a rerank sample is included")
+    total_energy_tier: Optional[str] = Field(
+        default=None, description="Weakest tier of the total (ESTIMATED whenever CPU energy is included)")
+    gpu_max_temp_c: Optional[float] = Field(
+        default=None, description="[MEASURED] Highest GPU temperature seen during the trial's generation calls")
+    cost_usd: float = Field(description="[ESTIMATED] monetary cost; 0 for local inference")
+    co2e_grams: float = Field(description="[ESTIMATED] total energy x the manifest's grid carbon intensity")
+    latency_breakdown_ms: Optional[Dict[str, float]] = Field(
+        default=None, description="[MEASURED] T_query, T_retrieval, T_rerank, T_context, T_generation (+ other) of §9.2")
+    output_truncated: Optional[bool] = Field(
+        default=None, description="[MEASURED] True if any generation stopped at the output-token limit")
 
     # --- 3. QUALITY METRICS ---
     task_correctness: float = Field(default=0.0, ge=0.0, le=1.0, description="[MEASURED] Factual correctness against ground-truth answer (CorrectnessEvaluator)")

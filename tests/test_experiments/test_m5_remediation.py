@@ -80,6 +80,7 @@ def test_scenario_1_correct_answer():
         answer=llm.response_text,
         retrieval=RetrievalResult(task_id=task.task_id, query=task.query, strategy_used="hybrid", chunks=chunks),
         latency_ms=20.0,
+        energy_joules=1.0, cost_usd=0.0, co2e_grams=0.0,  # explicit: the runner no longer invents them
     )
 
     trial = runner._evaluate_trial("baseline_b", task, eng_resp, trial_index=0, split_name="dev")
@@ -111,6 +112,7 @@ def test_scenario_2_incorrect_answer():
         answer=llm.response_text,
         retrieval=RetrievalResult(task_id=task.task_id, query=task.query, strategy_used="hybrid", chunks=chunks),
         latency_ms=20.0,
+        energy_joules=1.0, cost_usd=0.0, co2e_grams=0.0,  # explicit: the runner no longer invents them
     )
 
     trial = runner._evaluate_trial("baseline_b", task, eng_resp, trial_index=0, split_name="dev")
@@ -133,6 +135,7 @@ def test_scenario_3_unfounded_refusal_when_ground_truth_exists():
         answer=llm.response_text,
         retrieval=RetrievalResult(task_id=task.task_id, query=task.query, strategy_used="hybrid", chunks=[]),
         latency_ms=20.0,
+        energy_joules=1.0, cost_usd=0.0, co2e_grams=0.0,  # explicit: the runner no longer invents them
     )
 
     trial = runner._evaluate_trial("system_e", task, eng_resp, trial_index=0, split_name="dev")
@@ -155,6 +158,7 @@ def test_scenario_3_valid_refusal_when_ground_truth_absent():
         answer=llm.response_text,
         retrieval=RetrievalResult(task_id=task.task_id, query=task.query, strategy_used="hybrid", chunks=[]),
         latency_ms=20.0,
+        energy_joules=1.0, cost_usd=0.0, co2e_grams=0.0,  # explicit: the runner no longer invents them
     )
 
     trial = runner._evaluate_trial("system_e", task, eng_resp, trial_index=0, split_name="dev")
@@ -185,6 +189,7 @@ def test_scenario_4_unsupported_citation():
         answer=llm.response_text,
         retrieval=RetrievalResult(task_id=task.task_id, query=task.query, strategy_used="hybrid", chunks=chunks),
         latency_ms=20.0,
+        energy_joules=1.0, cost_usd=0.0, co2e_grams=0.0,  # explicit: the runner no longer invents them
     )
 
     trial = runner._evaluate_trial("baseline_b", task, eng_resp, trial_index=0, split_name="dev")
@@ -217,6 +222,7 @@ def test_scenario_5_partially_correct_answer():
         answer=llm.response_text,
         retrieval=RetrievalResult(task_id=task.task_id, query=task.query, strategy_used="hybrid", chunks=chunks),
         latency_ms=20.0,
+        energy_joules=1.0, cost_usd=0.0, co2e_grams=0.0,  # explicit: the runner no longer invents them
     )
 
     trial = runner._evaluate_trial("baseline_b", task, eng_resp, trial_index=0, split_name="dev")

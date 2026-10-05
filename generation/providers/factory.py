@@ -23,15 +23,14 @@ MODELS_YAML = PROJECT_ROOT / "configs" / "models.yaml"
 
 
 def local_model_options(models_yaml: Path = MODELS_YAML) -> Dict[str, Dict[str, Any]]:
-    """Per-model Ollama options from configs/models.yaml (e.g. num_gpu for the 7B)."""
-    from routing.registry import ModelRegistry
+    """Ollama options for every model, all from configs/inference.yaml (e.g. num_gpu 999).
 
-    registry = ModelRegistry.from_yaml(str(models_yaml))
-    return {
-        p.model_id: dict((p.extra or {}).get("ollama_options") or {})
-        for p in registry.list_all()
-        if p.provider == "local"
-    }
+    One set of options for every model Systems A-E and the routing tiers can call;
+    configs/models.yaml only describes the models (digest, tier, measurements).
+    """
+    from core.inference import inference_config
+
+    return inference_config().model_options()
 
 
 def build_provider(name: Optional[str] = None) -> BaseLLMProvider:

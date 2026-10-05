@@ -15,10 +15,14 @@ Systems Under Evaluation:
 from __future__ import annotations
 
 import datetime
+import time
 import json
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
+import psutil
+
+from core.config import settings
 from core.logging import get_logger
 from benchmark.dataset import BenchmarkDataset
 from evaluation.scorers.correctness import CorrectnessEvaluator
@@ -54,6 +58,20 @@ M5_RAW_DIR = DEFAULT_RAW_DIR
 M5_PROCESSED_DIR = DEFAULT_PROCESSED_DIR
 
 
+_CLASSIFICATION_FIELDS = ("sdlc_stage", "task_type", "complexity", "criticality")
+
+
+def _value(x: Any) -> Any:
+    return x.value if hasattr(x, "value") else x
+
+
+def _cpu_utilisation(start, end) -> Optional[float]:
+    """Fraction of all CPU time that was busy between two psutil.cpu_times() snapshots."""
+    total = sum(end) - sum(start)
+    idle = (end.idle - start.idle) + (getattr(end, "iowait", 0.0) - getattr(start, "iowait", 0.0))
+    return round(max(0.0, min(1.0, 1.0 - idle / total)), 4) if total > 0 else None
+
+
 class M5BenchmarkRunner:
     """
     Orchestrates multi-system benchmark execution across dataset splits.
@@ -86,6 +104,9 @@ class M5BenchmarkRunner:
         self._coverage_eval = EvidenceCoverageEvaluator()
         self._consistency_eval = EvidenceConsistencyEvaluator()
 
+        from intelligence.classifier import RuleBasedTaskClassifier
+
+        self._classifier = RuleBasedTaskClassifier()
         self._pipe_a: Optional[BaselineRAGPipeline] = None
         self._pipe_b: Optional[BaselineRAGPipeline] = None
         self._pipe_quality: Optional[QualityAwareRAGPipeline] = None
@@ -104,17 +125,98 @@ class M5BenchmarkRunner:
             )
         return self._pipe_b
 
+    def _get_pipeline_routed(self, llm: BaseLLMProvider) -> QualityAwareRAGPipeline:
+        """System E + task-aware model routing (RQ4): same pipeline, plus a TierRouter."""
+        if getattr(self, "_pipe_routed", None) is None or self._pipe_routed.llm_provider != llm:
+            from retrieval.adaptive import AdaptiveRetrievalPipeline
+            from routing.registry import ModelRegistry
+            from routing.tier_router import TierRouter
+
+            max_esc = self.manifest.systems[SystemID.SYSTEM_E_ROUTED.value].max_escalations
+            self._pipe_routed = QualityAwareRAGPipeline(
+                adaptive_pipeline=AdaptiveRetrievalPipeline(graph_store=self.graph_store),
+                llm_provider=llm,
+                verification_config=VerificationConfig(max_escalation_attempts=max_esc),
+                model_router=TierRouter(ModelRegistry.from_yaml("configs/models.yaml")),
+            )
+        return self._pipe_routed
+
     def _get_pipeline_quality(self, llm: BaseLLMProvider) -> QualityAwareRAGPipeline:
         if self._pipe_quality is None or self._pipe_quality.llm_provider != llm:
             # The manifest's System E escalation limit must reach the pipeline;
             # previously it was never passed, so every run used the built-in 2
             # whatever the manifest (or a calibration candidate) said.
             max_esc = self.manifest.systems[SystemID.SYSTEM_E.value].max_escalations
+            # Systems D and E need the knowledge graph. Without a graph_store the
+            # graph retriever silently injects nothing and D equals C (found by
+            # laptop-b's B3 review), so the store is always passed here.
+            from retrieval.adaptive import AdaptiveRetrievalPipeline
+
             self._pipe_quality = QualityAwareRAGPipeline(
+                adaptive_pipeline=AdaptiveRetrievalPipeline(graph_store=self.graph_store),
                 llm_provider=llm,
                 verification_config=VerificationConfig(max_escalation_attempts=max_esc),
             )
         return self._pipe_quality
+
+    @property
+    def graph_store(self):
+        if getattr(self, "_graph_store", None) is None:
+            from core.config import settings
+            from knowledge.graph.neo4j import Neo4jGraphStore
+
+            gs = settings.graph_store
+            self._graph_store = Neo4jGraphStore(uri=gs.uri, username=gs.username, password=gs.password)
+        return self._graph_store
+
+    def warm_up(self, system_ids: List[str]) -> Dict[str, Any]:
+        """Load every retriever, index and model the given systems use, untimed.
+
+        Original plan §10.4: one-time model loading is reported separately and never
+        charged to a query. Without this, the first retrieval of each pipeline built
+        the BM25 index (48,046 chunks) and loaded the encoders inside a measured trial
+        (16–18 s instead of ~0.2 s on 2026-10-05). Returns what was warmed and how long.
+        """
+        query = "How is the application configured?"  # fixed warm-up query, not a benchmark task
+        t0, warmed = time.perf_counter(), []
+        if SystemID.BASELINE_B.value in system_ids:
+            pipe = self._get_pipeline_b(self.llm_provider)
+            pipe.retriever.retrieve(query=query, strategy=RetrievalStrategyConfig(
+                strategy_name="hybrid", mode=RetrievalMode.HYBRID, top_k=5), task_id="warm-up")
+            warmed.append("baseline_b:hybrid")
+        task_aware = [s for s in system_ids if s not in (SystemID.BASELINE_A.value, SystemID.BASELINE_B.value)]
+        if task_aware:
+            pipes = [self._get_pipeline_quality(self.llm_provider)]
+            if SystemID.SYSTEM_E_ROUTED.value in system_ids:
+                pipes.append(self._get_pipeline_routed(self.llm_provider))
+            clf = self._classifier.classify(EngTaskRequest(task_id="warm-up", query=query))
+            graph_ok = bool(set(task_aware) - {SystemID.SYSTEM_C.value})
+            for pipe in pipes:
+                for name, cfg in pipe.adaptive_pipeline.list_strategies().items():
+                    mode = ExperimentMode.SYSTEM_D if graph_ok else ExperimentMode.SYSTEM_C
+                    pipe.adaptive_pipeline.retrieve(query=query, classification=clf, experiment_mode=mode,
+                                                    override_strategy=cfg, task_id="warm-up")
+                    warmed.append(name)
+        return {"warmed": sorted(set(warmed)), "seconds": round(time.perf_counter() - t0, 2)}
+
+    def graph_preflight(self) -> Dict[str, Any]:
+        """Refuse D/E runs unless the populated wave-1 graph is reachable.
+
+        This laptop holds only a 2-node test fixture until the wave-1 graph is built
+        (WORK_PLAN step 5); D/E on it would quietly measure "no graph". Raises with the reason.
+        """
+        expected_repos = len(self.manifest.frozen_variables.repositories)
+        store = self.graph_store
+        if not store.is_available():
+            raise RuntimeError("Neo4j is not reachable with the .env EIH_GRAPH_* settings; "
+                               "Systems D/E need the knowledge graph.")
+        repos, files = store.count_nodes("Repository"), store.count_nodes("File")
+        if repos < expected_repos or files == 0:
+            raise RuntimeError(f"Knowledge graph incomplete: {repos} Repository / {files} File nodes, "
+                               f"expected {expected_repos} repositories. Restore C:\\EIH_share\\neo4j.dump "
+                               "(WORK_PLAN step 5) before running Systems D/E.")
+        return {"repository_nodes": repos, "file_nodes": files, "total_nodes": store.count_nodes(),
+                "total_edges": store.count_edges()}
 
     def _execute_system(
         self,
@@ -125,23 +227,52 @@ class M5BenchmarkRunner:
         """
         Execute one task through the designated system pipeline.
         """
-        req = EngTaskRequest(
-            task_id=task.task_id,
-            query=task.query,
-            repository=task.repository,
-            quality_threshold_override=task.expected_quality_threshold,
-        )
+        # Systems A and B are not task-aware (original plan §7.1), so they get no
+        # classification. Systems C, D and E classify the query with the REAL
+        # rule-based classifier: the plan's classification is "automatically
+        # inferred" (contribution C1, §6.2). This runner used to hand C-E the
+        # benchmark's answer-key labels and quality threshold — an oracle the
+        # system never has in use, which would inflate the task-awareness gain
+        # Δ(B→C). The benchmark threshold is still what scores success
+        # (_evaluate_trial); the system's own gate uses the classifier's threshold.
+        req = EngTaskRequest(task_id=task.task_id, query=task.query, repository=task.repository)
+        clf, classification_info = None, None
+        if system_id not in (SystemID.BASELINE_A.value, SystemID.BASELINE_B.value):
+            t0 = time.perf_counter()
+            clf = self._classifier.classify(req)
+            classification_info = {
+                "source": self._classifier.classifier_name,
+                "classification_ms": round((time.perf_counter() - t0) * 1000.0, 3),
+                "predicted": {k: _value(getattr(clf, k)) for k in _CLASSIFICATION_FIELDS},
+                "agreement_with_benchmark": {
+                    k: _value(getattr(clf, k)) == _value(getattr(task, k)) for k in _CLASSIFICATION_FIELDS
+                },
+                "quality_threshold_used": clf.quality_threshold,
+            }
 
-        clf = TaskClassification(
-            task_id=task.task_id,
-            sdlc_stage=task.sdlc_stage.value if hasattr(task.sdlc_stage, "value") else str(task.sdlc_stage),
-            task_type=task.task_type.value if hasattr(task.task_type, "value") else str(task.task_type),
-            complexity=task.complexity.value if hasattr(task.complexity, "value") else str(task.complexity),
-            criticality=task.criticality.value if hasattr(task.criticality, "value") else str(task.criticality),
-            security_sensitivity=task.security_sensitivity,
-            quality_threshold=task.expected_quality_threshold,
-        )
+        # CPU energy is ESTIMATED by a disclosed method (original plan §9.1, §12):
+        # CPU TDP x system-wide CPU utilisation over this trial's window x duration.
+        # Utilisation comes from psutil.cpu_times() snapshots, which (unlike
+        # cpu_percent) no other call inside the window can reset.
+        cpu_start, t_window = psutil.cpu_times(), time.perf_counter()
+        response = self._dispatch(system_id, req, clf, llm_provider)
+        window_s = time.perf_counter() - t_window
+        response.metadata["cpu_window"] = {
+            "utilisation": _cpu_utilisation(cpu_start, psutil.cpu_times()),
+            "seconds": round(window_s, 4),
+            "method": "system-wide psutil.cpu_times delta over the trial",
+        }
+        if classification_info is not None:
+            response.metadata["classification"] = classification_info
+        return response
 
+    def _dispatch(
+        self,
+        system_id: str,
+        req: EngTaskRequest,
+        clf: Optional[TaskClassification],
+        llm_provider: BaseLLMProvider,
+    ) -> EngTaskResponse:
         if system_id == SystemID.BASELINE_A.value:
             pipe_a = self._get_pipeline_a(llm_provider)
             return pipe_a.execute(request=req, classification=clf, skip_retrieval=True)
@@ -179,6 +310,14 @@ class M5BenchmarkRunner:
         elif system_id == SystemID.SYSTEM_E.value:
             pipe_q = self._get_pipeline_quality(llm_provider)
             return pipe_q.execute(
+                request=req,
+                classification=clf,
+                experiment_mode=ExperimentMode.SYSTEM_D,
+                skip_verification=False,
+            )
+
+        elif system_id == SystemID.SYSTEM_E_ROUTED.value:
+            return self._get_pipeline_routed(llm_provider).execute(
                 request=req,
                 classification=clf,
                 experiment_mode=ExperimentMode.SYSTEM_D,
@@ -278,14 +417,40 @@ class M5BenchmarkRunner:
                 qc_success = False
 
         # Telemetry extraction
-        lat = response.latency_ms or 50.0
+        # No fallbacks: a missing measurement fails the trial loudly (the job
+        # queue records it as an error) instead of being replaced by an invented
+        # number. These used `x or <estimate>`, so a local model's valid cost of
+        # 0.0 was replaced by gpt-4o-mini prices, and missing energy/CO2e by
+        # 45 W + 60 W x latency at the UK grid intensity.
+        missing = [name for name, value in (
+            ("latency_ms", response.latency_ms), ("energy_joules", response.energy_joules),
+            ("cost_usd", response.cost_usd), ("co2e_grams", response.co2e_grams),
+        ) if value is None]
+        if missing:
+            raise ValueError(f"Trial {system_id}/{task.task_id} has no {missing}; "
+                             "refusing to substitute estimates.")
+        lat = response.latency_ms
         in_tok = response.input_tokens or 0
         out_tok = response.output_tokens or 0
         tot_tok = in_tok + out_tok
 
-        en_joules = response.energy_joules or ((45.0 + 60.0) * (lat / 1000.0))
-        cost = response.cost_usd or ((in_tok * 0.15 + out_tok * 0.60) / 1_000_000.0)
-        co2e = response.co2e_grams or ((en_joules / 3_600_000.0) * 233.0)
+        md = response.metadata or {}
+        # Tiers as defined by the original plan §9.1: GPU energy MEASURED (NVML
+        # counter; ESTIMATED if a rerank power sample is included), CPU energy,
+        # CO2e and cost ESTIMATED; totals inherit the weakest tier.
+        gpu_joules = response.energy_joules
+        cpu_window = md.get("cpu_window")
+        cpu_joules = None
+        if cpu_window and cpu_window.get("utilisation") is not None:
+            cpu_joules = (settings.sustainability.cpu_tdp_watts * cpu_window["utilisation"]
+                          * cpu_window["seconds"])
+        en_joules = gpu_joules + (cpu_joules or 0.0)
+        cost = response.cost_usd
+        co2e = (en_joules / 3_600_000.0) * self.manifest.frozen_variables.carbon_intensity_gco2_per_kwh
+        breakdown = dict(md.get("latency_breakdown_ms") or {})
+        classification_ms = (md.get("classification") or {}).get("classification_ms")
+        if breakdown and classification_ms is not None:
+            breakdown["query"] = classification_ms
 
         chunks_count = len(response.retrieval.chunks) if response.retrieval else 0
         graph_count = sum(1 for c in response.retrieval.chunks if c.metadata.get("graph_context")) if response.retrieval else 0
@@ -304,9 +469,11 @@ class M5BenchmarkRunner:
             trial_index=trial_index,
             timestamp=datetime.datetime.utcnow().isoformat(),
             manifest_hash=self._manifest_hash,
-            latency_ms=round(lat, 2),
-            retrieval_latency_ms=round(response.retrieval.retrieval_latency_ms or 0.0, 2) if response.retrieval else 0.0,
-            generation_latency_ms=round(lat - (response.retrieval.retrieval_latency_ms or 0.0), 2) if response.retrieval else round(lat, 2),
+            latency_ms=round(lat + (classification_ms or 0.0), 2),
+            retrieval_latency_ms=round(breakdown.get("retrieval", 0.0) + breakdown.get("rerank", 0.0), 2),
+            generation_latency_ms=round(breakdown.get("generation", lat), 2),
+            latency_breakdown_ms=breakdown or None,
+            output_truncated=md.get("output_truncated"),
             input_tokens=in_tok,
             output_tokens=out_tok,
             total_tokens=tot_tok,
@@ -315,10 +482,13 @@ class M5BenchmarkRunner:
             graph_chunks_count=graph_count,
             escalation_count=response.escalation_count,
             total_attempts=response.verification_details.get("total_attempts", 1) if response.verification_details else 1,
-            gpu_energy_measured_joules=None,
-            cpu_energy_joules=round(45.0 * (lat / 1000.0), 4),
-            gpu_energy_joules=round(60.0 * (lat / 1000.0), 4),
+            gpu_energy_measured_joules=md.get("generation_energy_measured_joules"),
+            cpu_energy_joules=round(cpu_joules, 4) if cpu_joules is not None else None,
+            gpu_energy_joules=round(gpu_joules, 4),
             total_energy_joules=round(en_joules, 4),
+            energy_tier=md.get("energy_tier"),
+            total_energy_tier="ESTIMATED" if cpu_joules is not None else md.get("energy_tier"),
+            gpu_max_temp_c=md.get("gpu_max_temp_c"),
             cost_usd=round(cost, 6),
             co2e_grams=round(co2e, 6),
             task_correctness=round(task_corr, 4),
@@ -343,6 +513,7 @@ class M5BenchmarkRunner:
             quality_per_second=qps,
             generated_answer=response.answer,
             metadata={
+                "classification": md.get("classification"),
                 "sdlc_stage": task.sdlc_stage.value if hasattr(task.sdlc_stage, "value") else str(task.sdlc_stage),
                 "repository": task.repository,
                 "complexity": task.complexity.value if hasattr(task.complexity, "value") else str(task.complexity),

@@ -2,155 +2,17 @@
 # Engineering Intelligence Hub — Model Registry
 # configs/models.yaml
 #
-# IMPORTANT: Cost, energy and latency figures are REFERENCE ESTIMATES.
-# Verify against provider pricing pages before publishing results.
-# Actual measured values are collected during experiments.
-#
-# Update this file when:
-# - Provider pricing changes
-# - New models are added
-# - Measured values replace reference estimates
+# Describes the local models the project uses (local models only — original
+# plan, MASTER_DATASET_SPECIFICATION §1): tier, digest, measured values.
+# HOW they are called (num_ctx, num_gpu, temperature, seed, output limit) is
+# NOT here: configs/inference.yaml is the single source of truth for that.
+# Paid-API models (OpenAI / Anthropic / Google) and local/llama-3-8b were
+# removed on 2026-10-05: never used, and contrary to the local-only decision.
 # ============================================================
 
 models:
-  # ---------- OpenAI ----------
-  - model_id: gpt-4o-mini
-    display_name: "GPT-4o Mini"
-    provider: openai
-    tier: small
-    context_window_tokens: 128000
-    max_output_tokens: 16384
-    ref_input_cost_per_1m_tokens: 0.15
-    ref_output_cost_per_1m_tokens: 0.60
-    ref_latency_p50_ms: 800
-    ref_latency_p95_ms: 3000
-    ref_energy_per_1k_output_tokens_wh: null  # To be measured
-    supports_function_calling: true
-    supports_streaming: true
-    default_temperature: 0.1
-    default_max_tokens: 2048
-    recommended_for_task_types:
-      - code_explanation
-      - requirement_retrieval
-      - test_explanation
-      - review_assistance
-
-  - model_id: gpt-4o
-    display_name: "GPT-4o"
-    provider: openai
-    tier: medium
-    context_window_tokens: 128000
-    max_output_tokens: 4096
-    ref_input_cost_per_1m_tokens: 2.50
-    ref_output_cost_per_1m_tokens: 10.00
-    ref_latency_p50_ms: 1500
-    ref_latency_p95_ms: 5000
-    ref_energy_per_1k_output_tokens_wh: null  # To be measured
-    supports_function_calling: true
-    supports_vision: true
-    supports_streaming: true
-    default_temperature: 0.1
-    default_max_tokens: 2048
-    recommended_for_task_types:
-      - code_generation
-      - defect_detection
-      - test_generation
-      - architecture_qa
-
-  # ---------- Anthropic ----------
-  - model_id: claude-3-haiku-20240307
-    display_name: "Claude 3 Haiku"
-    provider: anthropic
-    tier: small
-    context_window_tokens: 200000
-    max_output_tokens: 4096
-    ref_input_cost_per_1m_tokens: 0.25
-    ref_output_cost_per_1m_tokens: 1.25
-    ref_latency_p50_ms: 700
-    ref_latency_p95_ms: 2500
-    ref_energy_per_1k_output_tokens_wh: null
-    supports_function_calling: true
-    supports_streaming: true
-    default_temperature: 0.1
-    default_max_tokens: 2048
-
-  - model_id: claude-3-5-sonnet-20241022
-    display_name: "Claude 3.5 Sonnet"
-    provider: anthropic
-    tier: large
-    context_window_tokens: 200000
-    max_output_tokens: 8192
-    ref_input_cost_per_1m_tokens: 3.00
-    ref_output_cost_per_1m_tokens: 15.00
-    ref_latency_p50_ms: 2000
-    ref_latency_p95_ms: 8000
-    ref_energy_per_1k_output_tokens_wh: null
-    supports_function_calling: true
-    supports_streaming: true
-    default_temperature: 0.1
-    default_max_tokens: 4096
-    recommended_for_task_types:
-      - code_generation
-      - architecture_decision_support
-      - root_cause_assistance
-      - technical_debt_analysis
-
-  # ---------- Google ----------
-  - model_id: gemini-2.0-flash
-    display_name: "Gemini 2.0 Flash"
-    provider: google
-    tier: small
-    context_window_tokens: 1000000
-    max_output_tokens: 8192
-    ref_input_cost_per_1m_tokens: 0.10
-    ref_output_cost_per_1m_tokens: 0.40
-    ref_latency_p50_ms: 600
-    ref_latency_p95_ms: 2000
-    ref_energy_per_1k_output_tokens_wh: null
-    supports_function_calling: true
-    supports_streaming: true
-    default_temperature: 0.1
-    default_max_tokens: 2048
-
-  - model_id: gemini-1.5-pro
-    display_name: "Gemini 1.5 Pro"
-    provider: google
-    tier: large
-    context_window_tokens: 2000000
-    max_output_tokens: 8192
-    ref_input_cost_per_1m_tokens: 3.50
-    ref_output_cost_per_1m_tokens: 10.50
-    ref_latency_p50_ms: 3000
-    ref_latency_p95_ms: 12000
-    ref_energy_per_1k_output_tokens_wh: null
-    supports_function_calling: true
-    supports_streaming: true
-    default_temperature: 0.1
-    default_max_tokens: 4096
-
-  # ---------- Local (Ollama / vLLM) ----------
-  - model_id: local/llama-3-8b
-    display_name: "Llama 3 8B (Local)"
-    provider: local
-    tier: local
-    context_window_tokens: 8192
-    max_output_tokens: 4096
-    ref_input_cost_per_1m_tokens: 0.0
-    ref_output_cost_per_1m_tokens: 0.0
-    ref_latency_p50_ms: null  # Varies by hardware
-    ref_latency_p95_ms: null
-    ref_energy_per_1k_output_tokens_wh: null  # Measure via NVML
-    supports_function_calling: false
-    supports_streaming: true
-    is_available_locally: true
-    api_base_url: "http://localhost:11434"
-    default_temperature: 0.1
-    default_max_tokens: 2048
-
   # ---------- Local ladder (Ollama) — the models actually used (local-only, RD-013) ----------
   # Digests pinned in CLAUDE.md. Measured values: experiments/results/phase1/machine_A/.
-  # ollama_options are sent on every call for that model. num_gpu 999 = all layers on
-  # the GPU (decided 2026-10-05; num_ctx 12288 is OllamaProvider.DEFAULT_NUM_CTX).
   - model_id: "qwen2.5-coder:1.5b"
     display_name: "Qwen2.5-Coder 1.5B Instruct (Q4_K_M, Ollama)"
     provider: local
@@ -165,8 +27,6 @@ models:
     default_temperature: 0.0
     extra:
       digest: "d7372fd828518a4d38b1eb196c673c31a85f2ed302b3d1e406c4c2d1b64a0668"
-      ollama_options:
-        num_gpu: 999
       measured_laptop_a: "100% on GPU; 131 tok/s; 105.7 J per warm call (vram_study.json)"
 
   - model_id: "qwen2.5-coder:3b"
@@ -183,8 +43,6 @@ models:
     default_temperature: 0.0
     extra:
       digest: "f72c60cabf6237b07f6e632b2c48d533cef25eda2efbd34bed21c5e9c01e6225"
-      ollama_options:
-        num_gpu: 999
       measured_laptop_a: "100% on GPU; 76 tok/s; 174.2 J per warm call (vram_study.json)"
 
   - model_id: "qwen2.5-coder:7b"
@@ -206,6 +64,4 @@ models:
       # encoders resident (vram_study_7b_forced_gpu.json). At the num_ctx 12288 used
       # for all runs it still fits fully: 34.6 tok/s, peak 5,906 of 6,141 MiB
       # (long_context_probe.json).
-      ollama_options:
-        num_gpu: 999
       measured_laptop_a: "100% on GPU (forced); 38 tok/s; 306.8 J per warm call (vram_study_7b_forced_gpu.json)"

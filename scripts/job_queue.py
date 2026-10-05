@@ -48,7 +48,7 @@ from core.config import PROJECT_ROOT, settings
 
 QUEUE_ROOT = PROJECT_ROOT / "experiments" / "results" / "queue"
 LOCK_PATH = PROJECT_ROOT / "experiments" / "results" / ".gpu_queue.lock"
-ALL_SYSTEMS = ["baseline_a", "baseline_b", "system_c", "system_d", "system_e"]
+ALL_SYSTEMS = ["baseline_a", "baseline_b", "system_c", "system_d", "system_e", "system_e_routed"]
 MAX_TEMP_C = 90
 RESUME_TEMP_C = 65
 MAX_THERMAL_RETRIES = 2
@@ -283,7 +283,8 @@ def check_test_split_allowed(split: str, final_test: bool, queue_root: Path, run
 
 
 # --------------------------------------------------------------------------- M5 binding
-def m5_executor(provider_name: Optional[str], manifest_path: Optional[str], split: str):
+def m5_executor(provider_name: Optional[str], manifest_path: Optional[str], split: str,
+                systems: Optional[List[str]] = None):
     """Units execute through the existing M5 runner: pipeline per system, then trial evaluation."""
     from experiments.m5.manifest import ExperimentManifest
     from experiments.m5.runner import M5BenchmarkRunner
@@ -292,6 +293,20 @@ def m5_executor(provider_name: Optional[str], manifest_path: Optional[str], spli
     if manifest_path:
         manifest = ExperimentManifest(**json.loads(Path(manifest_path).read_text(encoding="utf-8")))
     runner = M5BenchmarkRunner(manifest=manifest, provider_name=provider_name)
+    # A manifest that differs from what the pipelines actually run with would
+    # certify settings that never ran: refuse it (mock runs are tests, not results).
+    from experiments.m5.manifest import runtime_mismatches
+
+    mismatches = runtime_mismatches(runner.manifest)
+    if mismatches and (provider_name or "").lower() != "mock":
+        raise RuntimeError(f"Manifest does not match the runtime settings: {mismatches}")
+    runner.graph_info = None
+    real = (provider_name or "").lower() != "mock"
+    if set(systems or []) & {"system_d", "system_e", "system_e_routed"} and real:
+        runner.graph_info = runner.graph_preflight()  # raises if the graph is missing/incomplete
+    # One-time loading (BM25 index, encoders, reranker) happens here, untimed, never
+    # inside a measured trial (original plan §10.4).
+    runner.warm_up_info = runner.warm_up(systems or []) if real else None
     tasks = {t.task_id: t for t in load_split_tasks(split)}
 
     def execute(unit: Dict[str, Any]) -> Dict[str, Any]:
@@ -379,14 +394,18 @@ def main(argv: Optional[Iterable[str]] = None) -> None:
     if args.max_tasks:
         task_ids = task_ids[:args.max_tasks]
     plan = build_plan(systems, task_ids, args.trials, args.seed)
-    config = {"split": args.split, "systems": systems, "trials": args.trials, "seed": args.seed,
-              "max_tasks": args.max_tasks, "task_ids": task_ids, "manifest": args.manifest,
-              "provider": args.provider or settings.model.default_provider}
 
     from experiments.provenance import collect_provenance
 
     with GpuLock(run_id=args.run_id):
-        execute, _ = m5_executor(args.provider, args.manifest, args.split)
+        execute, runner = m5_executor(args.provider, args.manifest, args.split, systems)
+        config = {"split": args.split, "systems": systems, "trials": args.trials, "seed": args.seed,
+                  "max_tasks": args.max_tasks, "task_ids": task_ids, "manifest": args.manifest,
+                  "manifest_hash": runner.manifest.compute_hash(),
+                  "frozen_variables": runner.manifest.frozen_variables.model_dump(),
+                  "knowledge_graph": runner.graph_info,
+                  "warm_up": runner.warm_up_info,
+                  "provider": args.provider or settings.model.default_provider}
         queue = JobQueue(run_dir, config, plan, execute, ThermalGuard(read_temp=nvml_temp),
                          provenance=collect_provenance, log=lambda m: print(m, flush=True))
         status = queue.run(retry_errors=args.retry_errors)

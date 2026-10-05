@@ -14,7 +14,7 @@ from __future__ import annotations
 import hashlib
 import json
 from enum import Enum
-from typing import Dict
+from typing import Any, Dict, List
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -26,6 +26,9 @@ class SystemID(str, Enum):
     SYSTEM_C   = "system_c"    # Task-Aware Adaptive RAG (M1 + M3, no graph, no gate)
     SYSTEM_D   = "system_d"    # Task-Aware + Knowledge Graph RAG (M1 + M2 + M3, no gate)
     SYSTEM_E   = "system_e"    # Full Proposed System (M1 + M2 + M3 + M4 Quality Gate & Escalation)
+    # E + task-aware model routing 1.5B -> 3B -> 7B (plan C1 "model tier selected per
+    # task", RQ4). One added capability over E, so delta(E -> E_routed) isolates routing.
+    SYSTEM_E_ROUTED = "system_e_routed"
 
 
 class SystemConfig(BaseModel):
@@ -39,6 +42,7 @@ class SystemConfig(BaseModel):
     quality_gate_enabled: bool = False
     escalation_enabled: bool = False
     max_escalations: int = 0
+    model_routing_enabled: bool = False
     default_top_k: int = 5
     default_dense_weight: float = 0.70
     default_sparse_weight: float = 0.30
@@ -58,7 +62,10 @@ class FrozenVariables(BaseModel):
     )
 
     # Base LLM Generation Constraints
+    llm_provider: str = "ollama"
     llm_model_id: str = "gpt-4o-mini"
+    llm_num_ctx: int = 12288
+    llm_num_gpu: int = 999
     temperature: float = 0.1
     max_output_tokens: int = 2048
     random_seed: int = 42
@@ -79,6 +86,62 @@ class FrozenVariables(BaseModel):
     trials_per_task: int = 3
 
     model_config = ConfigDict(use_enum_values=True)
+
+    @classmethod
+    def from_runtime(cls) -> "FrozenVariables":
+        """The values the pipelines will ACTUALLY use, read from the same sources they read.
+
+        The class defaults above are historical (gpt-4o-mini, UK grid, 2 repos) and
+        were never read by any pipeline, so a manifest built from them certified
+        settings that did not run. Every manifest is now built from runtime values,
+        and `runtime_mismatches()` refuses a manifest that differs from them.
+        """
+        from core.config import settings
+        from core.inference import inference_config
+        from sustainability.carbon.estimator import CarbonEstimator
+
+        sus = settings.sustainability
+        local = settings.model.default_provider == "ollama"
+        return cls(
+            repositories=wave1_repository_pins(),
+            llm_provider=settings.model.default_provider,
+            llm_model_id=settings.model.default_model_id,
+            llm_num_ctx=inference_config().num_ctx,
+            llm_num_gpu=inference_config().num_gpu,
+            temperature=settings.model.temperature,
+            max_output_tokens=settings.model.max_tokens,
+            random_seed=inference_config().seed,
+            embedding_model_id=settings.vector_store.embedding_model,
+            embedding_dimension=settings.vector_store.embedding_dimension,
+            carbon_intensity_gco2_per_kwh=CarbonEstimator.from_settings().carbon_intensity,
+            cpu_tdp_watts=sus.cpu_tdp_watts,
+            gpu_tdp_watts=sus.gpu_tdp_watts,
+            input_cost_per_1m_tokens_usd=0.0 if local else sus.default_input_cost_per_1m_tokens,
+            output_cost_per_1m_tokens_usd=0.0 if local else sus.default_output_cost_per_1m_tokens,
+        )
+
+
+def wave1_repository_pins() -> Dict[str, str]:
+    """repo name -> pinned commit for every wave-1 repository in datasets/registry.yaml."""
+    import yaml
+
+    from core.config import PROJECT_ROOT
+
+    registry = yaml.safe_load((PROJECT_ROOT / "datasets" / "registry.yaml").read_text(encoding="utf-8"))
+    entries = registry.get("repositories", []) if isinstance(registry, dict) else registry
+    return {
+        f"{e.get('owner', '')}/{e['name']}".lstrip("/"): e["selected_commit"]
+        for e in entries
+        if e.get("wave") == 1 and e.get("selected_commit")
+    }
+
+
+def runtime_mismatches(manifest: "ExperimentManifest") -> List[Dict[str, Any]]:
+    """Fields where the manifest differs from what the pipelines would actually run with."""
+    want = FrozenVariables.from_runtime().model_dump()
+    have = manifest.frozen_variables.model_dump()
+    return [{"field": k, "manifest": have.get(k), "runtime": v}
+            for k, v in want.items() if k != "trials_per_task" and have.get(k) != v]
 
 
 class ExperimentManifest(BaseModel):
@@ -164,7 +227,14 @@ class ExperimentManifest(BaseModel):
                 max_escalations=3,
             ),
         }
-        return cls(systems=systems)
+        systems[SystemID.SYSTEM_E_ROUTED.value] = systems[SystemID.SYSTEM_E.value].model_copy(update={
+            "system_id": SystemID.SYSTEM_E_ROUTED,
+            "system_name": "System E + model routing (RQ4)",
+            "description": "System E with task-aware model routing over the local ladder "
+                           "(small 1.5B, medium 3B, large 7B; escalation climbs the ladder).",
+            "model_routing_enabled": True,
+        })
+        return cls(systems=systems, frozen_variables=FrozenVariables.from_runtime())
 
     def compute_hash(self) -> str:
         """Compute SHA-256 fingerprint of the manifest configuration."""

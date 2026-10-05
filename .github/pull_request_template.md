@@ -2,15 +2,14 @@
 
 <!-- One or two sentences: what this PR changes and why. Link issues/decisions (RD-xxx). -->
 
-## Area / owner
+## Plan
 
-- [ ] Touches only my own directories (see `docs/WORKFLOW.md` §2)
-- [ ] Touches the other person's or shared directories → requested their review
-- [ ] Changes `knowledge/schemas/` or `core/config.py` (announced to the team)
+- [ ] Matches `docs/original_plan.md`; any deviation is recorded in `docs/WORK_PLAN.md` §5 (change register)
+- [ ] Generation settings changed only in `configs/inference.yaml`
 
 ## Testing
 
-- Machine: `laptop-a` / `laptop-b`
+- Machine: `laptop-a`
 - `python -m pytest` result: `___ passed, ___ skipped, ___ failed`
 - Docker (Qdrant/Neo4j) running during tests: yes / no
 
@@ -24,4 +23,4 @@
 ## Safety
 
 - [ ] No secrets (`.env`, keys, tokens) and no large data (snapshots, dumps, weights, `.corpus_cache/`)
-- [ ] `PROGRESS-A.md` / `PROGRESS-B.md` updated
+- [ ] `PROGRESS-A.md` updated
