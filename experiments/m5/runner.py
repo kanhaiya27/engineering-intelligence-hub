@@ -175,6 +175,16 @@ class M5BenchmarkRunner:
             )
         return self._pipe_quality
 
+    def _retrieval_label(self, task_id: str):
+        """Human-checked retrieval label for a task (dev/val now; test labels only before the final run)."""
+        if getattr(self, "_labels", None) is None:
+            from benchmark.retrieval_labels import LABELS_PATH
+            from evaluation.retrieval_metrics import Label
+
+            raw = json.loads(LABELS_PATH.read_text(encoding="utf-8"))["labels"] if LABELS_PATH.exists() else []
+            self._labels = {d["task_id"]: Label.from_json(d) for d in raw}
+        return self._labels.get(task_id)
+
     @property
     def graph_store(self):
         if getattr(self, "_graph_store", None) is None:
@@ -400,6 +410,10 @@ class M5BenchmarkRunner:
             4,
         )
 
+        from evaluation.outcome import outcome as independent_outcome
+
+        indep = independent_outcome(response.answer or "", self._retrieval_label(task.task_id))
+
         thresh = task.expected_quality_threshold
         is_refusal = "INSUFFICIENT EVIDENCE" in (response.answer or "")
         gt_exists = bool(task.ground_truth or task.acceptable_alternatives)
@@ -519,6 +533,12 @@ class M5BenchmarkRunner:
             consistency_score=_round(con_score),
             citation_validity_rate=_round(cit_valid_ratio),
             missing_scores=missing_scores,
+            has_retrieval_label=indep.has_label,
+            line_citations=indep.line_citations,
+            cited_span_precision=_round(indep.cited_span_precision),
+            cited_span_recall=_round(indep.cited_span_recall),
+            cited_file_recall=_round(indep.cited_file_recall),
+            answer_supported=indep.supported,
             is_grounded_refusal=is_refusal,
             grounded_refusal_score=refusal_score,
             composite_quality=composite_q,

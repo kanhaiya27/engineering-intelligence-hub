@@ -86,6 +86,15 @@ class TrialResult(BaseModel):
     citation_validity_rate: Optional[float] = Field(default=None, ge=0.0, le=1.0, description="Ratio of valid citations (None if the answer cites nothing)")
     missing_scores: List[str] = Field(default_factory=list, description="Quality components the evaluators did not score")
 
+    # --- Independent outcome (evaluation/outcome.py): answer text vs the human-checked evidence
+    #     spans only; never the retrieved chunks or System E's gate signals (RQ3 without circularity)
+    has_retrieval_label: bool = Field(default=False, description="A retrieval label exists for this task")
+    line_citations: int = Field(default=0, description="[MEASURED] [path:Lx-Ly] citations in the answer")
+    cited_span_precision: Optional[float] = Field(default=None, description="[MEASURED] Share of line citations inside a labelled evidence span")
+    cited_span_recall: Optional[float] = Field(default=None, description="[MEASURED] Share of labelled spans cited")
+    cited_file_recall: Optional[float] = Field(default=None, description="[MEASURED] Share of labelled relevant files cited")
+    answer_supported: Optional[bool] = Field(default=None, description="[MEASURED] Non-refusal answer citing >= 1 labelled span; None for refusals or without a label")
+
     # --- Refusal Metrics ---
     is_grounded_refusal: bool = Field(default=False, description="True if response issued an explicit INSUFFICIENT EVIDENCE refusal")
     grounded_refusal_score: float = Field(default=0.0, ge=0.0, le=1.0, description="Refusal precision score (0.50 neutral for missing evidence, 0.0 for unfounded refusal)")
