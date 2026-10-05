@@ -1,0 +1,756 @@
+{
+  "n": {
+    "dev": 24,
+    "val": 12
+  },
+  "correct": {
+    "dev": {
+      "sdlc_stage": 23,
+      "task_type": 22,
+      "complexity": 15,
+      "criticality": 18
+    },
+    "val": {
+      "sdlc_stage": 7,
+      "task_type": 8,
+      "complexity": 6,
+      "criticality": 6
+    }
+  },
+  "all_four_correct": {
+    "dev": 12,
+    "val": 2
+  },
+  "accuracy": {
+    "dev": {
+      "sdlc_stage": 0.9583333333333334,
+      "task_type": 0.9166666666666666,
+      "complexity": 0.625,
+      "criticality": 0.75
+    },
+    "val": {
+      "sdlc_stage": 0.5833333333333334,
+      "task_type": 0.6666666666666666,
+      "complexity": 0.5,
+      "criticality": 0.5
+    }
+  },
+  "confusion": {
+    "dev": {
+      "sdlc_stage": {
+        "architecture": {
+          "architecture": 4
+        },
+        "development": {
+          "development": 4
+        },
+        "maintenance": {
+          "maintenance": 4
+        },
+        "requirements": {
+          "requirements": 3,
+          "architecture": 1
+        },
+        "code_review": {
+          "code_review": 4
+        },
+        "testing": {
+          "testing": 4
+        }
+      },
+      "task_type": {
+        "code_explanation": {
+          "dependency_understanding": 1,
+          "code_explanation": 3
+        },
+        "code_generation": {
+          "code_generation": 4
+        },
+        "error_analysis": {
+          "error_analysis": 2
+        },
+        "change_understanding": {
+          "change_understanding": 2
+        },
+        "requirement_retrieval": {
+          "requirement_retrieval": 2
+        },
+        "requirement_understanding": {
+          "requirement_understanding": 1
+        },
+        "architecture_qa": {
+          "code_explanation": 1
+        },
+        "defect_detection": {
+          "defect_detection": 3
+        },
+        "review_assistance": {
+          "review_assistance": 1
+        },
+        "test_generation": {
+          "test_generation": 3
+        },
+        "test_failure_analysis": {
+          "test_failure_analysis": 1
+        }
+      },
+      "complexity": {
+        "medium": {
+          "medium": 10,
+          "low": 2,
+          "high": 3
+        },
+        "low": {
+          "low": 5,
+          "medium": 2
+        },
+        "high": {
+          "low": 1,
+          "medium": 1
+        }
+      },
+      "criticality": {
+        "medium": {
+          "low": 2,
+          "medium": 14,
+          "high": 1
+        },
+        "low": {
+          "medium": 1,
+          "low": 3
+        },
+        "high": {
+          "high": 1,
+          "medium": 1,
+          "critical": 1
+        }
+      }
+    },
+    "val": {
+      "sdlc_stage": {
+        "architecture": {
+          "architecture": 1,
+          "maintenance": 1
+        },
+        "development": {
+          "development": 2
+        },
+        "maintenance": {
+          "testing": 1,
+          "development": 1
+        },
+        "requirements": {
+          "requirements": 1,
+          "architecture": 1
+        },
+        "code_review": {
+          "code_review": 2
+        },
+        "testing": {
+          "testing": 1,
+          "architecture": 1
+        }
+      },
+      "task_type": {
+        "code_explanation": {
+          "code_explanation": 1,
+          "error_analysis": 1
+        },
+        "code_generation": {
+          "code_generation": 2
+        },
+        "error_analysis": {
+          "test_failure_analysis": 1
+        },
+        "change_understanding": {
+          "code_explanation": 1
+        },
+        "requirement_understanding": {
+          "requirement_understanding": 1
+        },
+        "architecture_qa": {
+          "architecture_qa": 1
+        },
+        "defect_detection": {
+          "defect_detection": 1
+        },
+        "risk_identification": {
+          "risk_identification": 1
+        },
+        "test_generation": {
+          "test_generation": 1
+        },
+        "test_explanation": {
+          "code_explanation": 1
+        }
+      },
+      "complexity": {
+        "medium": {
+          "low": 4,
+          "medium": 3
+        },
+        "low": {
+          "low": 3,
+          "high": 1,
+          "medium": 1
+        }
+      },
+      "criticality": {
+        "medium": {
+          "medium": 5
+        },
+        "low": {
+          "medium": 3
+        },
+        "high": {
+          "medium": 2,
+          "high": 1,
+          "critical": 1
+        }
+      }
+    }
+  },
+  "per_task": {
+    "eih-phase1-code-011": {
+      "split": "val",
+      "label": {
+        "sdlc_stage": "architecture",
+        "task_type": "code_explanation",
+        "complexity": "medium",
+        "criticality": "medium"
+      },
+      "predicted": {
+        "sdlc_stage": "architecture",
+        "task_type": "code_explanation",
+        "complexity": "low",
+        "criticality": "medium"
+      }
+    },
+    "eih-phase1-code-014": {
+      "split": "dev",
+      "label": {
+        "sdlc_stage": "architecture",
+        "task_type": "code_explanation",
+        "complexity": "medium",
+        "criticality": "medium"
+      },
+      "predicted": {
+        "sdlc_stage": "architecture",
+        "task_type": "dependency_understanding",
+        "complexity": "medium",
+        "criticality": "low"
+      }
+    },
+    "eih-phase1-code-015": {
+      "split": "dev",
+      "label": {
+        "sdlc_stage": "architecture",
+        "task_type": "code_explanation",
+        "complexity": "low",
+        "criticality": "low"
+      },
+      "predicted": {
+        "sdlc_stage": "architecture",
+        "task_type": "code_explanation",
+        "complexity": "low",
+        "criticality": "medium"
+      }
+    },
+    "eih-phase1-code-016": {
+      "split": "val",
+      "label": {
+        "sdlc_stage": "architecture",
+        "task_type": "code_explanation",
+        "complexity": "low",
+        "criticality": "low"
+      },
+      "predicted": {
+        "sdlc_stage": "maintenance",
+        "task_type": "error_analysis",
+        "complexity": "low",
+        "criticality": "medium"
+      }
+    },
+    "eih-phase1-code-017": {
+      "split": "dev",
+      "label": {
+        "sdlc_stage": "architecture",
+        "task_type": "code_explanation",
+        "complexity": "medium",
+        "criticality": "medium"
+      },
+      "predicted": {
+        "sdlc_stage": "architecture",
+        "task_type": "code_explanation",
+        "complexity": "medium",
+        "criticality": "medium"
+      }
+    },
+    "eih-phase1-code-018": {
+      "split": "dev",
+      "label": {
+        "sdlc_stage": "architecture",
+        "task_type": "code_explanation",
+        "complexity": "medium",
+        "criticality": "medium"
+      },
+      "predicted": {
+        "sdlc_stage": "architecture",
+        "task_type": "code_explanation",
+        "complexity": "low",
+        "criticality": "medium"
+      }
+    },
+    "eih-phase1-dev-021": {
+      "split": "val",
+      "label": {
+        "sdlc_stage": "development",
+        "task_type": "code_generation",
+        "complexity": "low",
+        "criticality": "low"
+      },
+      "predicted": {
+        "sdlc_stage": "development",
+        "task_type": "code_generation",
+        "complexity": "high",
+        "criticality": "medium"
+      }
+    },
+    "eih-phase1-dev-023": {
+      "split": "dev",
+      "label": {
+        "sdlc_stage": "development",
+        "task_type": "code_generation",
+        "complexity": "medium",
+        "criticality": "medium"
+      },
+      "predicted": {
+        "sdlc_stage": "development",
+        "task_type": "code_generation",
+        "complexity": "medium",
+        "criticality": "medium"
+      }
+    },
+    "eih-phase1-dev-025": {
+      "split": "dev",
+      "label": {
+        "sdlc_stage": "development",
+        "task_type": "code_generation",
+        "complexity": "medium",
+        "criticality": "medium"
+      },
+      "predicted": {
+        "sdlc_stage": "development",
+        "task_type": "code_generation",
+        "complexity": "medium",
+        "criticality": "medium"
+      }
+    },
+    "eih-phase1-dev-026": {
+      "split": "val",
+      "label": {
+        "sdlc_stage": "development",
+        "task_type": "code_generation",
+        "complexity": "medium",
+        "criticality": "medium"
+      },
+      "predicted": {
+        "sdlc_stage": "development",
+        "task_type": "code_generation",
+        "complexity": "medium",
+        "criticality": "medium"
+      }
+    },
+    "eih-phase1-dev-028": {
+      "split": "dev",
+      "label": {
+        "sdlc_stage": "development",
+        "task_type": "code_generation",
+        "complexity": "medium",
+        "criticality": "medium"
+      },
+      "predicted": {
+        "sdlc_stage": "development",
+        "task_type": "code_generation",
+        "complexity": "medium",
+        "criticality": "medium"
+      }
+    },
+    "eih-phase1-dev-030": {
+      "split": "dev",
+      "label": {
+        "sdlc_stage": "development",
+        "task_type": "code_generation",
+        "complexity": "medium",
+        "criticality": "medium"
+      },
+      "predicted": {
+        "sdlc_stage": "development",
+        "task_type": "code_generation",
+        "complexity": "medium",
+        "criticality": "medium"
+      }
+    },
+    "eih-phase1-ops-051": {
+      "split": "dev",
+      "label": {
+        "sdlc_stage": "maintenance",
+        "task_type": "error_analysis",
+        "complexity": "medium",
+        "criticality": "high"
+      },
+      "predicted": {
+        "sdlc_stage": "maintenance",
+        "task_type": "error_analysis",
+        "complexity": "high",
+        "criticality": "high"
+      }
+    },
+    "eih-phase1-ops-052": {
+      "split": "val",
+      "label": {
+        "sdlc_stage": "maintenance",
+        "task_type": "error_analysis",
+        "complexity": "medium",
+        "criticality": "high"
+      },
+      "predicted": {
+        "sdlc_stage": "testing",
+        "task_type": "test_failure_analysis",
+        "complexity": "medium",
+        "criticality": "medium"
+      }
+    },
+    "eih-phase1-ops-053": {
+      "split": "val",
+      "label": {
+        "sdlc_stage": "maintenance",
+        "task_type": "change_understanding",
+        "complexity": "low",
+        "criticality": "medium"
+      },
+      "predicted": {
+        "sdlc_stage": "development",
+        "task_type": "code_explanation",
+        "complexity": "low",
+        "criticality": "medium"
+      }
+    },
+    "eih-phase1-ops-054": {
+      "split": "dev",
+      "label": {
+        "sdlc_stage": "maintenance",
+        "task_type": "change_understanding",
+        "complexity": "low",
+        "criticality": "medium"
+      },
+      "predicted": {
+        "sdlc_stage": "maintenance",
+        "task_type": "change_understanding",
+        "complexity": "medium",
+        "criticality": "low"
+      }
+    },
+    "eih-phase1-ops-058": {
+      "split": "dev",
+      "label": {
+        "sdlc_stage": "maintenance",
+        "task_type": "error_analysis",
+        "complexity": "medium",
+        "criticality": "medium"
+      },
+      "predicted": {
+        "sdlc_stage": "maintenance",
+        "task_type": "error_analysis",
+        "complexity": "medium",
+        "criticality": "medium"
+      }
+    },
+    "eih-phase1-ops-059": {
+      "split": "dev",
+      "label": {
+        "sdlc_stage": "maintenance",
+        "task_type": "change_understanding",
+        "complexity": "low",
+        "criticality": "low"
+      },
+      "predicted": {
+        "sdlc_stage": "maintenance",
+        "task_type": "change_understanding",
+        "complexity": "low",
+        "criticality": "low"
+      }
+    },
+    "eih-phase1-req-002": {
+      "split": "val",
+      "label": {
+        "sdlc_stage": "requirements",
+        "task_type": "requirement_understanding",
+        "complexity": "low",
+        "criticality": "medium"
+      },
+      "predicted": {
+        "sdlc_stage": "requirements",
+        "task_type": "requirement_understanding",
+        "complexity": "low",
+        "criticality": "medium"
+      }
+    },
+    "eih-phase1-req-003": {
+      "split": "val",
+      "label": {
+        "sdlc_stage": "requirements",
+        "task_type": "architecture_qa",
+        "complexity": "medium",
+        "criticality": "high"
+      },
+      "predicted": {
+        "sdlc_stage": "architecture",
+        "task_type": "architecture_qa",
+        "complexity": "medium",
+        "criticality": "high"
+      }
+    },
+    "eih-phase1-req-005": {
+      "split": "dev",
+      "label": {
+        "sdlc_stage": "requirements",
+        "task_type": "requirement_retrieval",
+        "complexity": "low",
+        "criticality": "low"
+      },
+      "predicted": {
+        "sdlc_stage": "requirements",
+        "task_type": "requirement_retrieval",
+        "complexity": "low",
+        "criticality": "low"
+      }
+    },
+    "eih-phase1-req-008": {
+      "split": "dev",
+      "label": {
+        "sdlc_stage": "requirements",
+        "task_type": "requirement_understanding",
+        "complexity": "low",
+        "criticality": "medium"
+      },
+      "predicted": {
+        "sdlc_stage": "requirements",
+        "task_type": "requirement_understanding",
+        "complexity": "low",
+        "criticality": "medium"
+      }
+    },
+    "eih-phase1-req-009": {
+      "split": "dev",
+      "label": {
+        "sdlc_stage": "requirements",
+        "task_type": "architecture_qa",
+        "complexity": "high",
+        "criticality": "high"
+      },
+      "predicted": {
+        "sdlc_stage": "architecture",
+        "task_type": "code_explanation",
+        "complexity": "low",
+        "criticality": "medium"
+      }
+    },
+    "eih-phase1-req-010": {
+      "split": "dev",
+      "label": {
+        "sdlc_stage": "requirements",
+        "task_type": "requirement_retrieval",
+        "complexity": "medium",
+        "criticality": "medium"
+      },
+      "predicted": {
+        "sdlc_stage": "requirements",
+        "task_type": "requirement_retrieval",
+        "complexity": "medium",
+        "criticality": "high"
+      }
+    },
+    "eih-phase1-rev-043": {
+      "split": "dev",
+      "label": {
+        "sdlc_stage": "code_review",
+        "task_type": "defect_detection",
+        "complexity": "medium",
+        "criticality": "high"
+      },
+      "predicted": {
+        "sdlc_stage": "code_review",
+        "task_type": "defect_detection",
+        "complexity": "low",
+        "criticality": "critical"
+      }
+    },
+    "eih-phase1-rev-044": {
+      "split": "dev",
+      "label": {
+        "sdlc_stage": "code_review",
+        "task_type": "review_assistance",
+        "complexity": "low",
+        "criticality": "low"
+      },
+      "predicted": {
+        "sdlc_stage": "code_review",
+        "task_type": "review_assistance",
+        "complexity": "low",
+        "criticality": "low"
+      }
+    },
+    "eih-phase1-rev-045": {
+      "split": "dev",
+      "label": {
+        "sdlc_stage": "code_review",
+        "task_type": "defect_detection",
+        "complexity": "medium",
+        "criticality": "medium"
+      },
+      "predicted": {
+        "sdlc_stage": "code_review",
+        "task_type": "defect_detection",
+        "complexity": "medium",
+        "criticality": "medium"
+      }
+    },
+    "eih-phase1-rev-046": {
+      "split": "val",
+      "label": {
+        "sdlc_stage": "code_review",
+        "task_type": "defect_detection",
+        "complexity": "medium",
+        "criticality": "high"
+      },
+      "predicted": {
+        "sdlc_stage": "code_review",
+        "task_type": "defect_detection",
+        "complexity": "low",
+        "criticality": "medium"
+      }
+    },
+    "eih-phase1-rev-047": {
+      "split": "val",
+      "label": {
+        "sdlc_stage": "code_review",
+        "task_type": "risk_identification",
+        "complexity": "medium",
+        "criticality": "high"
+      },
+      "predicted": {
+        "sdlc_stage": "code_review",
+        "task_type": "risk_identification",
+        "complexity": "low",
+        "criticality": "critical"
+      }
+    },
+    "eih-phase1-rev-048": {
+      "split": "dev",
+      "label": {
+        "sdlc_stage": "code_review",
+        "task_type": "defect_detection",
+        "complexity": "low",
+        "criticality": "medium"
+      },
+      "predicted": {
+        "sdlc_stage": "code_review",
+        "task_type": "defect_detection",
+        "complexity": "medium",
+        "criticality": "medium"
+      }
+    },
+    "eih-phase1-test-032": {
+      "split": "val",
+      "label": {
+        "sdlc_stage": "testing",
+        "task_type": "test_generation",
+        "complexity": "low",
+        "criticality": "medium"
+      },
+      "predicted": {
+        "sdlc_stage": "testing",
+        "task_type": "test_generation",
+        "complexity": "medium",
+        "criticality": "medium"
+      }
+    },
+    "eih-phase1-test-033": {
+      "split": "val",
+      "label": {
+        "sdlc_stage": "testing",
+        "task_type": "test_explanation",
+        "complexity": "medium",
+        "criticality": "low"
+      },
+      "predicted": {
+        "sdlc_stage": "architecture",
+        "task_type": "code_explanation",
+        "complexity": "low",
+        "criticality": "medium"
+      }
+    },
+    "eih-phase1-test-034": {
+      "split": "dev",
+      "label": {
+        "sdlc_stage": "testing",
+        "task_type": "test_generation",
+        "complexity": "medium",
+        "criticality": "medium"
+      },
+      "predicted": {
+        "sdlc_stage": "testing",
+        "task_type": "test_generation",
+        "complexity": "high",
+        "criticality": "medium"
+      }
+    },
+    "eih-phase1-test-035": {
+      "split": "dev",
+      "label": {
+        "sdlc_stage": "testing",
+        "task_type": "test_failure_analysis",
+        "complexity": "medium",
+        "criticality": "medium"
+      },
+      "predicted": {
+        "sdlc_stage": "testing",
+        "task_type": "test_failure_analysis",
+        "complexity": "high",
+        "criticality": "medium"
+      }
+    },
+    "eih-phase1-test-037": {
+      "split": "dev",
+      "label": {
+        "sdlc_stage": "testing",
+        "task_type": "test_generation",
+        "complexity": "medium",
+        "criticality": "medium"
+      },
+      "predicted": {
+        "sdlc_stage": "testing",
+        "task_type": "test_generation",
+        "complexity": "medium",
+        "criticality": "medium"
+      }
+    },
+    "eih-phase1-test-038": {
+      "split": "dev",
+      "label": {
+        "sdlc_stage": "testing",
+        "task_type": "test_generation",
+        "complexity": "high",
+        "criticality": "medium"
+      },
+      "predicted": {
+        "sdlc_stage": "testing",
+        "task_type": "test_generation",
+        "complexity": "medium",
+        "criticality": "medium"
+      }
+    }
+  },
+  "created_utc": "2026-10-05T19:11:04.281902+00:00"
+}

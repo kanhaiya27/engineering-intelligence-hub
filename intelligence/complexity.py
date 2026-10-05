@@ -125,6 +125,11 @@ class HeuristicComplexityAnalyzer:
             score += 0.15
             reasons.append(f"Inherently complex task type: {task_type}")
 
+        # Writing code or tests is multi-step work (Step 2a rule revision, 2026-10-06, from dev only).
+        if task_type in {TaskType.CODE_GENERATION, TaskType.TEST_GENERATION}:
+            score += 0.15
+            reasons.append(f"Multi-step generation task type: {task_type}")
+
         # Normalize score to [0.0, 1.0]
         final_score = min(1.0, max(0.0, round(score, 2)))
 

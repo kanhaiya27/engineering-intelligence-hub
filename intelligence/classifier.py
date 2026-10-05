@@ -7,6 +7,7 @@ criticality, security sensitivity, and minimum required quality threshold.
 
 from __future__ import annotations
 
+import re
 from typing import List, Optional, Tuple
 
 from core.logging import get_logger
@@ -22,7 +23,25 @@ from knowledge.schemas.tasks import (
 
 logger = get_logger(__name__)
 
-# Keyword patterns mapping to (SDLCStage, TaskType)
+# Rule revision 2026-10-06 (Step 2a, WORK_PLAN C25), written from the 24 DEV tasks only; the 12
+# val tasks were the untouched check (experiments/results/classifier/). General changes only, no
+# task-specific keywords:
+#   * imperative requests ("write/implement/create ...") are generation tasks and are matched before
+#     anything else, so "write an error handler" is not error analysis;
+#   * errors raised in a test setting ("test suite", "pytest", "test client") are test-failure analysis;
+#   * past-tense change questions ("how did X replace/update ...") are change understanding;
+#   * error diagnosis and root-cause analysis are MAINTENANCE: the benchmark's six SDLC stages have
+#     no "operations" (only incident retrieval stays OPERATIONS);
+#   * explaining how an existing component works is ARCHITECTURE-stage code explanation;
+#   * lookups of configuration keys / provided utilities are requirement retrieval;
+#   * "what happens if ..." in a review is defect detection.
+
+_GENERATION_START = re.compile(r"^\s*(please\s+)?(write|implement|create|build|add|generate)\b")
+_TEST_WORD = re.compile(r"\b(test|tests|pytest|unittest|testclient|test_client)\b")
+_TEST_SETTING = ("test suite", "test suites", "in tests", "pytest", "test client", "test_client", "testclient")
+_ERROR_CUES = ("diagnose", "traceback", "runtimeerror", "exception", "error", "stack trace", "raise", "crash")
+
+# Keyword patterns mapping to (SDLCStage, TaskType), checked in order after the rules above.
 _TASK_TYPE_RULES: List[Tuple[List[str], SDLCStage, TaskType]] = [
     # Testing
     (["test generation", "write a test", "write unit test", "pytest test", "test case"], SDLCStage.TESTING, TaskType.TEST_GENERATION),
@@ -35,9 +54,9 @@ _TASK_TYPE_RULES: List[Tuple[List[str], SDLCStage, TaskType]] = [
     (["code review", "review this", "improve typing", "best practice review"], SDLCStage.CODE_REVIEW, TaskType.REVIEW_ASSISTANCE),
 
     # Maintenance & Operations
-    (["diagnose", "traceback", "runtimeerror", "exception", "error", "stack trace", "why does uvicorn", "why does flask crash"], SDLCStage.OPERATIONS, TaskType.ERROR_ANALYSIS),
-    (["root cause", "connection leak", "memory leak", "why does a database connection leak", "why does a reverse proxy"], SDLCStage.OPERATIONS, TaskType.ROOT_CAUSE_ASSISTANCE),
-    (["what changed in", "deprecated", "deprecation", "removed in", "migration from", "compat"], SDLCStage.MAINTENANCE, TaskType.CHANGE_UNDERSTANDING),
+    (["what changed in", "deprecated", "deprecation", "removed in", "migration from", "compat", "how did"], SDLCStage.MAINTENANCE, TaskType.CHANGE_UNDERSTANDING),
+    (["diagnose", "traceback", "runtimeerror", "exception", "error", "stack trace", "why does uvicorn", "why does flask crash"], SDLCStage.MAINTENANCE, TaskType.ERROR_ANALYSIS),
+    (["root cause", "connection leak", "memory leak", "why does a database connection leak", "why does a reverse proxy"], SDLCStage.MAINTENANCE, TaskType.ROOT_CAUSE_ASSISTANCE),
     (["incident", "postmortem", "outage", "production incident"], SDLCStage.OPERATIONS, TaskType.INCIDENT_RETRIEVAL),
 
     # Architecture
@@ -46,12 +65,12 @@ _TASK_TYPE_RULES: List[Tuple[List[str], SDLCStage, TaskType]] = [
     (["architecture decision", "adr", "trade-off between frameworks"], SDLCStage.ARCHITECTURE, TaskType.ARCHITECTURE_DECISION_SUPPORT),
 
     # Requirements
-    (["requirement", "requirements for", "what configuration key", "openapi documentation generation", "session cookie security requirements", "oauth2 password flow"], SDLCStage.REQUIREMENTS, TaskType.REQUIREMENT_UNDERSTANDING),
-    (["config key", "configuration parameter", "retrieval of requirement"], SDLCStage.REQUIREMENTS, TaskType.REQUIREMENT_RETRIEVAL),
+    (["what configuration key", "config key", "configuration parameter", "retrieval of requirement", "oauth2 password flow", "does fastapi provide", "does flask provide"], SDLCStage.REQUIREMENTS, TaskType.REQUIREMENT_RETRIEVAL),
+    (["requirement", "requirements for", "openapi documentation generation", "session cookie security requirements"], SDLCStage.REQUIREMENTS, TaskType.REQUIREMENT_UNDERSTANDING),
 
     # Development / Code Generation & Explanation
     (["write a minimal", "write a custom", "write an endpoint", "write a flask", "write a fastapi", "implement a", "create an app", "template filter", "lifespan"], SDLCStage.DEVELOPMENT, TaskType.CODE_GENERATION),
-    (["explain how", "how does", "how is", "what does", "requestcontext", "push() and pop()", "url_for", "flash()"], SDLCStage.DEVELOPMENT, TaskType.CODE_EXPLANATION),
+    (["explain how", "how does", "how is", "what does", "requestcontext", "push() and pop()", "url_for", "flash()"], SDLCStage.ARCHITECTURE, TaskType.CODE_EXPLANATION),
     (["help with repository", "how to use", "repository assistance"], SDLCStage.DEVELOPMENT, TaskType.REPOSITORY_ASSISTANCE),
 ]
 
@@ -76,6 +95,20 @@ class RuleBasedTaskClassifier(BaseTaskClassifier):
     def _match_task_type(self, query: str) -> Tuple[SDLCStage, TaskType, float]:
         """Match query string against rule patterns to find SDLCStage and TaskType."""
         query_lower = query.lower()
+
+        # 1. Imperative requests are generation tasks (before any error keyword).
+        if _GENERATION_START.search(query_lower):
+            if _TEST_WORD.search(query_lower):
+                return SDLCStage.TESTING, TaskType.TEST_GENERATION, 0.90
+            return SDLCStage.DEVELOPMENT, TaskType.CODE_GENERATION, 0.90
+
+        # 2. An error raised in a test setting is test-failure analysis.
+        if any(c in query_lower for c in _TEST_SETTING) and any(c in query_lower for c in _ERROR_CUES):
+            return SDLCStage.TESTING, TaskType.TEST_FAILURE_ANALYSIS, 0.85
+
+        # 3. "What happens if ..." in a review is defect detection.
+        if "review" in query_lower and "what happens if" in query_lower:
+            return SDLCStage.CODE_REVIEW, TaskType.DEFECT_DETECTION, 0.85
 
         for keywords, stage, task_type in _TASK_TYPE_RULES:
             for kw in keywords:

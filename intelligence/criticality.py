@@ -46,6 +46,10 @@ _OUTAGE_CUES = {
 }
 
 
+# Production context that raises an error/defect to HIGH criticality
+_PRODUCTION_CUES = {"production", "in prod", "live traffic", "customers"}
+
+
 class HeuristicCriticalityAnalyzer:
     """
     Computes task criticality, security sensitivity, and recommended quality thresholds.
@@ -99,12 +103,15 @@ class HeuristicCriticalityAnalyzer:
             base_threshold = 0.90
             reasons.append("Marked CRITICAL due to production outage/high security risk")
         elif task_type in {
-            TaskType.DEFECT_DETECTION,
             TaskType.ROOT_CAUSE_ASSISTANCE,
-            TaskType.ERROR_ANALYSIS,
             TaskType.ARCHITECTURE_QA,
             TaskType.CHANGE_IMPACT_ANALYSIS,
-        } or security_sensitivity == SecuritySensitivity.MEDIUM:
+        } or security_sensitivity == SecuritySensitivity.MEDIUM or (
+            # Step 2a revision (2026-10-06, dev only): an error or defect is HIGH only when it is in
+            # production (or security-sensitive, above); otherwise it is standard MEDIUM work.
+            task_type in {TaskType.ERROR_ANALYSIS, TaskType.DEFECT_DETECTION}
+            and any(re.search(r"\b" + re.escape(w) + r"\b", query_lower) for w in _PRODUCTION_CUES)
+        ):
             criticality = CriticalityLevel.HIGH
             base_threshold = 0.85
             reasons.append(f"Marked HIGH criticality based on task type ({task_type}) or security sensitivity")
@@ -113,6 +120,9 @@ class HeuristicCriticalityAnalyzer:
             TaskType.TEST_GENERATION,
             TaskType.CODE_EXPLANATION,
             TaskType.REQUIREMENT_UNDERSTANDING,
+            TaskType.ERROR_ANALYSIS,
+            TaskType.DEFECT_DETECTION,
+            TaskType.TEST_FAILURE_ANALYSIS,
         }:
             criticality = CriticalityLevel.MEDIUM
             base_threshold = 0.75
