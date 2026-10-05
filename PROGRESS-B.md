@@ -19,6 +19,39 @@ measured (with numbers only if actually measured), what is blocked.
 
 ---
 
+## 2026-10-05 (afternoon) — F1 fixed: escalation now strengthens retrieval
+
+**Heads-up (A's directories):** `generation/quality_rag.py`, `retrieval/adaptive.py`,
+`retrieval/policy.py` changed, so the PR needs A's review (collision rule 1). Small,
+behaviour-only change.
+
+**Done**
+- `fix/escalation-strategy-override`: F1 reproduced by execution on current master
+  (escalation limit 3) and fixed. Before: all 4 attempts executed plain `hybrid`
+  (top_k 7, no graph, no rerank) while `attempt_history` recorded `*_esc1`,
+  `*_esc2_graph`, `*_esc_max`. Cause: the pipeline passed only the escalated *name*,
+  which is not in the registry, and the policy silently fell back to `hybrid`.
+- Fix: `AdaptiveRetrievalPipeline.retrieve(override_strategy=<config>)` runs a config
+  as given (System C still strips graph); `quality_rag` passes the config. An unknown
+  `override_strategy_name` now raises `InvalidRetrievalStrategyError` (API: 400)
+  instead of silently running `hybrid`. Each attempt records `strategy_executed`
+  (name, mode, top_k, graph, rerank) from what the retriever was actually given.
+
+**Measured** (laptop-b, real `configs/retrieval.yaml` registry, retrievers recorded)
+- After the fix, executed per attempt: top_k 7 → 10 → 16 → 30; graph off/off/on/on
+  (graph-augmented retriever in System D); cross-encoder rerank on at attempt 3.
+- 5 new tests (fail on old code, pass on the fix); full suite: 261 passed.
+
+**Must pull (Laptop A)**
+- Escalation now really widens retrieval, adds graph context and reranks, so System E
+  latency and energy will rise on escalated tasks. Pull before P0-3 calibration (A3) or
+  any System E run. Old `attempt_history` entries named a strategy that never ran.
+
+**Next**
+- [ ] WORK_PLAN B3: knowledge-graph population (started next on `feat/graph-populate-wave1`).
+
+---
+
 ## 2026-10-05 (later) — Pulled Phase 1b; labels checkout-path fix
 
 **Done**

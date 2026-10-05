@@ -434,6 +434,97 @@ class TestEscalationPolicy:
         assert policy.get_max_attempts() == 3
 
 
+class TestEscalationExecutes:
+    """Finding F1: the escalated strategy must be the one the retriever runs.
+
+    Uses the real strategy registry (configs/retrieval.yaml), the real policy
+    and the real EscalationPolicy; only the retrievers are recorders. Before the
+    fix every attempt executed plain "hybrid" (top_k 7, no graph, no rerank)
+    while attempt_history recorded the escalated names.
+    """
+
+    def _pipeline_with_recorders(self):
+        from retrieval.adaptive import AdaptiveRetrievalPipeline
+        from retrieval.policy import AdaptiveRetrievalPolicy
+        from retrieval.router import RetrievalRouter
+
+        router = RetrievalRouter.from_yaml("configs/retrieval.yaml")
+        pipeline = AdaptiveRetrievalPipeline.__new__(AdaptiveRetrievalPipeline)
+        pipeline._router = router
+        pipeline._registry = router.list_strategies()
+        pipeline._policy = AdaptiveRetrievalPolicy(pipeline._registry)
+        pipeline._graph_store = None
+
+        calls = []
+
+        def recorder(name):
+            def retrieve(query, strategy, classification, task_id):
+                calls.append((name, strategy))
+                result = _make_retrieval([])
+                result.strategy_used = strategy.strategy_name
+                return result
+            mock = MagicMock()
+            mock.retrieve.side_effect = retrieve
+            return mock
+
+        for attr in ("_dense", "_sparse", "_hybrid", "_graph_aug"):
+            setattr(pipeline, attr, recorder(attr))
+        return pipeline, calls
+
+    def _run(self, experiment_mode):
+        from retrieval.adaptive import ExperimentMode  # noqa: F401
+        adaptive, calls = self._pipeline_with_recorders()
+        pipeline = QualityAwareRAGPipeline(
+            adaptive_pipeline=adaptive,
+            llm_provider=DeterministicMockLLM(["In `missing.py:10`, it does stuff."]),
+            verification_config=VerificationConfig(max_escalation_attempts=3),
+        )
+        response = pipeline.execute(
+            request=EngTaskRequest(task_id="f1", query="Explain verify_token"),
+            classification=_make_classification(quality_threshold=0.85),
+            experiment_mode=experiment_mode,
+        )
+        return response, calls
+
+    def test_each_rung_executes_its_escalated_config_system_d(self):
+        from retrieval.adaptive import ExperimentMode
+        response, calls = self._run(ExperimentMode.SYSTEM_D)
+
+        assert response.passed_quality_gate is False
+        assert len(calls) == 4
+        names = [strategy.strategy_name for _, strategy in calls]
+        assert names[1].endswith("_esc1")
+        assert names[2].endswith("_esc2_graph")
+        assert names[3].endswith("_esc_max")
+
+        base, esc1, esc2, esc_max = (strategy for _, strategy in calls)
+        assert esc1.top_k > base.top_k
+        assert esc2.include_graph_context is True
+        assert esc_max.enable_reranking is True
+        assert esc_max.reranker_type == "cross_encoder"
+        assert esc_max.top_k == 30
+        # Graph rungs go to the graph-augmented retriever in System D.
+        assert [name for name, _ in calls][2:] == ["_graph_aug", "_graph_aug"]
+
+        # What is recorded per attempt is what was executed.
+        history = response.verification_details["attempt_history"]
+        for record, (_, strategy) in zip(history, calls):
+            assert record["strategy_used"] == strategy.strategy_name
+            assert record["strategy_executed"]["strategy_name"] == strategy.strategy_name
+            assert record["strategy_executed"]["top_k"] == strategy.top_k
+        assert history[3]["strategy_executed"]["enable_reranking"] is True
+
+    def test_system_c_escalation_widens_without_graph(self):
+        from retrieval.adaptive import ExperimentMode
+        _, calls = self._run(ExperimentMode.SYSTEM_C)
+
+        assert len(calls) == 4
+        assert all(name != "_graph_aug" for name, _ in calls)
+        assert all(strategy.include_graph_context is False for _, strategy in calls)
+        assert calls[3][1].enable_reranking is True
+        assert calls[3][1].top_k == 30
+
+
 # ---------------------------------------------------------------------------
 # 8. QualityAwareRAGPipeline End-to-End Tests
 # ---------------------------------------------------------------------------
