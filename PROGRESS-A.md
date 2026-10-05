@@ -8,6 +8,41 @@ measured (with numbers only if actually measured), what is blocked.
 
 ---
 
+## 2026-10-06 — Step 2: preflight, approved decisions, confounds on dev/val, freeze
+
+Branch `master-fix`, fast-forwarded to master `58bf4ab` (PR #18).
+
+**Preflight** — clean.
+- Graph = build record + exactly the 2 test nodes and 1 edge.
+- Working tree: only `docs/SRS.pdf` (untracked).
+- Benchmark files unchanged since v1.1; only test IDs were read.
+
+**Approved decisions applied**
+- A3: graph backed up (`C:/EIH_backups/…`), 2 nodes and 1 edge deleted; the graph equals its build
+  record; the test suite leaves it unchanged.
+- A1 / C23: D = C + graph on every task.
+- A2 / C24: success = correct AND cites labelled evidence.
+- D12: 24 test tasks queued (4 batches, rotating pairs). Found by task ID only: 4 have evidence that
+  cannot be shown.
+- Found: results JSON was git-ignored, so the 5 Oct Mode R/energy JSON was never committed. Now versioned.
+
+**Step 2**
+- 2a / C25: classifier rules from dev only. All four fields right: dev 3 → 12 of 24, val 1 → 2 of 12.
+- 2b / C26: fused-only cut-off at 0.25; zero-evidence tasks 0 for every system.
+- 2c: probes. Variation comes from the cache/load state and `num_predict` (V1). 3-trial run: 648 units,
+  all ok.
+- 2d: `docs/BENCHMARK_AUDIT.md`. 7 of the 20 tasks not yet corrected have answer or question problems;
+  11 of 36 overall.
+- 2e: `docs/FROZEN_CONFIG.md`, manifest `95e5a587c9d60e7a`. The limit is not raised (T1).
+
+**Key measured results (dev/val, descriptive)**
+- Token F1 0.235–0.260 for all systems; 0/648 trials at the threshold (M1).
+- E refuses 21% with the same unsupported rate as D.
+
+**Next** — Step 3 after "go"; decisions M1, T1, V1 first.
+
+---
+
 ## 2026-10-05 (late) — Master prompt Steps 0 + 1: schedule, review queue, measurement validity
 
 Branch `master-fix` (tag `pre-master-fix` = master 68a072d before it).

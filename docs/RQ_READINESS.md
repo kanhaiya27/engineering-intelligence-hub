@@ -1,262 +1,210 @@
 # RQ readiness
 
-Updated after Step 1 (5 Oct 2026, branch `master-fix`). One entry per research question
-(`docs/original_plan.md` §3). The original plan states no formal hypotheses beyond RQ1–RQ8 and
-contributions C1–C4.
+Updated after Step 2 (6 Oct 2026, branch `master-fix`, frozen manifest `95e5a587c9d60e7a`). One entry per
+research question (`docs/original_plan.md` §3). The original plan states no formal hypotheses beyond
+RQ1–RQ8 and contributions C1–C4.
 
-**Evidence so far:**
-- Mode R on the 36 dev/val tasks (`experiments/results/mode_r/machine_A/mode-r-devval-2026-10-05/`).
-  It is **provisional**: all 36 labels are still `draft` until Avaneesh verifies them (ASK_ME L1).
-- Retrieval energy by component (`experiments/results/retrieval_energy/machine_A/retrieval-energy-2026-10-05/`).
-- Per-call model energy from Phase 1.
+**Evidence so far, all dev/val only (no test task has been run or read):**
 
-**No Mode Q (answer) results exist yet.** Real Mode Q runs are blocked until ASK_ME A3 (2 stray test
-nodes in the live graph) is resolved.
+| Source | Location | Status |
+|---|---|---|
+| Mode R, after A1 and 2b | `experiments/results/mode_r/machine_A/mode-r-devval-2026-10-06-2b/` | **PROVISIONAL**: the 36 labels are drafts (L1) |
+| Mode Q, 648 trials (36 tasks × 6 systems × 3 trials) | `experiments/results/queue/machine_A/modeq-{val,dev}-2c-2026-10-06/` | Analysis in `experiments/results/variance/`. **Calibration data, not results for claims** |
+| Retrieval energy components | `experiments/results/retrieval_energy/` | — |
+| Classifier before/after | `experiments/results/classifier/` | — |
+| Benchmark audit | `docs/BENCHMARK_AUDIT.md` | — |
 
-**Power figures.** These are minimum detectable effects (MDE), two-sided α = 0.05, power 0.80, paired
-Wilcoxon. They use the per-task standard deviation of differences observed in Mode R as a stand-in for
-answer-level variation, which is not yet measured. Example: span Recall@5, B vs C, SD 0.27 →
-
-| Tasks | MDE |
-|---|---|
-| 24 (current test split) | 0.16 |
-| 30 (one stratum) | 0.14 |
-| 36 | 0.13 |
-| 180 (test split at ~450 tasks) | 0.06 |
+**The one finding that blocks every RQ:** correctness (plain token F1) never reaches a task
+threshold (0 of 648 trials), so the primary success measure is 0 for every system (ASK_ME M1).
 
 ## Summary
 
-| RQ | Design valid? | Sample now → planned | Baselines | Likelihood |
+| RQ | Design valid? | Sample now → planned | Main open issue | Likelihood |
 |---|---|---|---|---|
-| RQ1 task-aware vs fixed | Partially | 24 test → ~180 | B present | Medium |
-| RQ2 graph | **No, until A1** | 36 dev/val (3 with graph) | C present | Low |
-| RQ3 verification | Yes, after Step 1f | 24 → ~180 | D present | Medium |
-| RQ4 routing | Yes | 24 → ~180 | E present; large-LLM baseline open (D4) | Medium |
-| RQ5 by stage/complexity/criticality | Partially | 4 per stage → ~30 per stage | — | Low → Medium |
-| RQ6 repos/languages | No | Python only | — | Low |
-| RQ7 fresh tasks | No | 0 | — | Low |
-| RQ8 Pareto | Yes, after 1b/1h | as RQ1 | all systems | Medium |
+| RQ1 task-aware vs fixed | Partially (M1) | 24 test → ~180 | B→C null in Mode R; correctness measure | Medium |
+| RQ2 graph | Yes, after A1 | 36 dev/val | C→D null in Mode R; Mode Q needs M1 | Low–Medium |
+| RQ3 verification | Yes (independent outcome) | 24 → ~180 | E refuses 21%; unsupported 81% (D 81%) | Medium |
+| RQ4 routing | Yes; T1 open | 24 → ~180 | Routing tier: loops, 122 model loads | Medium |
+| RQ5 strata | Partially | 4/stage → ~30/stage | Sample size | Low → Medium |
+| RQ6 languages | No | Python only | Step 4 | Low |
+| RQ7 fresh | No | 0 | Step 5 | Low |
+| RQ8 Pareto | Yes | as RQ1 | Success undefined until M1 | Medium |
+
+### Descriptive Mode Q on dev/val (648 trials, frozen config; not results for any claim)
+
+| System | Token F1 | F1 ≥ threshold | Refusals | Unsupported (non-refusals) | Latency | Output tokens | GPU J/trial |
+|---|---|---|---|---|---|---|---|
+| A | 0.236 | 0 | 0% | 100% (cites nothing) | 13.4 s | 465 | 840 |
+| B | 0.245 | 0 | 10.2% | 89.7% | 16.0 s | 358 | 849 |
+| C | 0.253 | 0 | 1.9% | 85.8% | 16.2 s | 342 | 854 |
+| D | 0.260 | 0 | 0% | 80.6% | 16.5 s | 315 | 848 |
+| E | 0.248 | 0 | 21.3% | 81.2% | 30.0 s | 548 | 1,528 |
+| E + routing | 0.235 | 0 | 21.3% | 92.9% | 31.2 s | 804 | 1,435 |
+
+"Unsupported" means the answer cites no line inside the labelled evidence (draft labels).
+
+**Run-to-run variance (Step 2c):**
+- A–E give identical answers across 3 trials on 7–10 of 36 tasks.
+- Trial-to-trial share of F1 variance is 2–10%.
+- The binary outcomes agree 93–100% across trials.
+- Cause: numeric-path effects (prompt cache after a model load, the output limit), not sampling
+  (V1). Model reloads happen because the routing tier evicts the 7B: 7–14 per system for A–E, 122 for
+  E + routing.
 
 ---
 
 ## RQ1: Does task-aware retrieval improve answer quality over fixed RAG at comparable or lower cost?
 
-**Design valid.** Partially.
-- Valid: C differs from B only by task classification plus the adaptive strategy (one fixed config,
-  `configs/inference.yaml`).
-- Not yet valid: correctness was lexical F1 inflated ×1.5. That is fixed (C19). It is not yet
-  checked against human ratings (1e tooling ready). The success definition still leans on E's gate
-  signals (ASK_ME A2).
+**Design valid.** Partially. Fixed in Step 2:
+- The cut-off confound (D17 → C26). No system has a zero-evidence task now (C/D had 3).
+- The classifier, revised on dev. All four fields right: val 1 → 2 of 12, dev 3 → 12 of 24. The dev
+  gain far exceeds val's: fitting to dev.
 
-**Sample size and power.** 24 test tasks give MDE ≈ 0.16 (span recall); about 180 give ≈ 0.06. In
-Mode R, B→C is +0.005 span Recall@5 (95% CI −0.08 to +0.09, p = 0.85, n = 36). That is no detectable
-retrieval difference at this n.
+Not valid yet: the correctness measure (M1).
 
-**Baselines present.** A (LLM only) and B (fixed hybrid). Yes.
+**Sample size and power.** 24 test tasks give MDE ≈ 0.16 (span recall); about 180 give ≈ 0.06.
+
+**Baselines.** A and B present.
 
 **Confounds left.**
-- **Score thresholds (D17).** C and D retrieve nothing on 3 of 36 tasks (dev-026, rev-048, test-032);
-  B has no threshold. Mode R table "Zero-evidence tasks". Step 2b.
-- **Classifier accuracy is unmeasured** beyond 4 tasks (Step 2a).
-- **Run-to-run variation at temperature 0** (D16; also B req-010: 981 vs 853 tokens). Step 2c.
+- **Evidence budget differs by design:** C has 6.5 text chunks per task against B's 5.0.
+- **Classifier errors:** val stage agreement is 7/12.
+- **M1.**
 
-**Evidence.**
-- `experiments/results/mode_r/machine_A/mode-r-devval-2026-10-05/report.md`: B vs C file and span metrics.
-- `experiments/stats.py` (paired tests, Holm), `experiments/m5/analysis.py` (`co2e_per_successful_task`).
+**Evidence.** Mode R B→C, span Recall@5: +0.009 (95% CI −0.07 to +0.08, p = 0.83, n = 36, provisional).
+Mode Q dev/val: F1 0.245 (B) vs 0.253 (C), unsupported 89.7% vs 85.8% (descriptive, not tested; dev
+is calibration data).
 
-**Likelihood of a supported answer:** Medium. The machinery is now valid, but the retrieval difference
-B→C is ~0 at n = 36. A quality gain would have to come from the strategy's context size, not from
-better ranking.
+**Likelihood of a supported answer:** Medium. The retrieval difference is null so far; the question is
+answerable once M1 is fixed.
 
-**Smallest remaining fix.**
-- Steps 2a–2c.
-- Decide A2.
-- Rate 30–50 answers to validate the correctness F1.
+**Smallest remaining fix.** M1, then L1 (label verification).
 
 ## RQ2: Does knowledge-graph augmentation improve multi-file and structural reasoning?
 
-**Design valid. No, as built.** D adds graph context only when the adaptive policy picks a graph
-strategy: 3 of 36 dev/val tasks. On the other 33, D's retrieval is identical to C's. Mode R:
-- C→D file Recall@5 difference is exactly 0, on every task.
-- Graph chunks appear on 3 tasks for D.
-- They appear on 35–36 tasks for E's rungs 2 and 3.
+**Design valid.** Yes, after A1 (C23): D = C's retrieval + graph context, on 28 of 36 tasks (was 3).
 
-**Sample size and power.** As built, Δ(C→D) rests on 3 tasks: no power. With A1(b) (graph on every
-task) it rests on all tasks; 21 of 36 dev/val labels are multi-file.
+**Sample size.** 36 dev/val; 21 multi-file.
 
-**Baselines present.** C. External Mode R sets (CrossCodeEval, RepoBench) are not yet licensed
-(Step 6).
+**Baselines.** C. External Mode R sets are pending the licence audit (Step 6).
 
-**Confounds left.**
-- **Graph chunks carry no source text.** They name files and relations, so they help at file level
-  only. Both levels are reported (`evaluation/retrieval_metrics.py`).
-- **Graph contamination.** Two stray test nodes are in the live graph (A3). They don't affect
-  retrieval, but they block real runs.
+**Confounds left.** Graph chunks name files and relations, not code text.
 
 **Evidence.**
-- Mode R report and `metrics.json` (`n_graph_chunks` per task).
-- `experiments/results/graph_build/machine_A/graph_build_wave1.json`.
+- Mode R C→D, file Recall@10: +0.014 (CI 0.00–0.04, p = 0.32; one task changes). Graph chunks come
+  after the text, so ranking metrics barely move.
+- Mode Q dev/val: F1 0.253 (C) → 0.260 (D); unsupported 85.8% → 80.6%; refusals 1.9% → 0%
+  (descriptive).
 
-**Likelihood of a supported answer:** Low until A1 is decided. Medium with A1(b) plus the external
-Mode R sets.
+**Likelihood of a supported answer:** Low–Medium. Any effect must show in answers (Mode Q), not ranking.
 
-**Smallest remaining fix.** Decide A1 (recommended: D = C + graph on every task), then re-run Mode R.
-That takes about 1 GPU-minute.
+**Smallest remaining fix.** M1; external Mode R datasets.
 
-## RQ3: Does quality-aware verification with bounded escalation reduce unsupported answers?
+## RQ3: Does verification with bounded escalation reduce unsupported answers?
 
-**Design valid.** Yes, after Step 1f. The outcome is now independent of E's gate. Cited line spans are
-checked against the human-checked evidence spans (`evaluation/outcome.py`). The outcomes are:
-- unsupported-answer rate over non-refusals;
-- refusal rate, separately;
-- cited-span precision and recall.
+**Design valid.** Yes. The outcome is independent of E's gate (C22). Refusals are separate.
 
-E's own evaluators remain only as gate signals.
+**Sample size.** As RQ1. Binary outcome per task: McNemar.
 
-**Sample size and power.** As RQ1. The unsupported rate is a paired binary outcome per task, tested with
-`mcnemar_exact`.
-
-**Baselines present.** D (same retrieval as E's attempt 0).
+**Baselines.** D.
 
 **Confounds left.**
-- **Labels needed for every test task** before the final run (decided: labelled right before it).
-- **The consistency evaluator is weak** (`docs/PROJECT_REPORT.md:708`). It is a gate signal, no longer
-  the outcome.
+- **Labels are drafts** (L1).
+- **Test labels** are needed before the final run.
 
-**Evidence.**
-- Mode R: E's escalation rungs widen retrieval. Span Recall@10 rises from 0.37 (D) to 0.54
-  (rung 3, esc_max): +0.17, 95% CI 0.08–0.29, p = 0.004, n = 36, draft labels. This is retrieval
-  only. Whether E reaches those rungs depends on its gate, which only Mode Q shows.
-- `evaluation/outcome.py`, `tests/test_evaluation/test_outcome.py`.
+**Evidence.** Mode Q dev/val (descriptive): E's unsupported rate equals D's (81.2% vs 80.6%), while E
+refuses 21.3% of tasks (D 0%) and takes about 1.8× the latency and energy. On these data, verification
+converts answers into refusals rather than into better-supported answers. That is a potential negative
+finding, reported as it stands.
 
-**Likelihood of a supported answer:** Medium. Escalation demonstrably retrieves more of the labelled
-evidence; whether answers become better supported is unmeasured.
+**Likelihood of a supported answer:** Medium. Either direction is answerable.
 
-**Smallest remaining fix.** Mode Q dev/val (Step 7a) after A3. Test labels before the final run.
+**Smallest remaining fix.** L1; test labels.
 
-## RQ4: Can task-aware model routing reduce energy and cost while keeping per-task quality?
+## RQ4: Can model routing cut energy and cost while keeping per-task quality?
 
-**Design valid.** Yes. E→E_routed adds exactly one capability (`system_e_routed`).
-- Model reload energy is now MEASURED per trial (`model_load_energy_joules`) and included in CO₂e per
-  successful task (Step 1b).
-- Whole-trial GPU energy is now measured (Step 1h, C20).
+**Design valid.** Yes. Model loads are measured and counted (C20).
 
-**Sample size and power.** As RQ1. Big-Vul/PrimeVul (1,000) would add power for the criticality
-question, but they are not licensed yet and the GPU budget is open (G1).
+**Sample size.** As RQ1.
 
-**Baselines present.** E (fixed 7B). Large-LLM baseline open (D4).
+**Baselines.** E; large-LLM baseline open (D4).
 
 **Confounds left.**
-- **Routing depends on classifier accuracy** (Step 2a).
-- **Run-to-run variance** (Step 2c).
+- **T1:** small-tier repetition loops, 9 of 108 trials.
+- **Model swaps:** 122 loads in 108 trials, which also evict the 7B for the other systems.
 
-**Evidence.**
-- Phase-1 per-call energy at 12K context: 1.5B 348.6 J, 3B 478.4 J
-  (`experiments/results/phase1/machine_A/ctx12k_small_models/long_context_probe.md:7-8`);
-  7B 762.8 J (`long_context_probe.md:9`).
+**Evidence.** Mode Q dev/val (descriptive): E + routing uses 1,435 J vs E's 1,528 J per trial (−6%).
+Unsupported rate 92.9% vs 81.2%; output 804 vs 548 tokens.
 
-**Likelihood of a supported answer:** Medium.
+**Likelihood of a supported answer:** Medium. On these data the quality constraint looks violated: a
+possible negative finding.
 
-**Smallest remaining fix.** Step 2a; decide D4; Mode Q.
+**Smallest remaining fix.** T1, D4, M1.
 
 ## RQ5: Does the benefit vary by SDLC stage, complexity and criticality?
 
-**Design valid.** Partially. Now available:
-- the interaction test (`experiments/stats.py` `mixed_effects`, Wald test of system × stratum);
-- per-stratum paired tests with Holm.
+**Design valid.** Partially. The method is ready (mixed model, stratified Holm).
 
-**Sample size and power.** 4 test tasks per stage now: no power (MDE > 0.3). The target is about 30 per
-stage per stratum (Step 3a), giving MDE ≈ 0.14 per stratum.
+**Sample size.** 4 per stage on test now; target about 30 per stage (Step 3).
 
-**Baselines present.** Same as RQ1.
+**Baselines.** As RQ1.
 
-**Confounds left.**
-- **Two repositories only** in the current benchmark.
-- **Stage and repository are partly confounded** until the six repos are covered.
+**Confounds left.** 2 repositories only.
 
-**Evidence.** `tests/test_experiments/test_stats.py::test_stratified_and_mixed_effects_detect_interaction`
-(method check on synthetic data, not a result).
+**Evidence.** None yet.
 
-**Likelihood of a supported answer:** Low now. Medium if ~450 tasks are approved by 12 Oct (review
-shortfall: ASK_ME R1).
+**Likelihood of a supported answer:** Low → Medium with Step 3.
 
-**Smallest remaining fix.** The task-drafting tool (3a) and review throughput (R1).
+**Smallest remaining fix.** Step 3 (task drafting plus review throughput, R1).
 
-## RQ6: Does the system generalise across repositories and programming languages?
+## RQ6: Does the system generalise across repositories and languages?
 
-**Design valid.** No. The corpus is Python only and tree-sitter is not installed.
+**Design valid.** No. Python only.
 
 **Sample size.** 0 non-Python tasks.
 
 **Baselines.** —
 
-**Confounds left.** Chunker quality versus language (plan §12). Requires AST-aware chunking per
-language.
-
-**Evidence.** `datasets/registry.yaml` (waves 3–4 name the Java, JS, Go, Rust and C/C++ repositories).
-
-**Likelihood of a supported answer:** Low.
-
-**Smallest remaining fix.**
-- Step 4: tree-sitter plus 2 repositories (recommended gson and express, ASK_ME L6).
-- Their graph and about 60 reviewed tasks.
-
-## RQ7: Do the results hold on fresh, contamination-controlled tasks?
-
-**Design valid.** No. EIH-Fresh does not exist.
-
-**Sample size.** 0. The planned size is 50 or ~150 (ASK_ME F1).
-
-**Baselines.** —
-
-**Confounds left.** Model cutoff dates must be recorded (spec §6.1).
+**Confounds left.** Chunker quality differs by language.
 
 **Evidence.** None.
 
 **Likelihood of a supported answer:** Low.
 
-**Smallest remaining fix.** Step 5: post-cutoff repositories, frozen by hash before any run.
+**Smallest remaining fix.** Step 4 (L6: gson and express recommended).
+
+## RQ7: Do the results hold on fresh, contamination-controlled tasks?
+
+**Design valid.** No. EIH-Fresh does not exist.
+
+**Sample size.** 0.
+
+**Baselines.** —
+
+**Confounds left.** Model cutoff dates must be recorded.
+
+**Evidence.** None.
+
+**Likelihood of a supported answer:** Low.
+
+**Smallest remaining fix.** Step 5 (F1: size).
 
 ## RQ8: What is the quality–latency–energy–cost–carbon Pareto frontier?
 
-**Design valid.** Yes, after Steps 1b and 1h.
-- Energy is now whole-pipeline (retrieval included, measured per trial).
-- CO₂e per successful task is implemented, including model loads.
-- Latency is decomposed per trial.
+**Design valid.** Yes. Energy is whole-trial and MEASURED. CO₂e per success includes model loads.
 
 **Sample size.** As RQ1.
 
 **Baselines.** All systems; large-LLM baseline open (D4).
 
 **Confounds left.**
-- **Single GPU** (absolute joules are hardware-specific; plan §12).
-- **CO₂e and cost are ESTIMATED** by design (plan §9.1).
+- **CO₂e per success is undefined** while success is 0 everywhere (M1).
+- **Non-generation GPU energy** (28–65 J/trial) includes idle draw between steps (field described so).
 
-**Evidence.** Retrieval energy per query, net of idle GPU power (4.26 W). Measured 5 Oct, 36 dev/val
-queries × 5 repeats per counter-only window
-(`experiments/results/retrieval_energy/machine_A/retrieval-energy-2026-10-05/report.md`).
+**Evidence.**
+- Mode Q dev/val GPU J/trial: 840–1,528.
+- Retrieval compute 0.3–19 J/query.
 
-| Component or system | Net GPU energy per query [MEASURED − idle] |
-|---|---|
-| Embedding | 0.39 J |
-| Cross-encoder over 30 candidates | 8.72 J |
-| Graph increment | 0.56 J |
-| B | 0.27 J |
-| C | 3.07 J |
-| D | 3.15 J |
-| E rung 1 | 4.23 J |
-| E rung 2 | 5.90 J |
-| E rung 3 | 18.87 J |
+**Likelihood of a supported answer:** Medium.
 
-- CPU energy is ESTIMATED at 3.3–7.3 J per query.
-- BM25 is CPU-bound. Its net GPU figure is −0.37 J/query: the GPU drew slightly less than the idle
-  baseline. That is zero within noise.
-- The old single-sample reranker figure (0.07–0.13 J, report §10.4) was for a few candidates. Over
-  30 candidates the reranker is the largest retrieval cost.
-- Retrieval is small next to generation (smoke trials: 338–2,523 J per trial), so the frontier is
-  driven by generation length and escalation.
-
-**Likelihood of a supported answer:** Medium. A frontier can always be drawn; it is now measured on the
-right boundary.
-
-**Smallest remaining fix.** Mode Q runs.
+**Smallest remaining fix.** M1.
