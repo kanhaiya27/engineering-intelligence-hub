@@ -8,7 +8,85 @@ measured (with numbers only if actually measured), what is blocked.
 
 ---
 
-## 2026-10-06 — Phase 1b (steps 1–5 of 8): OllamaProvider, routing, escalation
+## 2026-10-05 (night) — Phase 1b step 7: GPU job queue
+
+Branch `feat/gpu-job-queue` (off `feat/local-inference-routing`; task A2 step 7).
+
+**Done**
+- `scripts/job_queue.py`: one unit = (system, task, trial). Exactly-once ledger
+  (`results.jsonl`, fsynced; re-running the same `--run-id` resumes, a half-written line
+  from a crash re-runs), errors recorded with the exception (never dropped;
+  `--retry-errors`), units interleaved and shuffled per trial round (seed 42) so no
+  system always runs first/last, the 90 °C discard-cool-repeat rule (temperature read
+  between units only), a GPU lock file, and the held-out test split only with
+  `--final-test`, once. Writes `run.json` (provenance), `plan.jsonl`, `discarded.jsonl`,
+  `summary.json` under `experiments/results/queue/<machine>/<run-id>/`.
+- Tests: 11 new; full suite **267 passed**.
+- Smoke run (2 dev tasks × baseline_a + system_e × 1 trial, real Ollama/Qdrant, written
+  to scratch — not a result): 4/4 ok, resume re-ran 0 units.
+
+**Found (for A3 — runner defects, not queue defects)**
+- **System A refuses everything:** `BaselineRAGPipeline` with `skip_retrieval=True` still
+  uses the evidence-only SYSTEM_PROMPT, so the 7B answers "INSUFFICIENT EVIDENCE" (~1.5 s,
+  47–59 tokens) → A→B would measure a strawman. A needs its own no-evidence prompt.
+- **Measured energy never reaches the trial record:** `M5BenchmarkRunner._evaluate_trial`
+  sets `gpu_energy_measured_joules=None` and computes `cpu/gpu_energy_joules` as
+  45 W / 60 W × latency; the NVML energy from `OllamaProvider` (and its per-call max
+  temperature) is dropped. Must be wired before any A–E number counts.
+
+**Next**
+- [ ] Step 8: PRs (`feat/local-inference-routing` = step 6, then this branch)
+- [ ] A3: fix the two runner defects above, manifest re-freeze, live calibration
+
+---
+
+## 2026-10-05 (evening) — Phase 1b step 6: long-context probe → context budget
+
+Branch `feat/local-inference-routing` (task A2). Script `scripts/phase1_long_context_probe.py`.
+
+**Decision (owner, 2026-10-05):** every model and system runs at **num_ctx 12,288, all
+layers on the GPU (`num_gpu 999`), output limit 1,024 tokens** (was 4,096 / 2,048).
+Thermal rule for long runs: work up to 90 °C; a condition with a call above 90 °C is
+discarded and repeated after cooling to 65 °C.
+
+**Measured** (laptop-a, encoders resident, real-corpus prompts, 1 cold + 2 warm per point)
+- Prompt sizes (`long_context_sizes.md`): overhead 236 tokens; formatted chunk p50 117,
+  p95 515, p99 903. DERIVED prompt for the widest rung (20–24 chunks): p95 5.5–6.4K,
+  p99 7.5–9.0K tokens → fits 12,288 − 1,024.
+- 7B all-on-GPU (`long_context_probe.md`): 4K 37.0 tok/s · 8K 35.4 · **12K 34.6 tok/s,
+  peak 5,906 / 6,141 MiB, ~763 J/call** · 16K 33.1, VRAM full (6,088) · 20K prefill
+  collapses 1,400 → 237 tok/s, 90 s, 3.2 kJ/call · 24K 170 s, 5.4 kJ/call. Ollama still
+  reports 100% on GPU at 20K+: the WDDM driver pages to system RAM.
+- 7B Ollama default placement: 82% → 64% on GPU as context grows; decode 20.1 → 3.3 tok/s.
+- At 12K (`ctx12k_small_models/`): 1.5B 111 tok/s, peak 2,338 MiB; 3B 68.5 tok/s, peak
+  3,368 MiB; both 100% on GPU.
+- Routing switch 7B → 3B → 1.5B → 7B via the real provider at 12K with ~8.9K-token
+  prompts: Ollama evicts the 7B for the smaller models and vice versa; every call 100% on
+  GPU, context check headroom ~3,150 tokens.
+- Tests: 256 passed (one test updated: all tiers now get `num_gpu 999`).
+
+**Found**
+- **81 corpus chunks are > 2,048 tokens, 9 are > 8,192, the largest 67,021** (lockfiles,
+  contributor/sponsor lists, `plugin_list.rst`, a 39K-token test file). The prompt guard
+  refuses such prompts (no silent truncation), but they must be fixed at ingestion — asked
+  Laptop B (see Must pull / Blocked).
+- At 24K the Qwen tokenizer counted 23 tokens more than Ollama (exact match up to 20K);
+  over-counting is the safe direction for the truncation guard.
+
+**Must pull (Laptop B)** — `core/config.py` max_tokens 2048 → 1024; `configs/models.yaml`
+`num_gpu 999` for all three models; `OllamaProvider.DEFAULT_NUM_CTX` 4096 → 12288.
+
+**Blocked / for Laptop B (before A3, ~14 Oct)**
+- Re-chunk: cap chunks at ~512 tokens (BGE-small embeds only the first 512) and skip
+  lockfiles / generated data; re-ingest, new snapshot in `C:\EIH_share\`, re-check labels.
+
+**Next**
+- [ ] Step 7: `scripts/job_queue.py`; Step 8: PR
+- [ ] A3: correct and re-freeze the manifest (also stale: `model_max_tokens` 2048)
+
+---
+
+## 2026-10-05 — Phase 1b (steps 1–5 of 8): OllamaProvider, routing, escalation
 
 Branch `feat/local-inference-routing` (task A2 in `docs/WORK_PLAN.md`).
 

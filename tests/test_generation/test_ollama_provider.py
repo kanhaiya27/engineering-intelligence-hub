@@ -18,7 +18,7 @@ import pytest
 
 from core.exceptions import GenerationError
 from generation.base import GenerationRequest
-from generation.providers.ollama import ContextOverflowError, OllamaProvider
+from generation.providers.ollama import DEFAULT_NUM_CTX, ContextOverflowError, OllamaProvider
 
 DIGEST = "d7372fd828518a4d38b1eb196c673c31a85f2ed302b3d1e406c4c2d1b64a0668"
 MODEL = "qwen2.5-coder:1.5b"
@@ -105,7 +105,7 @@ def test_sends_deterministic_options_and_model_specific_overrides():
     p.generate(req(system_prompt="sys"))
     p.generate(req(model="qwen2.5-coder:7b"))
     small, large = chat_bodies(fake)
-    assert small["options"] == {"temperature": 0.0, "seed": 42, "num_predict": 128, "num_ctx": 4096}
+    assert small["options"] == {"temperature": 0.0, "seed": 42, "num_predict": 128, "num_ctx": DEFAULT_NUM_CTX}
     assert large["options"]["num_gpu"] == 999
     assert small["messages"][0] == {"role": "system", "content": "sys"}
 
@@ -169,7 +169,7 @@ def test_unreachable_server_is_reported_not_hidden():
 
 def test_prompt_that_would_be_truncated_is_refused_before_sending():
     fake = FakeOllama()
-    p = make(fake, token_counter=FakeCounter(n=4000))  # 4000 + 128 > num_ctx 4096
+    p = make(fake, token_counter=FakeCounter(n=DEFAULT_NUM_CTX - 100))  # + 128 output > num_ctx
     with pytest.raises(ContextOverflowError, match="silently truncate"):
         p.generate(req())
     assert chat_bodies(fake) == [], "nothing may be sent to Ollama"
@@ -177,8 +177,8 @@ def test_prompt_that_would_be_truncated_is_refused_before_sending():
 
 def test_context_check_is_recorded_and_flags_unknown_tokenizers():
     r = make(FakeOllama()).generate(req())
-    assert r.extra["context_check"] == {"prompt_tokens": 120, "num_ctx": 4096, "checked": True,
-                                        "headroom_tokens": 4096 - 120 - 128}
+    assert r.extra["context_check"] == {"prompt_tokens": 120, "num_ctx": DEFAULT_NUM_CTX, "checked": True,
+                                        "headroom_tokens": DEFAULT_NUM_CTX - 120 - 128}
     r2 = make(FakeOllama(), token_counter=FakeCounter(n=None)).generate(req())
     assert r2.extra["context_check"]["checked"] is False
 
