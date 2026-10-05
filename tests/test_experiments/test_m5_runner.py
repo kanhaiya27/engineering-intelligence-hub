@@ -138,7 +138,7 @@ class TestExperimentManifest:
 
     def test_default_manifest_structure(self):
         manifest = ExperimentManifest.create_default()
-        assert len(manifest.systems) == 5
+        assert len(manifest.systems) == 6  # A-E + E with model routing (RQ4)
         assert SystemID.BASELINE_A.value in manifest.systems
         assert SystemID.BASELINE_B.value in manifest.systems
         assert SystemID.SYSTEM_C.value in manifest.systems

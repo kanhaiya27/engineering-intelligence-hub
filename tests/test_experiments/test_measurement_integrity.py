@@ -225,3 +225,24 @@ def test_non_task_aware_baselines_get_no_classification(runner, task, monkeypatc
     monkeypatch.setattr(runner, "_dispatch", lambda sid, req, clf, llm: seen.update(clf=clf) or response())
     resp = runner._execute_system(system_id, task, runner.llm_provider)
     assert seen["clf"] is None and "classification" not in resp.metadata
+
+
+# ----------------------------------------------------------------------------- RQ4 routed system
+def test_routed_system_is_e_plus_exactly_one_capability():
+    from experiments.m5.manifest import ExperimentManifest, SystemID
+
+    systems = ExperimentManifest.create_default().systems
+    e, routed = systems[SystemID.SYSTEM_E.value], systems[SystemID.SYSTEM_E_ROUTED.value]
+    diff = {k for k, v in routed.model_dump().items() if e.model_dump()[k] != v}
+    assert diff == {"system_id", "system_name", "description", "model_routing_enabled"}
+    assert routed.model_routing_enabled is True and e.model_routing_enabled is False
+
+
+def test_routed_pipeline_routes_over_the_configured_ladder(runner):
+    from core.inference import inference_config
+
+    runner._graph_store = _store(6, 10)
+    pipe = runner._get_pipeline_routed(runner.llm_provider)
+    ladder = inference_config().routing_ladder
+    assert pipe.model_router.ladder == [ladder["small"], ladder["medium"], ladder["large"]]
+    assert runner._get_pipeline_quality(runner.llm_provider).model_router is None, "A-E keep the fixed model"

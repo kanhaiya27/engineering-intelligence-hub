@@ -51,6 +51,17 @@ class TierRouter(BaseModelRouter):
         return "tier_router_v1"
 
     def _build_ladder(self) -> List[str]:
+        # The ladder is defined once, in configs/inference.yaml (routing_ladder);
+        # the registry must describe each of those models.
+        if self.local_only:
+            from core.inference import inference_config
+
+            ladder_cfg = inference_config().routing_ladder
+            ladder = [ladder_cfg[tier] for tier in TIER_ORDER]
+            missing = [m for m in ladder if self.registry.get(m) is None]
+            if missing:
+                raise RoutingError(f"routing_ladder models missing from configs/models.yaml: {missing}")
+            return ladder
         ladder = []
         for tier in TIER_ORDER:
             candidates = [p for p in self.registry.list_by_tier(ModelTier(tier))

@@ -125,6 +125,22 @@ class M5BenchmarkRunner:
             )
         return self._pipe_b
 
+    def _get_pipeline_routed(self, llm: BaseLLMProvider) -> QualityAwareRAGPipeline:
+        """System E + task-aware model routing (RQ4): same pipeline, plus a TierRouter."""
+        if getattr(self, "_pipe_routed", None) is None or self._pipe_routed.llm_provider != llm:
+            from retrieval.adaptive import AdaptiveRetrievalPipeline
+            from routing.registry import ModelRegistry
+            from routing.tier_router import TierRouter
+
+            max_esc = self.manifest.systems[SystemID.SYSTEM_E_ROUTED.value].max_escalations
+            self._pipe_routed = QualityAwareRAGPipeline(
+                adaptive_pipeline=AdaptiveRetrievalPipeline(graph_store=self.graph_store),
+                llm_provider=llm,
+                verification_config=VerificationConfig(max_escalation_attempts=max_esc),
+                model_router=TierRouter(ModelRegistry.from_yaml("configs/models.yaml")),
+            )
+        return self._pipe_routed
+
     def _get_pipeline_quality(self, llm: BaseLLMProvider) -> QualityAwareRAGPipeline:
         if self._pipe_quality is None or self._pipe_quality.llm_provider != llm:
             # The manifest's System E escalation limit must reach the pipeline;
@@ -264,6 +280,14 @@ class M5BenchmarkRunner:
         elif system_id == SystemID.SYSTEM_E.value:
             pipe_q = self._get_pipeline_quality(llm_provider)
             return pipe_q.execute(
+                request=req,
+                classification=clf,
+                experiment_mode=ExperimentMode.SYSTEM_D,
+                skip_verification=False,
+            )
+
+        elif system_id == SystemID.SYSTEM_E_ROUTED.value:
+            return self._get_pipeline_routed(llm_provider).execute(
                 request=req,
                 classification=clf,
                 experiment_mode=ExperimentMode.SYSTEM_D,

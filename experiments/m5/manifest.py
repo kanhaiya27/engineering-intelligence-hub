@@ -26,6 +26,9 @@ class SystemID(str, Enum):
     SYSTEM_C   = "system_c"    # Task-Aware Adaptive RAG (M1 + M3, no graph, no gate)
     SYSTEM_D   = "system_d"    # Task-Aware + Knowledge Graph RAG (M1 + M2 + M3, no gate)
     SYSTEM_E   = "system_e"    # Full Proposed System (M1 + M2 + M3 + M4 Quality Gate & Escalation)
+    # E + task-aware model routing 1.5B -> 3B -> 7B (plan C1 "model tier selected per
+    # task", RQ4). One added capability over E, so delta(E -> E_routed) isolates routing.
+    SYSTEM_E_ROUTED = "system_e_routed"
 
 
 class SystemConfig(BaseModel):
@@ -39,6 +42,7 @@ class SystemConfig(BaseModel):
     quality_gate_enabled: bool = False
     escalation_enabled: bool = False
     max_escalations: int = 0
+    model_routing_enabled: bool = False
     default_top_k: int = 5
     default_dense_weight: float = 0.70
     default_sparse_weight: float = 0.30
@@ -223,6 +227,13 @@ class ExperimentManifest(BaseModel):
                 max_escalations=3,
             ),
         }
+        systems[SystemID.SYSTEM_E_ROUTED.value] = systems[SystemID.SYSTEM_E.value].model_copy(update={
+            "system_id": SystemID.SYSTEM_E_ROUTED,
+            "system_name": "System E + model routing (RQ4)",
+            "description": "System E with task-aware model routing over the local ladder "
+                           "(small 1.5B, medium 3B, large 7B; escalation climbs the ladder).",
+            "model_routing_enabled": True,
+        })
         return cls(systems=systems, frozen_variables=FrozenVariables.from_runtime())
 
     def compute_hash(self) -> str:
