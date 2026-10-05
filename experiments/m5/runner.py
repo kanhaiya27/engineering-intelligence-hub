@@ -72,6 +72,18 @@ def _cpu_utilisation(start, end) -> Optional[float]:
     return round(max(0.0, min(1.0, 1.0 - idle / total)), 4) if total > 0 else None
 
 
+def baseline_b_strategy() -> RetrievalStrategyConfig:
+    """System B's fixed hybrid retrieval (plan §7.1): dense 0.7 + BM25 0.3, top_k 5, no graph."""
+    return RetrievalStrategyConfig(
+        strategy_name="hybrid",
+        mode=RetrievalMode.HYBRID,
+        top_k=5,
+        dense_weight=0.70,
+        sparse_weight=0.30,
+        include_graph_context=False,
+    )
+
+
 class M5BenchmarkRunner:
     """
     Orchestrates multi-system benchmark execution across dataset splits.
@@ -278,16 +290,8 @@ class M5BenchmarkRunner:
             return pipe_a.execute(request=req, classification=clf, skip_retrieval=True)
 
         elif system_id == SystemID.BASELINE_B.value:
-            strat_b = RetrievalStrategyConfig(
-                strategy_name="hybrid",
-                mode=RetrievalMode.HYBRID,
-                top_k=5,
-                dense_weight=0.70,
-                sparse_weight=0.30,
-                include_graph_context=False,
-            )
             pipe_b = self._get_pipeline_b(llm_provider)
-            return pipe_b.execute(request=req, strategy=strat_b, classification=clf)
+            return pipe_b.execute(request=req, strategy=baseline_b_strategy(), classification=clf)
 
         elif system_id == SystemID.SYSTEM_C.value:
             pipe_q = self._get_pipeline_quality(llm_provider)

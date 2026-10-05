@@ -63,6 +63,19 @@ until you answer. To answer, reply with the item ID and your choice. Answered it
   (seed 42) per SDLC stage × repository, in the pilot's ratio 40% dev / 20% val / 40% test. It is
   assigned when a task is approved, so nobody chooses where a task lands.
 
+## Design decisions found in Step 1
+
+- [ ] **A1: System D adds graph context on only 3 of 36 dev/val tasks.** Measured in Mode R
+  (`experiments/results/mode_r/machine_A/mode-r-devval-2026-10-05/`). D uses the adaptive
+  policy's strategy, and that strategy includes the graph only for graph-type tasks (2×
+  `graph_augmented_reranked`, 1× `graph_augmented`). So D's retrieval equals C's on 33 of 36
+  tasks, and Δ(C→D) for RQ2 rests on 3 tasks.
+  (a) Keep it: D = "the policy may choose the graph".
+  (b) D = C's strategy **plus** graph context on every task. Plan §7.1 says each system adds
+      exactly one capability, and D's is knowledge-graph augmentation.
+  **Recommended: (b)**, recorded as a change in WORK_PLAN §5. E's attempt 0 then equals the new D.
+  Decide before the Step 2 calibration.
+
 ## Plan decisions still open (WORK_PLAN §4)
 
 - [ ] **D4: Large-LLM baseline** (spec §7.3; a large model cannot run on 6 GB).
