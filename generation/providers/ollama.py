@@ -40,7 +40,13 @@ logger = get_logger(__name__)
 
 DEFAULT_BASE_URL = "http://localhost:11434"
 DEFAULT_SEED = 42
-DEFAULT_NUM_CTX = 4096
+# One context window for every model and system, so Systems A-E differ only in
+# what they retrieve. 12,288 holds the p99 prompt of the widest escalation rung
+# (~9K tokens) plus the 1,024-token output budget, and the 7B stays fully on the
+# 6 GB GPU at ~35 tok/s; at 16K VRAM is full and from 20K the driver spills to
+# system RAM (5-7x slower). Measured: experiments/results/phase1/machine_A/
+# long_context_sizes.md and long_context_probe.md.
+DEFAULT_NUM_CTX = 12288
 # The NVML energy counter advances in ~100 ms steps on the dev laptop, so energy
 # for windows shorter than this is flagged as low reliability.
 MIN_RELIABLE_ENERGY_WINDOW_S = 1.0

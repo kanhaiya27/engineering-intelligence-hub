@@ -149,7 +149,8 @@ models:
 
   # ---------- Local ladder (Ollama) — the models actually used (local-only, RD-013) ----------
   # Digests pinned in CLAUDE.md. Measured values: experiments/results/phase1/machine_A/.
-  # ollama_options are sent on every call for that model.
+  # ollama_options are sent on every call for that model. num_gpu 999 = all layers on
+  # the GPU (decided 2026-10-05; num_ctx 12288 is OllamaProvider.DEFAULT_NUM_CTX).
   - model_id: "qwen2.5-coder:1.5b"
     display_name: "Qwen2.5-Coder 1.5B Instruct (Q4_K_M, Ollama)"
     provider: local
@@ -164,7 +165,8 @@ models:
     default_temperature: 0.0
     extra:
       digest: "d7372fd828518a4d38b1eb196c673c31a85f2ed302b3d1e406c4c2d1b64a0668"
-      ollama_options: {}
+      ollama_options:
+        num_gpu: 999
       measured_laptop_a: "100% on GPU; 131 tok/s; 105.7 J per warm call (vram_study.json)"
 
   - model_id: "qwen2.5-coder:3b"
@@ -181,7 +183,8 @@ models:
     default_temperature: 0.0
     extra:
       digest: "f72c60cabf6237b07f6e632b2c48d533cef25eda2efbd34bed21c5e9c01e6225"
-      ollama_options: {}
+      ollama_options:
+        num_gpu: 999
       measured_laptop_a: "100% on GPU; 76 tok/s; 174.2 J per warm call (vram_study.json)"
 
   - model_id: "qwen2.5-coder:7b"
@@ -200,7 +203,9 @@ models:
       digest: "dae161e27b0e90dd1856c8bb3209201fd6736d8eb66298e75ed87571486f4364"
       # Ollama's default placement put only 82% on the GPU; forcing all layers is
       # 72% faster and 21% less energy per call and fits at num_ctx 4096 with the
-      # encoders resident (vram_study_7b_forced_gpu.json).
+      # encoders resident (vram_study_7b_forced_gpu.json). At the num_ctx 12288 used
+      # for all runs it still fits fully: 34.6 tok/s, peak 5,906 of 6,141 MiB
+      # (long_context_probe.json).
       ollama_options:
         num_gpu: 999
       measured_laptop_a: "100% on GPU (forced); 38 tok/s; 306.8 J per warm call (vram_study_7b_forced_gpu.json)"
