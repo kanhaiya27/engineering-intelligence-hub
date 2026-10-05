@@ -283,7 +283,8 @@ def check_test_split_allowed(split: str, final_test: bool, queue_root: Path, run
 
 
 # --------------------------------------------------------------------------- M5 binding
-def m5_executor(provider_name: Optional[str], manifest_path: Optional[str], split: str):
+def m5_executor(provider_name: Optional[str], manifest_path: Optional[str], split: str,
+                systems: Optional[List[str]] = None):
     """Units execute through the existing M5 runner: pipeline per system, then trial evaluation."""
     from experiments.m5.manifest import ExperimentManifest
     from experiments.m5.runner import M5BenchmarkRunner
@@ -299,6 +300,9 @@ def m5_executor(provider_name: Optional[str], manifest_path: Optional[str], spli
     mismatches = runtime_mismatches(runner.manifest)
     if mismatches and (provider_name or "").lower() != "mock":
         raise RuntimeError(f"Manifest does not match the runtime settings: {mismatches}")
+    runner.graph_info = None
+    if set(systems or []) & {"system_d", "system_e"} and (provider_name or "").lower() != "mock":
+        runner.graph_info = runner.graph_preflight()  # raises if the graph is missing/incomplete
     tasks = {t.task_id: t for t in load_split_tasks(split)}
 
     def execute(unit: Dict[str, Any]) -> Dict[str, Any]:
@@ -390,11 +394,12 @@ def main(argv: Optional[Iterable[str]] = None) -> None:
     from experiments.provenance import collect_provenance
 
     with GpuLock(run_id=args.run_id):
-        execute, runner = m5_executor(args.provider, args.manifest, args.split)
+        execute, runner = m5_executor(args.provider, args.manifest, args.split, systems)
         config = {"split": args.split, "systems": systems, "trials": args.trials, "seed": args.seed,
                   "max_tasks": args.max_tasks, "task_ids": task_ids, "manifest": args.manifest,
                   "manifest_hash": runner.manifest.compute_hash(),
                   "frozen_variables": runner.manifest.frozen_variables.model_dump(),
+                  "knowledge_graph": runner.graph_info,
                   "provider": args.provider or settings.model.default_provider}
         queue = JobQueue(run_dir, config, plan, execute, ThermalGuard(read_temp=nvml_temp),
                          provenance=collect_provenance, log=lambda m: print(m, flush=True))

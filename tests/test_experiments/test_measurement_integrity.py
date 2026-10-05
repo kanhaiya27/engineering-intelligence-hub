@@ -132,3 +132,41 @@ def test_single_nvml_power_sample_is_labelled_as_a_sample():
     r = est.estimate(2000.0, 0, 0, "cross-encoder", is_local_model=True)
     assert r.method == EnergyEstimationMethod.NVML_POWER_SAMPLE and r.is_estimate is True
     assert r.gpu_energy_joules == pytest.approx(60.0)
+
+
+# ----------------------------------------------------------------------------- knowledge graph wiring
+def _store(repos: int, files: int, available: bool = True):
+    from knowledge.graph.base import GraphNode
+    from knowledge.graph.in_memory import InMemoryGraphStore
+
+    store = InMemoryGraphStore()
+    for i in range(repos):
+        store.upsert_node(GraphNode(f"repo:r{i}", "Repository"))
+    for i in range(files):
+        store.upsert_node(GraphNode(f"file:r0:f{i}.py", "File"))
+    store.is_available = lambda: available
+    return store
+
+
+def test_systems_d_e_pipeline_is_built_with_the_graph_store(runner):
+    runner._graph_store = _store(6, 10)
+    runner._pipe_quality = None
+    pipe = runner._get_pipeline_quality(runner.llm_provider)
+    assert pipe.adaptive_pipeline._graph_store is runner._graph_store, "D/E without a graph equals C"
+
+
+@pytest.mark.parametrize("repos,files,available,match", [
+    (0, 1, True, "incomplete"),      # laptop-a's 2-node test fixture
+    (5, 100, True, "incomplete"),    # a repository missing
+    (6, 100, False, "not reachable"),
+])
+def test_graph_preflight_refuses_a_missing_or_partial_graph(runner, repos, files, available, match):
+    runner._graph_store = _store(repos, files, available)
+    with pytest.raises(RuntimeError, match=match):
+        runner.graph_preflight()
+
+
+def test_graph_preflight_passes_for_the_full_wave1_graph(runner):
+    runner._graph_store = _store(6, 4228)
+    info = runner.graph_preflight()
+    assert info["repository_nodes"] == 6 and info["file_nodes"] == 4228

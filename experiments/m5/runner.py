@@ -110,11 +110,46 @@ class M5BenchmarkRunner:
             # previously it was never passed, so every run used the built-in 2
             # whatever the manifest (or a calibration candidate) said.
             max_esc = self.manifest.systems[SystemID.SYSTEM_E.value].max_escalations
+            # Systems D and E need the knowledge graph. Without a graph_store the
+            # graph retriever silently injects nothing and D equals C (found by
+            # laptop-b's B3 review), so the store is always passed here.
+            from retrieval.adaptive import AdaptiveRetrievalPipeline
+
             self._pipe_quality = QualityAwareRAGPipeline(
+                adaptive_pipeline=AdaptiveRetrievalPipeline(graph_store=self.graph_store),
                 llm_provider=llm,
                 verification_config=VerificationConfig(max_escalation_attempts=max_esc),
             )
         return self._pipe_quality
+
+    @property
+    def graph_store(self):
+        if getattr(self, "_graph_store", None) is None:
+            from core.config import settings
+            from knowledge.graph.neo4j import Neo4jGraphStore
+
+            gs = settings.graph_store
+            self._graph_store = Neo4jGraphStore(uri=gs.uri, username=gs.username, password=gs.password)
+        return self._graph_store
+
+    def graph_preflight(self) -> Dict[str, Any]:
+        """Refuse D/E runs unless the populated wave-1 graph is reachable.
+
+        Laptop A held only a 2-node test fixture until laptop-b's dump is restored;
+        D/E on that graph would quietly measure "no graph". Raises with the reason.
+        """
+        expected_repos = len(self.manifest.frozen_variables.repositories)
+        store = self.graph_store
+        if not store.is_available():
+            raise RuntimeError("Neo4j is not reachable with the .env EIH_GRAPH_* settings; "
+                               "Systems D/E need the knowledge graph.")
+        repos, files = store.count_nodes("Repository"), store.count_nodes("File")
+        if repos < expected_repos or files == 0:
+            raise RuntimeError(f"Knowledge graph incomplete: {repos} Repository / {files} File nodes, "
+                               f"expected {expected_repos} repositories. Restore C:\\EIH_share\\neo4j.dump "
+                               "(laptop-b B3) before running Systems D/E.")
+        return {"repository_nodes": repos, "file_nodes": files, "total_nodes": store.count_nodes(),
+                "total_edges": store.count_edges()}
 
     def _execute_system(
         self,
