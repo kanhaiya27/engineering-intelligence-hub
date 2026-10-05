@@ -1,0 +1,625 @@
+{
+  "contract_version": "1.0.0",
+  "trace_id": "00000000-0000-4000-8000-000000000001",
+  "request_id": "00000000-0000-4000-8000-000000000002",
+  "created_at": "2026-10-05T00:00:00Z",
+  "query": "How does example_function handle an empty input?",
+  "system": "E",
+  "execution": {
+    "producer": {
+      "machine_id": "laptop-b",
+      "gpu_name": "NVIDIA GeForce RTX 5050 Laptop GPU",
+      "torch_version": "2.11.0+cu128",
+      "cuda_version": "12.8",
+      "git_sha": "unknown",
+      "carbon_region": "IN",
+      "carbon_intensity_gco2_per_kwh": null
+    },
+    "served_by_machine_id": "laptop-b",
+    "generation_source": "mock",
+    "research_evidence": false,
+    "cached_from": null
+  },
+  "classification": {
+    "classifier": "rule_based",
+    "sdlc_stage": "development",
+    "task_type": "code_explanation",
+    "task_type_source": "classifier",
+    "complexity": "medium",
+    "criticality": "medium",
+    "security_sensitivity": "none",
+    "quality_threshold": 0.75,
+    "quality_threshold_source": "classifier",
+    "classifier_confidence": 0.9,
+    "reasoning": null,
+    "latency_ms": {
+      "value": 1,
+      "unit": "ms",
+      "provenance": "MEASURED",
+      "method": "perf_counter",
+      "note": null
+    }
+  },
+  "attempts": [
+    {
+      "attempt_index": 0,
+      "retrieval": {
+        "attempt_index": 0,
+        "requested_strategy": "hybrid_balanced",
+        "strategy_name": "hybrid_balanced",
+        "strategy_fallback": false,
+        "mode": "hybrid",
+        "top_k": 5,
+        "score_threshold": 0.0,
+        "dense_weight": 0.5,
+        "sparse_weight": 0.5,
+        "dense": {
+          "requested": true,
+          "executed": true,
+          "candidates": 5,
+          "skip_reason": null
+        },
+        "sparse": {
+          "requested": true,
+          "executed": true,
+          "candidates": 5,
+          "skip_reason": null
+        },
+        "graph": {
+          "requested": false,
+          "executed": false,
+          "candidates": null,
+          "skip_reason": null,
+          "hop_depth": null,
+          "nodes_visited": null,
+          "chunks_injected": null
+        },
+        "reranker": {
+          "requested": false,
+          "executed": false,
+          "candidates": null,
+          "skip_reason": null,
+          "reranker_type": "none",
+          "returned": null,
+          "latency_ms": {
+            "value": null,
+            "unit": "ms",
+            "provenance": null,
+            "method": "not_available",
+            "note": null
+          },
+          "energy_joules": {
+            "value": null,
+            "unit": "joules",
+            "provenance": null,
+            "method": "not_available",
+            "note": null
+          }
+        },
+        "chunks": [
+          {
+            "rank": 1,
+            "chunk_id": "example/repo:src/example/module_1.py:0000000000000000:chunk:0",
+            "channel": "hybrid",
+            "repository": "example/repo",
+            "file_path": "src/example/module_1.py",
+            "start_line": 10,
+            "end_line": 20,
+            "symbol_name": "example_function_1",
+            "commit_sha": "0000000",
+            "citation": "example/repo:src/example/module_1.py:10-20",
+            "score": 1.0,
+            "score_kind": "fused",
+            "dense_score": 1.0,
+            "sparse_score": 1.0,
+            "pre_rerank_score": null,
+            "pre_rerank_rank": null,
+            "graph_hop": null,
+            "content": "def example_function():\n    ...  # placeholder content\n",
+            "content_truncated": false,
+            "content_trust": "untrusted"
+          },
+          {
+            "rank": 2,
+            "chunk_id": "example/repo:src/example/module_2.py:0000000000000000:chunk:0",
+            "channel": "hybrid",
+            "repository": "example/repo",
+            "file_path": "src/example/module_2.py",
+            "start_line": 10,
+            "end_line": 20,
+            "symbol_name": "example_function_2",
+            "commit_sha": "0000000",
+            "citation": "example/repo:src/example/module_2.py:10-20",
+            "score": 0.5,
+            "score_kind": "fused",
+            "dense_score": 0.5,
+            "sparse_score": 0.5,
+            "pre_rerank_score": null,
+            "pre_rerank_rank": null,
+            "graph_hop": null,
+            "content": "def example_function():\n    ...  # placeholder content\n",
+            "content_truncated": false,
+            "content_trust": "untrusted"
+          }
+        ],
+        "latency_ms": {
+          "value": 10,
+          "unit": "ms",
+          "provenance": "MEASURED",
+          "method": "perf_counter",
+          "note": null
+        }
+      },
+      "generation": {
+        "attempt_index": 0,
+        "provider": "mock",
+        "model_id": "mock-model",
+        "is_local_model": false,
+        "finish_reason": "stop",
+        "answer": "Placeholder answer citing example/repo:src/example/module_1.py:10-20.",
+        "input_tokens": {
+          "value": 1000,
+          "unit": "tokens",
+          "provenance": "MEASURED",
+          "method": "provider_usage",
+          "note": null
+        },
+        "output_tokens": {
+          "value": 100,
+          "unit": "tokens",
+          "provenance": "MEASURED",
+          "method": "provider_usage",
+          "note": null
+        },
+        "latency_ms": {
+          "value": 80,
+          "unit": "ms",
+          "provenance": "MEASURED",
+          "method": "perf_counter",
+          "note": null
+        }
+      },
+      "verification": {
+        "attempt_index": 0,
+        "executed": true,
+        "gate": "default_gate",
+        "threshold": 0.75,
+        "aggregated_score": {
+          "value": 0.5,
+          "unit": "score",
+          "provenance": "DERIVED",
+          "method": "weighted_mean",
+          "note": null
+        },
+        "passed": false,
+        "critical_failures": [],
+        "evaluator_errors": [],
+        "signals": [
+          {
+            "signal_type": "citation_support",
+            "evaluator_name": "CitationGroundingEvaluator",
+            "status": "failed",
+            "score": 0.5,
+            "weight": 0.35,
+            "provenance": "MEASURED",
+            "rationale": "placeholder rationale"
+          }
+        ]
+      },
+      "resources": {
+        "latency_ms": {
+          "value": 100,
+          "unit": "ms",
+          "provenance": "MEASURED",
+          "method": "perf_counter",
+          "note": null
+        },
+        "input_tokens": {
+          "value": 1000,
+          "unit": "tokens",
+          "provenance": "MEASURED",
+          "method": "provider_usage",
+          "note": null
+        },
+        "output_tokens": {
+          "value": 100,
+          "unit": "tokens",
+          "provenance": "MEASURED",
+          "method": "provider_usage",
+          "note": null
+        },
+        "cost_usd": {
+          "value": null,
+          "unit": "usd",
+          "provenance": null,
+          "method": "not_available",
+          "note": null
+        },
+        "energy_joules": {
+          "value": 1.0,
+          "unit": "joules",
+          "provenance": "ESTIMATED",
+          "method": "sum",
+          "note": null
+        },
+        "energy_cpu_joules": {
+          "value": 1.0,
+          "unit": "joules",
+          "provenance": "ESTIMATED",
+          "method": "tdp_proxy",
+          "note": null
+        },
+        "energy_gpu_joules": {
+          "value": null,
+          "unit": "joules",
+          "provenance": null,
+          "method": "not_available",
+          "note": "remote API model: GPU energy is outside the system boundary"
+        },
+        "energy_rerank_joules": {
+          "value": 0,
+          "unit": "joules",
+          "provenance": "DERIVED",
+          "method": "not_executed",
+          "note": null
+        },
+        "co2e_grams": {
+          "value": 0.0002,
+          "unit": "gco2e",
+          "provenance": "ESTIMATED",
+          "method": "grid_intensity",
+          "note": null
+        }
+      }
+    },
+    {
+      "attempt_index": 1,
+      "retrieval": {
+        "attempt_index": 1,
+        "requested_strategy": "hybrid_balanced_esc1",
+        "strategy_name": "hybrid_balanced_esc1",
+        "strategy_fallback": false,
+        "mode": "graph_augmented",
+        "top_k": 8,
+        "score_threshold": 0.0,
+        "dense_weight": 0.5,
+        "sparse_weight": 0.5,
+        "dense": {
+          "requested": true,
+          "executed": true,
+          "candidates": 5,
+          "skip_reason": null
+        },
+        "sparse": {
+          "requested": true,
+          "executed": true,
+          "candidates": 5,
+          "skip_reason": null
+        },
+        "graph": {
+          "requested": true,
+          "executed": true,
+          "candidates": null,
+          "skip_reason": null,
+          "hop_depth": 1,
+          "nodes_visited": 1,
+          "chunks_injected": 1
+        },
+        "reranker": {
+          "requested": false,
+          "executed": false,
+          "candidates": null,
+          "skip_reason": null,
+          "reranker_type": "none",
+          "returned": null,
+          "latency_ms": {
+            "value": null,
+            "unit": "ms",
+            "provenance": null,
+            "method": "not_available",
+            "note": null
+          },
+          "energy_joules": {
+            "value": null,
+            "unit": "joules",
+            "provenance": null,
+            "method": "not_available",
+            "note": null
+          }
+        },
+        "chunks": [
+          {
+            "rank": 1,
+            "chunk_id": "example/repo:src/example/module_1.py:0000000000000000:chunk:0",
+            "channel": "hybrid",
+            "repository": "example/repo",
+            "file_path": "src/example/module_1.py",
+            "start_line": 10,
+            "end_line": 20,
+            "symbol_name": "example_function_1",
+            "commit_sha": "0000000",
+            "citation": "example/repo:src/example/module_1.py:10-20",
+            "score": 1.0,
+            "score_kind": "fused",
+            "dense_score": 1.0,
+            "sparse_score": 1.0,
+            "pre_rerank_score": null,
+            "pre_rerank_rank": null,
+            "graph_hop": null,
+            "content": "def example_function():\n    ...  # placeholder content\n",
+            "content_truncated": false,
+            "content_trust": "untrusted"
+          },
+          {
+            "rank": 2,
+            "chunk_id": "example/repo:src/example/module_2.py:0000000000000000:chunk:0",
+            "channel": "hybrid",
+            "repository": "example/repo",
+            "file_path": "src/example/module_2.py",
+            "start_line": 10,
+            "end_line": 20,
+            "symbol_name": "example_function_2",
+            "commit_sha": "0000000",
+            "citation": "example/repo:src/example/module_2.py:10-20",
+            "score": 0.5,
+            "score_kind": "fused",
+            "dense_score": 0.5,
+            "sparse_score": 0.5,
+            "pre_rerank_score": null,
+            "pre_rerank_rank": null,
+            "graph_hop": null,
+            "content": "def example_function():\n    ...  # placeholder content\n",
+            "content_truncated": false,
+            "content_trust": "untrusted"
+          },
+          {
+            "rank": 3,
+            "chunk_id": "example/repo:src/example/module_3.py:0000000000000000:chunk:0",
+            "channel": "graph",
+            "repository": "example/repo",
+            "file_path": "src/example/module_3.py",
+            "start_line": 10,
+            "end_line": 20,
+            "symbol_name": "example_function_3",
+            "commit_sha": "0000000",
+            "citation": "example/repo:src/example/module_3.py:10-20",
+            "score": 0.3333333333333333,
+            "score_kind": "graph",
+            "dense_score": null,
+            "sparse_score": null,
+            "pre_rerank_score": null,
+            "pre_rerank_rank": null,
+            "graph_hop": 1,
+            "content": "def example_function():\n    ...  # placeholder content\n",
+            "content_truncated": false,
+            "content_trust": "untrusted"
+          }
+        ],
+        "latency_ms": {
+          "value": 10,
+          "unit": "ms",
+          "provenance": "MEASURED",
+          "method": "perf_counter",
+          "note": null
+        }
+      },
+      "generation": {
+        "attempt_index": 1,
+        "provider": "mock",
+        "model_id": "mock-model",
+        "is_local_model": false,
+        "finish_reason": "stop",
+        "answer": "Placeholder answer citing example/repo:src/example/module_1.py:10-20.",
+        "input_tokens": {
+          "value": 1000,
+          "unit": "tokens",
+          "provenance": "MEASURED",
+          "method": "provider_usage",
+          "note": null
+        },
+        "output_tokens": {
+          "value": 100,
+          "unit": "tokens",
+          "provenance": "MEASURED",
+          "method": "provider_usage",
+          "note": null
+        },
+        "latency_ms": {
+          "value": 80,
+          "unit": "ms",
+          "provenance": "MEASURED",
+          "method": "perf_counter",
+          "note": null
+        }
+      },
+      "verification": {
+        "attempt_index": 1,
+        "executed": true,
+        "gate": "default_gate",
+        "threshold": 0.75,
+        "aggregated_score": {
+          "value": 0.8,
+          "unit": "score",
+          "provenance": "DERIVED",
+          "method": "weighted_mean",
+          "note": null
+        },
+        "passed": true,
+        "critical_failures": [],
+        "evaluator_errors": [],
+        "signals": [
+          {
+            "signal_type": "citation_support",
+            "evaluator_name": "CitationGroundingEvaluator",
+            "status": "passed",
+            "score": 0.8,
+            "weight": 0.35,
+            "provenance": "MEASURED",
+            "rationale": "placeholder rationale"
+          }
+        ]
+      },
+      "resources": {
+        "latency_ms": {
+          "value": 100,
+          "unit": "ms",
+          "provenance": "MEASURED",
+          "method": "perf_counter",
+          "note": null
+        },
+        "input_tokens": {
+          "value": 1000,
+          "unit": "tokens",
+          "provenance": "MEASURED",
+          "method": "provider_usage",
+          "note": null
+        },
+        "output_tokens": {
+          "value": 100,
+          "unit": "tokens",
+          "provenance": "MEASURED",
+          "method": "provider_usage",
+          "note": null
+        },
+        "cost_usd": {
+          "value": null,
+          "unit": "usd",
+          "provenance": null,
+          "method": "not_available",
+          "note": null
+        },
+        "energy_joules": {
+          "value": 1.0,
+          "unit": "joules",
+          "provenance": "ESTIMATED",
+          "method": "sum",
+          "note": null
+        },
+        "energy_cpu_joules": {
+          "value": 1.0,
+          "unit": "joules",
+          "provenance": "ESTIMATED",
+          "method": "tdp_proxy",
+          "note": null
+        },
+        "energy_gpu_joules": {
+          "value": null,
+          "unit": "joules",
+          "provenance": null,
+          "method": "not_available",
+          "note": "remote API model: GPU energy is outside the system boundary"
+        },
+        "energy_rerank_joules": {
+          "value": 0,
+          "unit": "joules",
+          "provenance": "DERIVED",
+          "method": "not_executed",
+          "note": null
+        },
+        "co2e_grams": {
+          "value": 0.0002,
+          "unit": "gco2e",
+          "provenance": "ESTIMATED",
+          "method": "grid_intensity",
+          "note": null
+        }
+      }
+    }
+  ],
+  "escalation": {
+    "max_escalations": 2,
+    "steps": [
+      {
+        "from_attempt": 0,
+        "to_attempt": 1,
+        "rung": "expanded_retrieval",
+        "from_strategy": "hybrid_balanced",
+        "to_strategy": "hybrid_balanced_esc1",
+        "trigger_score": 0.5,
+        "threshold": 0.75,
+        "critical_failures": [],
+        "changes": [
+          {
+            "name": "top_k",
+            "before": 5,
+            "after": 8
+          }
+        ]
+      }
+    ],
+    "exhausted": false
+  },
+  "outcome": {
+    "verdict": "VERIFIED",
+    "answer": "Placeholder answer citing example/repo:src/example/module_1.py:10-20.",
+    "answer_attempt_index": 1
+  },
+  "totals": {
+    "latency_ms": {
+      "value": 200,
+      "unit": "ms",
+      "provenance": "MEASURED",
+      "method": "perf_counter",
+      "note": null
+    },
+    "input_tokens": {
+      "value": 2000,
+      "unit": "tokens",
+      "provenance": "MEASURED",
+      "method": "provider_usage",
+      "note": null
+    },
+    "output_tokens": {
+      "value": 200,
+      "unit": "tokens",
+      "provenance": "MEASURED",
+      "method": "provider_usage",
+      "note": null
+    },
+    "cost_usd": {
+      "value": null,
+      "unit": "usd",
+      "provenance": null,
+      "method": "not_available",
+      "note": null
+    },
+    "energy_joules": {
+      "value": 2.0,
+      "unit": "joules",
+      "provenance": "ESTIMATED",
+      "method": "sum",
+      "note": null
+    },
+    "energy_cpu_joules": {
+      "value": 2.0,
+      "unit": "joules",
+      "provenance": "ESTIMATED",
+      "method": "tdp_proxy",
+      "note": null
+    },
+    "energy_gpu_joules": {
+      "value": null,
+      "unit": "joules",
+      "provenance": null,
+      "method": "not_available",
+      "note": "remote API model: GPU energy is outside the system boundary"
+    },
+    "energy_rerank_joules": {
+      "value": 0,
+      "unit": "joules",
+      "provenance": "DERIVED",
+      "method": "not_executed",
+      "note": null
+    },
+    "co2e_grams": {
+      "value": 0.0004,
+      "unit": "gco2e",
+      "provenance": "ESTIMATED",
+      "method": "grid_intensity",
+      "note": null
+    }
+  },
+  "warnings": [
+    "ILLUSTRATIVE EXAMPLE: hand-written placeholder values, not results of any run."
+  ]
+}

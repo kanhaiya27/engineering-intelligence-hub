@@ -15,6 +15,10 @@ from __future__ import annotations
 from typing import Dict, List, Optional, Tuple
 from unittest.mock import MagicMock
 
+import pytest
+
+from core.exceptions import InvalidRetrievalStrategyError
+
 
 from knowledge.graph.base import BaseGraphStore, GraphEdge, GraphNode, NodeLabel
 from knowledge.schemas.tasks import (
@@ -234,12 +238,14 @@ class TestAdaptiveRetrievalPolicy:
         result = policy.resolve(clf)
         assert result.strategy_name == "hybrid"
 
-    def test_unknown_override_falls_back_to_hybrid(self):
+    def test_unknown_override_raises(self):
+        # An explicit override must never silently run a different strategy
+        # (finding F1: escalated names fell back to "hybrid" on every attempt).
         registry = _make_registry("hybrid")
         policy = AdaptiveRetrievalPolicy(registry)
         clf = _make_classification()
-        result = policy.resolve(clf, override_strategy_name="nonexistent_strategy_xyz")
-        assert result.strategy_name == "hybrid"
+        with pytest.raises(InvalidRetrievalStrategyError):
+            policy.resolve(clf, override_strategy_name="nonexistent_strategy_xyz")
 
     def test_list_policies_returns_dict(self):
         policy = AdaptiveRetrievalPolicy({})
@@ -525,6 +531,50 @@ class TestAdaptiveRetrievalPipeline:
         # → should route to _dense, not _graph_aug
         pipeline._dense.retrieve.assert_called_once()
         pipeline._graph_aug.retrieve.assert_not_called()
+
+    def test_override_strategy_config_runs_as_given(self):
+        # An unregistered config (e.g. an escalated rung) must reach the
+        # retriever unchanged, not be looked up by name.
+        pipeline = self._make_pipeline()
+        self._setup_mock_retriever(pipeline._graph_aug)
+        esc = RetrievalStrategyConfig(
+            strategy_name="hybrid_esc1_esc2_graph",
+            mode=RetrievalMode.GRAPH_AUGMENTED,
+            top_k=19,
+            include_graph_context=True,
+        )
+        result = pipeline.retrieve(
+            query="test",
+            classification=_make_classification(),
+            experiment_mode=ExperimentMode.SYSTEM_D,
+            override_strategy=esc,
+        )
+        sent = pipeline._graph_aug.retrieve.call_args.kwargs["strategy"]
+        assert sent is esc
+        assert result.metadata["resolved_strategy"] == "hybrid_esc1_esc2_graph"
+        assert result.metadata["executed_strategy"]["top_k"] == 19
+        assert result.metadata["executed_strategy"]["include_graph_context"] is True
+
+    def test_override_strategy_config_has_graph_stripped_in_system_c(self):
+        pipeline = self._make_pipeline()
+        self._setup_mock_retriever(pipeline._hybrid)
+        esc = RetrievalStrategyConfig(
+            strategy_name="hybrid_esc1_esc2_graph",
+            mode=RetrievalMode.GRAPH_AUGMENTED,
+            top_k=19,
+            include_graph_context=True,
+        )
+        result = pipeline.retrieve(
+            query="test",
+            classification=_make_classification(),
+            experiment_mode=ExperimentMode.SYSTEM_C,
+            override_strategy=esc,
+        )
+        pipeline._graph_aug.retrieve.assert_not_called()
+        sent = pipeline._hybrid.retrieve.call_args.kwargs["strategy"]
+        assert sent.top_k == 19
+        assert sent.include_graph_context is False
+        assert result.metadata["executed_strategy"]["include_graph_context"] is False
 
     def test_result_contains_experiment_metadata(self):
         pipeline = self._make_pipeline()

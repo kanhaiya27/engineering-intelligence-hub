@@ -16,6 +16,7 @@ from typing import TYPE_CHECKING, Any, Dict, Optional
 from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel, Field
 
+from core.exceptions import InvalidRetrievalStrategyError
 from core.logging import get_logger
 from knowledge.schemas.tasks import (
     EngTaskRequest,
@@ -79,7 +80,10 @@ class AdaptiveRetrieveRequest(BaseModel):
     )
     override_strategy: Optional[str] = Field(
         default=None,
-        description="Force a specific named strategy (ablation experiments only).",
+        description=(
+            "Force a specific named strategy (ablation experiments only). "
+            "Must be a name listed by GET /strategies; unknown names return 400."
+        ),
     )
     task_id: Optional[str] = Field(default=None, description="Optional task tracking ID")
 
@@ -169,6 +173,11 @@ async def adaptive_retrieve(req: AdaptiveRetrieveRequest):
 
     except HTTPException:
         raise
+    except InvalidRetrievalStrategyError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"{exc.message} {exc.details}",
+        )
     except Exception as exc:
         logger.error(f"Adaptive retrieval failed: {exc}", exc_info=True)
         raise HTTPException(
