@@ -61,6 +61,7 @@ class FrozenVariables(BaseModel):
     llm_provider: str = "ollama"
     llm_model_id: str = "gpt-4o-mini"
     llm_num_ctx: int = 12288
+    llm_num_gpu: int = 999
     temperature: float = 0.1
     max_output_tokens: int = 2048
     random_seed: int = 42
@@ -92,7 +93,7 @@ class FrozenVariables(BaseModel):
         and `runtime_mismatches()` refuses a manifest that differs from them.
         """
         from core.config import settings
-        from generation.providers.ollama import DEFAULT_NUM_CTX, DEFAULT_SEED
+        from core.inference import inference_config
         from sustainability.carbon.estimator import CarbonEstimator
 
         sus = settings.sustainability
@@ -101,10 +102,11 @@ class FrozenVariables(BaseModel):
             repositories=wave1_repository_pins(),
             llm_provider=settings.model.default_provider,
             llm_model_id=settings.model.default_model_id,
-            llm_num_ctx=DEFAULT_NUM_CTX,
+            llm_num_ctx=inference_config().num_ctx,
+            llm_num_gpu=inference_config().num_gpu,
             temperature=settings.model.temperature,
             max_output_tokens=settings.model.max_tokens,
-            random_seed=DEFAULT_SEED,
+            random_seed=inference_config().seed,
             embedding_model_id=settings.vector_store.embedding_model,
             embedding_dimension=settings.vector_store.embedding_dimension,
             carbon_intensity_gco2_per_kwh=CarbonEstimator.from_settings().carbon_intensity,

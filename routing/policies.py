@@ -4,7 +4,7 @@ Engineering Intelligence Hub — Routing Policies
 Configuration model for routing policy parameters.
 
 Policies control how the router trades off quality, cost, latency and energy.
-They are loaded from configs/default.yaml and can be overridden per experiment.
+Defaults are defined in RoutingPolicy below and can be overridden per experiment.
 
 The optimisation objective (from the system specification) is:
     minimise: α*Time + β*Cost + γ*Energy + δ*CO2e + ε*Rework

@@ -31,6 +31,7 @@ import httpx
 
 from core.config import settings
 from core.exceptions import GenerationError, ProviderTimeoutError
+from core.inference import inference_config
 from core.logging import get_logger
 from generation.base import BaseLLMProvider, GenerationRequest, GenerationResponse
 from generation.tokens import ChatTokenCounter
@@ -39,14 +40,16 @@ from sustainability.energy.nvml_meter import NvmlEnergyMeter
 logger = get_logger(__name__)
 
 DEFAULT_BASE_URL = "http://localhost:11434"
-DEFAULT_SEED = 42
+# From configs/inference.yaml (single source of truth); kept as module names
+# because tests, scripts and the manifest import them.
+DEFAULT_SEED = inference_config().seed
 # One context window for every model and system, so Systems A-E differ only in
 # what they retrieve. 12,288 holds the p99 prompt of the widest escalation rung
 # (~9K tokens) plus the 1,024-token output budget, and the 7B stays fully on the
 # 6 GB GPU at ~35 tok/s; at 16K VRAM is full and from 20K the driver spills to
 # system RAM (5-7x slower). Measured: experiments/results/phase1/machine_A/
 # long_context_sizes.md and long_context_probe.md.
-DEFAULT_NUM_CTX = 12288
+DEFAULT_NUM_CTX = inference_config().num_ctx
 # The NVML energy counter advances in ~100 ms steps on the dev laptop, so energy
 # for windows shorter than this is flagged as low reliability.
 MIN_RELIABLE_ENERGY_WINDOW_S = 1.0
@@ -67,7 +70,7 @@ class OllamaProvider(BaseLLMProvider):
         self,
         base_url: Optional[str] = None,
         timeout_seconds: Optional[float] = None,
-        keep_alive: str = "30m",
+        keep_alive: Optional[str] = None,
         seed: int = DEFAULT_SEED,
         num_ctx: int = DEFAULT_NUM_CTX,
         model_options: Optional[Dict[str, Dict[str, Any]]] = None,
@@ -78,7 +81,7 @@ class OllamaProvider(BaseLLMProvider):
     ) -> None:
         self.base_url = (base_url or settings.secrets.local_model_base_url or DEFAULT_BASE_URL).rstrip("/")
         self.timeout_seconds = float(timeout_seconds or settings.model.request_timeout_seconds)
-        self.keep_alive = keep_alive
+        self.keep_alive = keep_alive or inference_config().keep_alive
         self.seed = seed
         self.num_ctx = num_ctx
         self.model_options = model_options or {}

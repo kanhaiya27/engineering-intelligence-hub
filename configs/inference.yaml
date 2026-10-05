@@ -1,0 +1,37 @@
+# ============================================================
+# Engineering Intelligence Hub — inference configuration
+# configs/inference.yaml
+#
+# SINGLE SOURCE OF TRUTH for how every answer is generated, for all
+# Systems A–E and every routing tier. Read by core/inference.py; used by
+# core.config.ModelSettings, generation/providers/ollama.py, the provider
+# factory and the experiment manifest. Do not repeat these values elsewhere.
+#
+# Local models only (original plan, MASTER_DATASET_SPECIFICATION §1).
+# Values decided 2026-10-05 from measurements on laptop-a (RTX 4050, 6 GB):
+#   experiments/results/phase1/machine_A/long_context_probe.md
+#   experiments/results/phase1/machine_A/long_context_sizes.md
+# ============================================================
+
+provider: ollama
+
+# Systems A–E all use this one model, so they differ only in retrieval and
+# verification (one capability per step, original plan §7.1; change register C2).
+fixed_model: qwen2.5-coder:7b
+fallback_model: qwen2.5-coder:3b
+
+# Routing tiers, cheapest first (RQ4). Digests pinned in CLAUDE.md.
+routing_ladder:
+  small: qwen2.5-coder:1.5b
+  medium: qwen2.5-coder:3b
+  large: qwen2.5-coder:7b
+
+# Sent with every call to every model above.
+options:
+  num_ctx: 12288      # p99 prompt of the widest escalation rung ~9K + output fits; 7B stays on GPU
+  num_gpu: 999        # all layers on the GPU (Ollama's default put only 64–82% of the 7B there)
+  temperature: 0.0
+  seed: 42
+
+max_output_tokens: 1024   # part of the num_ctx budget; trials record whether an answer hit it
+keep_alive: 30m
