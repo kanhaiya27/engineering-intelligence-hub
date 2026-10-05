@@ -1,0 +1,200 @@
+{
+  "study": "phase1_long_context_sizes",
+  "provenance": {
+    "recorded_at_utc": "2026-10-05T08:07:42+00:00",
+    "machine_id": "laptop-a",
+    "platform": "Windows-10-10.0.26300-SP0",
+    "python": "3.11.9",
+    "gpu": {
+      "name": "NVIDIA GeForce RTX 4050 Laptop GPU",
+      "driver": "617.14",
+      "vram_total_mib": 6141,
+      "power_default_limit_w": 80.0,
+      "power_max_limit_w": 140.0,
+      "compute_capability": "8.9"
+    },
+    "torch": {
+      "torch": "2.6.0+cu124",
+      "cuda": "12.4",
+      "cudnn": 90100,
+      "cuda_available": true
+    },
+    "ollama": null,
+    "git": {
+      "sha": "a02e71bf28f82a1fbd3f35aa078e303a37bb1737",
+      "branch": "feat/local-inference-routing",
+      "dirty": false
+    },
+    "sustainability_config": {
+      "carbon_region": "custom",
+      "carbon_intensity_gco2_per_kwh": 713.0,
+      "cpu_tdp_watts": 45.0,
+      "gpu_tdp_watts": 80.0
+    }
+  },
+  "config": {
+    "collection": "eih_knowledge",
+    "tokenizer_for": "qwen2.5-coder:7b",
+    "tokenizer": "Qwen/Qwen2.5-Coder-1.5B-Instruct",
+    "mc_samples": 20000,
+    "seed": 42,
+    "question": "Using only the repository evidence above, explain what the code in the evidence does, which functions call which, and point out any error handling it performs.",
+    "chunk_format": "QualityAwareRAGPipeline._build_context_prompt"
+  },
+  "results": {
+    "prompt_overhead_tokens": 236,
+    "chunk_tokens": {
+      "n": 48046,
+      "mean": 184.3,
+      "p50": 117,
+      "p90": 374,
+      "p95": 515,
+      "p99": 903,
+      "max": 67021
+    },
+    "chunk_tokens_by_repository": {
+      "fastapi/fastapi": {
+        "n": 18899,
+        "mean": 170.5,
+        "p50": 110,
+        "p90": 331,
+        "p95": 443,
+        "p99": 878,
+        "max": 39743
+      },
+      "pallets/flask": {
+        "n": 1489,
+        "mean": 210.0,
+        "p50": 160,
+        "p90": 414,
+        "p95": 520,
+        "p99": 929,
+        "max": 2329
+      },
+      "psf/requests": {
+        "n": 976,
+        "mean": 168.6,
+        "p50": 120,
+        "p90": 339,
+        "p95": 440,
+        "p99": 707,
+        "max": 2577
+      },
+      "pylint-dev/pylint": {
+        "n": 10819,
+        "mean": 152.3,
+        "p50": 93,
+        "p90": 303,
+        "p95": 469,
+        "p99": 822,
+        "max": 11496
+      },
+      "pytest-dev/pytest": {
+        "n": 6889,
+        "mean": 210.1,
+        "p50": 155,
+        "p90": 422,
+        "p95": 548,
+        "p99": 624,
+        "max": 67021
+      },
+      "sphinx-doc/sphinx": {
+        "n": 8974,
+        "mean": 229.8,
+        "p50": 140,
+        "p90": 494,
+        "p95": 574,
+        "p99": 1234,
+        "max": 47496
+      }
+    },
+    "prompt_tokens_for_n_chunks": {
+      "3": {
+        "mean": 798.6,
+        "p50": 691,
+        "p90": 1127,
+        "p95": 1331,
+        "p99": 2133,
+        "max": 67555,
+        "worst_case_longest_n": 154496
+      },
+      "5": {
+        "mean": 1166.0,
+        "p50": 1038,
+        "p90": 1622,
+        "p95": 1896,
+        "p99": 2999,
+        "max": 68067,
+        "worst_case_longest_n": 195557
+      },
+      "8": {
+        "mean": 1704.4,
+        "p50": 1568,
+        "p90": 2316,
+        "p95": 2671,
+        "p99": 4013,
+        "max": 69966,
+        "worst_case_longest_n": 228936
+      },
+      "10": {
+        "mean": 2081.9,
+        "p50": 1910,
+        "p90": 2756,
+        "p95": 3149,
+        "p99": 4639,
+        "max": 68660,
+        "worst_case_longest_n": 244624
+      },
+      "14": {
+        "mean": 2816.3,
+        "p50": 2613,
+        "p90": 3622,
+        "p95": 4099,
+        "p99": 5787,
+        "max": 70051,
+        "worst_case_longest_n": 270470
+      },
+      "15": {
+        "mean": 2979.3,
+        "p50": 2782,
+        "p90": 3840,
+        "p95": 4335,
+        "p99": 5986,
+        "max": 69463,
+        "worst_case_longest_n": 275521
+      },
+      "18": {
+        "mean": 3540.5,
+        "p50": 3317,
+        "p90": 4481,
+        "p95": 5030,
+        "p99": 7028,
+        "max": 72147,
+        "worst_case_longest_n": 289154
+      },
+      "20": {
+        "mean": 3915.1,
+        "p50": 3667,
+        "p90": 4909,
+        "p95": 5518,
+        "p99": 7489,
+        "max": 71633,
+        "worst_case_longest_n": 297811
+      },
+      "24": {
+        "mean": 4681.4,
+        "p50": 4381,
+        "p90": 5770,
+        "p95": 6419,
+        "p99": 8967,
+        "max": 72463,
+        "worst_case_longest_n": 312900
+      }
+    },
+    "tiers": {
+      "chunk_tokens": "MEASURED",
+      "prompt_overhead_tokens": "MEASURED",
+      "prompt_tokens_for_n_chunks": "DERIVED (Monte Carlo over measured chunk lengths)"
+    }
+  }
+}

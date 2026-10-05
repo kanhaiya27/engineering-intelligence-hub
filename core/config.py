@@ -74,7 +74,9 @@ class ModelSettings(BaseSettings):
     fallback_model_id: str = Field(
         default="qwen2.5-coder:3b", description="Fallback model for failed routing"
     )
-    max_tokens: int = Field(default=2048, description="Maximum output tokens")
+    max_tokens: int = Field(
+        default=1024, description="Maximum output tokens (part of the num_ctx 12288 budget)"
+    )
     temperature: float = Field(
         default=0.0, description="Sampling temperature (0 = deterministic with a fixed seed)"
     )

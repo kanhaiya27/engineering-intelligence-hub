@@ -151,7 +151,7 @@ def test_routed_pipeline_actually_calls_the_selected_model():
     assert easy.metadata["models_called"] == [SMALL] and hard.metadata["models_called"] == [LARGE]
     assert easy.verification_details["attempt_history"][0]["model_digest"] == DIGESTS[SMALL]
     assert fake.chats[1]["options"]["num_gpu"] == 999                  # measured 7B setting applied
-    assert "num_gpu" not in fake.chats[0]["options"]
+    assert fake.chats[0]["options"]["num_gpu"] == 999                  # all tiers: all layers on GPU
 
 
 def test_quality_failure_escalates_to_the_next_model():

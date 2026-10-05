@@ -29,7 +29,7 @@ class GenerationRequest:
     model_id: str
     system_prompt: Optional[str] = None
     messages: Optional[List[Dict[str, str]]] = None  # For chat-format providers
-    max_tokens: int = 2048
+    max_tokens: int = 1024
     temperature: float = 0.1
     stop_sequences: List[str] = field(default_factory=list)
     stream: bool = False

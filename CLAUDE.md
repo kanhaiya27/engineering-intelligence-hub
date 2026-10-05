@@ -180,4 +180,10 @@ complete 25 Oct 2026; final 15 Nov 2026.
   at ~27–31 W (P0). Report **gross** energy as the headline; "net of idle" only with a
   settled P8 baseline.
 - 7B (Q4_K_M) runs 82% on GPU at num_ctx 4096 (Ollama's own estimate), even alone.
+- **Run settings (decided 2026-10-05): num_ctx 12,288, `num_gpu 999` (all layers on the
+  GPU) for every model, output limit 1,024 tokens.** The 7B fits at 12K (peak 5,906 of
+  6,141 MiB with encoders); at 16K VRAM is full; from 20K the driver silently pages to
+  system RAM (5–7× slower, 4–7× the energy) while Ollama still reports "100% on GPU".
+  See `experiments/results/phase1/machine_A/long_context_probe.md`.
+- Long runs: work up to 90 °C; above that, cool to 65 °C and repeat the measurement.
 - The laptop throttles at 84–87 °C; long runs need cooldowns and logged temperatures.
