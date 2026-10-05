@@ -1,0 +1,67 @@
+{
+  "action": "A3 delete stray test fixture nodes from the live experiment graph",
+  "approved_by": "Avaneesh Kumar Verma (2026-10-06, Step 2 prompt)",
+  "performed_utc": "2026-10-05T18:49:52.299163+00:00",
+  "cause": "tests/test_api/test_graph_endpoints.py wrote them via the API's live store (fixed in 174561d)",
+  "backup": {
+    "path": "C:/EIH_backups/neo4j_graph_pre_A3_2026-10-06.jsonl.gz",
+    "sha256": "bb88968de325da8a9aaf887c583338d713231cb5230030538feb307f8217ca91",
+    "nodes": 37068,
+    "edges": 58983
+  },
+  "deleted_nodes": [
+    {
+      "id": "test:node:a",
+      "labels": [
+        "Entity",
+        "File"
+      ],
+      "props": {
+        "name": "a.py",
+        "node_id": "test:node:a"
+      },
+      "rels": 1
+    },
+    {
+      "id": "test:node:b",
+      "labels": [
+        "Entity",
+        "Module"
+      ],
+      "props": {
+        "name": "a",
+        "node_id": "test:node:b"
+      },
+      "rels": 1
+    }
+  ],
+  "counters": {
+    "nodes_deleted": 2,
+    "relationships_deleted": 1
+  },
+  "after": {
+    "nodes": 37066,
+    "edges": 58982,
+    "nodes_by_label": {
+      "Repository": 6,
+      "File": 7109,
+      "Function": 5930,
+      "Test": 8193,
+      "Class": 4071,
+      "Method": 9187,
+      "Commit": 2570
+    },
+    "edges_by_type": {
+      "CONTAINS": 34490,
+      "IMPORTS": 5414,
+      "CALLS": 11012,
+      "TESTS": 1952,
+      "MODIFIES": 6114
+    }
+  },
+  "build_record": {
+    "nodes": 37066,
+    "edges": 58982
+  },
+  "matches_build_record_exactly": true
+}

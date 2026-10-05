@@ -82,6 +82,9 @@ experiments/results/**/*.npz
 !experiments/results/.gitkeep
 # Small, provenance-stamped measurement results are versioned with the code.
 !experiments/results/phase1/**/*.json
+!experiments/results/graph_build/**/*.json
+!experiments/results/mode_r/**/*.json
+!experiments/results/retrieval_energy/**/*.json
 
 # --- Datasets (large files — exclude raw, keep registry/schema) ---
 datasets/**/*.jsonl

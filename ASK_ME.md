@@ -52,10 +52,6 @@ until you answer. To answer, reply with the item ID and your choice. Answered it
   **Recommended: take the lines from the label, check them in review, and write them into the
   task file after approval** (Step 2d). The same check runs on the test tasks in the 3b
   correctness pass.
-- [ ] **D12: Test-task correctness pass.** The master prompt decides this: two independent reviewers
-  check the 24 existing test tasks before any tuning (Step 3b, 6–7 Oct).
-  **Recommended: confirm the reviewers.** Avaneesh plus one other. Not Claude: Claude never sees
-  test tasks before the final run.
 - [ ] **F1: EIH-Fresh size.** The master prompt says 30–50 tasks; the dataset spec (Tier 3) says
   ~150. **Recommended: 50 by 12 Oct, recorded as change C19 in WORK_PLAN.** 150 needs ~200 more
   reviews and +25 GPU-h.
@@ -64,32 +60,6 @@ until you answer. To answer, reply with the item ID and your choice. Answered it
   assigned when a task is approved, so nobody chooses where a task lands.
 
 ## Design decisions found in Step 1
-
-- [ ] **A1: System D adds graph context on only 3 of 36 dev/val tasks.** Measured in Mode R
-  (`experiments/results/mode_r/machine_A/mode-r-devval-2026-10-05/`). D uses the adaptive
-  policy's strategy, and that strategy includes the graph only for graph-type tasks (2×
-  `graph_augmented_reranked`, 1× `graph_augmented`). So D's retrieval equals C's on 33 of 36
-  tasks, and Δ(C→D) for RQ2 rests on 3 tasks.
-  (a) Keep it: D = "the policy may choose the graph".
-  (b) D = C's strategy **plus** graph context on every task. Plan §7.1 says each system adds
-      exactly one capability, and D's is knowledge-graph augmentation.
-  **Recommended: (b)**, recorded as a change in WORK_PLAN §5. E's attempt 0 then equals the new D.
-  Decide before the Step 2 calibration.
-
-- [ ] **A3: Delete 2 test nodes from the live Neo4j graph?** `tests/test_api/test_graph_endpoints.py`
-  wrote `test:node:a` (File) and `test:node:b` (Module) plus 1 edge into the experiment graph and
-  never removed them. Live graph: 37,068 / 58,983; build report: 37,066 / 58,982. They link to
-  nothing real, so Mode R is unaffected, but the new manifest check (Step 1g) correctly
-  **refuses every real Mode Q run** until the graph equals its build report. The test now uses an
-  in-memory store.
-  **Recommended: yes**, delete exactly those 2 nodes and their edge (`MATCH (n) WHERE n.node_id IN
-  ['test:node:a','test:node:b'] DETACH DELETE n`), then re-check that the counts equal the report.
-- [ ] **A2: Primary success definition for CO₂e per successful task.** The current
-  `quality_constrained_success` needs composite ≥ threshold. The composite is 60% System E's own gate
-  signals, so a "success" partly means "passed E's gate".
-  **Recommended:** primary = correct (lexical F1 ≥ task threshold) **and** supported (cites ≥ 1
-  labelled evidence span, `evaluation/outcome.py`). Report the old definition as secondary. Fix it
-  before any test run.
 
 ## Plan decisions still open (WORK_PLAN §4)
 
@@ -142,6 +112,16 @@ until you answer. To answer, reply with the item ID and your choice. Answered it
 - Step 1c installs `statsmodels` (mixed-effects models for RQ5) and adds it to the requirements.
 
 ## Decided
+
+- 2026-10-06 **A3**: backup exported (`C:/EIH_backups/neo4j_graph_pre_A3_2026-10-06.jsonl.gz`), then
+  `test:node:a`, `test:node:b` and their edge deleted. The graph now equals its build record
+  (37,066 / 58,982, labels and edge types identical). The log is
+  `experiments/results/graph_build/machine_A/graph_maintenance_2026-10-06_A3.json`. The full test
+  suite leaves the live graph unchanged.
+- 2026-10-06 **A1**: System D adds graph context on every task (WORK_PLAN C23).
+- 2026-10-06 **A2**: success = correct AND cites labelled evidence lines.
+- 2026-10-06 **D12**: two independent reviewers (from Avaneesh, Sanvi, Aayan, Radhesh) check the
+  test tasks' correctness before any tuning sees the test split.
 
 - 2026-10-05: four benchmark fixes (ops-052, ops-053, code-014, rev-045) and 12 evidence fixes,
   approved by Avaneesh (`docs/BENCHMARK_FIXES_2026-10-05.md`, PR #17).
