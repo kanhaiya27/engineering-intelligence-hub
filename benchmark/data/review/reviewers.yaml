@@ -1,0 +1,7 @@
+# Benchmark reviewers (master prompt 2026-10-05). Only these names may record review decisions.
+# Full names to be confirmed (ASK_ME.md); first names are accepted on the command line.
+reviewers:
+  - Avaneesh Kumar Verma
+  - Sanvi
+  - Aayan
+  - Radhesh
