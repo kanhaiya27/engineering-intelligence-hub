@@ -8,6 +8,36 @@ measured (with numbers only if actually measured), what is blocked.
 
 ---
 
+## 2026-10-05 (late) — Master prompt Steps 0 + 1: schedule, review queue, measurement validity
+
+Branch `master-fix` (tag `pre-master-fix` = master 68a072d before it).
+
+**Step 0**
+- `docs/SCHEDULE.md`: day by day to 20 Oct; GPU budget ≈ 550 GPU-h for Modes R/Q vs ≈ 300
+  available, plus Mode P; review need ≈ 135 h vs 84 h. Options are in `ASK_ME.md` (G1, R1).
+- Review queue (`benchmark/review.py`, `scripts/review.py`, `docs/REVIEW_GUIDE.md`).
+  `calibration-01` (10 dev/val tasks) queued for all four reviewers.
+- Found: 9 dev/val tasks cite a doc file with no line numbers (ASK_ME L3).
+
+**Step 1**
+- 1a: Mode R metrics plus a run on the 36 dev/val labels (provisional, draft labels). D = C on 33/36
+  tasks: the policy picks a graph strategy for only 3 (ASK_ME A1). C/D retrieve nothing on 3 tasks.
+- 1b: CO₂e per successful task, including model loads.
+- 1c: statistics (`experiments/stats.py`).
+- 1d: no invented scores. The 0.50 fills and an unexplained ×1.5 on correctness are removed (C19).
+- 1e/1f: citation-span outcome independent of E's gate (C22); blind human-rating subset tools.
+- 1g: the manifest binds configs, data files, the collection and the graph (C21). Found: a test had
+  written 2 nodes into the live graph. The test is fixed; deletion awaits ASK_ME A3.
+  **Real runs are refused until then.**
+- 1h: whole-trial NVML energy per trial (C20).
+- Measured: retrieval energy per component (B 0.27 J, C 3.07 J, E rung 3 18.87 J net GPU per query;
+  cross-encoder 8.72 J).
+- `docs/RQ_READINESS.md` written.
+
+**Blocked on Avaneesh:** `ASK_ME.md` (A1, A2, A3, G1, R1–R5, L1, L3, D4, D6, F1, S1, citations).
+
+**Next** — Step 2 (confounds, dev/val only, freeze 9 Oct) after "go".
+
 ## 2026-10-05 (night) — Step 3: benchmark corrections (v1.1) and label review sheet
 
 Branch `fix/benchmark-task-corrections` (WORK_PLAN step 6). PR #16 merged before.

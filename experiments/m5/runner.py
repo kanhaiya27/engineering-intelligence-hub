@@ -65,11 +65,27 @@ def _value(x: Any) -> Any:
     return x.value if hasattr(x, "value") else x
 
 
+def _round(x: Optional[float], nd: int = 4) -> Optional[float]:
+    return None if x is None else round(x, nd)
+
+
 def _cpu_utilisation(start, end) -> Optional[float]:
     """Fraction of all CPU time that was busy between two psutil.cpu_times() snapshots."""
     total = sum(end) - sum(start)
     idle = (end.idle - start.idle) + (getattr(end, "iowait", 0.0) - getattr(start, "iowait", 0.0))
     return round(max(0.0, min(1.0, 1.0 - idle / total)), 4) if total > 0 else None
+
+
+def baseline_b_strategy() -> RetrievalStrategyConfig:
+    """System B's fixed hybrid retrieval (plan §7.1): dense 0.7 + BM25 0.3, top_k 5, no graph."""
+    return RetrievalStrategyConfig(
+        strategy_name="hybrid",
+        mode=RetrievalMode.HYBRID,
+        top_k=5,
+        dense_weight=0.70,
+        sparse_weight=0.30,
+        include_graph_context=False,
+    )
 
 
 class M5BenchmarkRunner:
@@ -158,6 +174,16 @@ class M5BenchmarkRunner:
                 verification_config=VerificationConfig(max_escalation_attempts=max_esc),
             )
         return self._pipe_quality
+
+    def _retrieval_label(self, task_id: str):
+        """Human-checked retrieval label for a task (dev/val now; test labels only before the final run)."""
+        if getattr(self, "_labels", None) is None:
+            from benchmark.retrieval_labels import LABELS_PATH
+            from evaluation.retrieval_metrics import Label
+
+            raw = json.loads(LABELS_PATH.read_text(encoding="utf-8"))["labels"] if LABELS_PATH.exists() else []
+            self._labels = {d["task_id"]: Label.from_json(d) for d in raw}
+        return self._labels.get(task_id)
 
     @property
     def graph_store(self):
@@ -255,7 +281,13 @@ class M5BenchmarkRunner:
         # Utilisation comes from psutil.cpu_times() snapshots, which (unlike
         # cpu_percent) no other call inside the window can reset.
         cpu_start, t_window = psutil.cpu_times(), time.perf_counter()
-        response = self._dispatch(system_id, req, clf, llm_provider)
+        meter = self._trial_meter(llm_provider)
+        if meter is not None:
+            with meter:
+                response = self._dispatch(system_id, req, clf, llm_provider)
+            response.metadata["trial_gpu_energy"] = meter.result.to_dict()
+        else:
+            response = self._dispatch(system_id, req, clf, llm_provider)
         window_s = time.perf_counter() - t_window
         response.metadata["cpu_window"] = {
             "utilisation": _cpu_utilisation(cpu_start, psutil.cpu_times()),
@@ -265,6 +297,17 @@ class M5BenchmarkRunner:
         if classification_info is not None:
             response.metadata["classification"] = classification_info
         return response
+
+    @staticmethod
+    def _trial_meter(llm_provider: BaseLLMProvider):
+        """Counter-only NVML meter over the WHOLE trial (Step 1h): retrieval, embedding, BM25,
+        graph, reranking, every generation and escalation. Two counter reads, no power polling
+        (polling itself adds GPU power; nvml_meter.py OBSERVER EFFECT). Real local runs only."""
+        from sustainability.energy.nvml_meter import NvmlEnergyMeter, nvml_available
+
+        if getattr(llm_provider, "provider_name", None) != "ollama" or not nvml_available():
+            return None
+        return NvmlEnergyMeter(sample_interval_s=3600.0)
 
     def _dispatch(
         self,
@@ -278,16 +321,8 @@ class M5BenchmarkRunner:
             return pipe_a.execute(request=req, classification=clf, skip_retrieval=True)
 
         elif system_id == SystemID.BASELINE_B.value:
-            strat_b = RetrievalStrategyConfig(
-                strategy_name="hybrid",
-                mode=RetrievalMode.HYBRID,
-                top_k=5,
-                dense_weight=0.70,
-                sparse_weight=0.30,
-                include_graph_context=False,
-            )
             pipe_b = self._get_pipeline_b(llm_provider)
-            return pipe_b.execute(request=req, strategy=strat_b, classification=clf)
+            return pipe_b.execute(request=req, strategy=baseline_b_strategy(), classification=clf)
 
         elif system_id == SystemID.SYSTEM_C.value:
             pipe_q = self._get_pipeline_quality(llm_provider)
@@ -360,30 +395,41 @@ class M5BenchmarkRunner:
             ground_truth=task.ground_truth,
             acceptable_alternatives=task.acceptable_alternatives,
         )
-        task_corr = corr_metric.task_correctness if corr_metric and corr_metric.task_correctness is not None else 0.50
+        # Missing scores stay missing (None): no invented 0.50. A trial with any missing
+        # component has no composite, is excluded from quality aggregates and is counted.
+        task_corr = corr_metric.task_correctness if corr_metric is not None else None
 
-        # 2. Quality Gate Signals
+        # 2. Quality Gate Signals (System E's own evaluators; see the independent outcome
+        #    measures in evaluation/outcome.py for RQ3)
+        def _score(signals):
+            return signals[0].score if signals and signals[0].score is not None else None
+
         cit_signals = self._citation_eval.evaluate(req, response)
         rel_signals = self._relevance_eval.evaluate(req, response)
         cov_signals = self._coverage_eval.evaluate(req, response)
         con_signals = self._consistency_eval.evaluate(req, response)
+        cit_score, rel_score = _score(cit_signals), _score(rel_signals)
+        cov_score, con_score = _score(cov_signals), _score(con_signals)
+        components = {"task_correctness": task_corr, "citation_grounding": cit_score,
+                      "query_relevance": rel_score, "evidence_coverage": cov_score,
+                      "evidence_consistency": con_score}
+        missing_scores = [k for k, v in components.items() if v is None]
 
-        cit_score = cit_signals[0].score if cit_signals and cit_signals[0].score is not None else 0.50
-        rel_score = rel_signals[0].score if rel_signals and rel_signals[0].score is not None else 0.50
-        cov_score = cov_signals[0].score if cov_signals and cov_signals[0].score is not None else 0.50
-        con_score = con_signals[0].score if con_signals and con_signals[0].score is not None else 1.00
-
-        cit_valid_ratio = 1.0
+        cit_valid_ratio = None
         if cit_signals and cit_signals[0].metadata.get("total_citations", 0) > 0:
             v = cit_signals[0].metadata.get("valid_citations", 0)
             t = cit_signals[0].metadata.get("total_citations", 1)
             cit_valid_ratio = v / t
 
         # Weighted Composite Quality (P0-1): 40% Ground-Truth Correctness + 25% Citation Support + 15% Relevance + 10% Coverage + 10% Consistency
-        composite_q = round(
+        composite_q = None if missing_scores else round(
             (task_corr * 0.40) + (cit_score * 0.25) + (rel_score * 0.15) + (cov_score * 0.10) + (con_score * 0.10),
             4,
         )
+
+        from evaluation.outcome import outcome as independent_outcome
+
+        indep = independent_outcome(response.answer or "", self._retrieval_label(task.task_id))
 
         thresh = task.expected_quality_threshold
         is_refusal = "INSUFFICIENT EVIDENCE" in (response.answer or "")
@@ -403,6 +449,8 @@ class M5BenchmarkRunner:
                 qc_success = True
                 passed = True
                 refusal_score = 0.50
+        elif composite_q is None:
+            refusal_score, passed, qc_success, success_type = 0.0, None, None, "MISSING_SCORES"
         else:
             refusal_score = 0.0
             passed = (composite_q >= thresh) and (task_corr >= thresh)
@@ -430,6 +478,13 @@ class M5BenchmarkRunner:
             raise ValueError(f"Trial {system_id}/{task.task_id} has no {missing}; "
                              "refusing to substitute estimates.")
         lat = response.latency_ms
+        # Model loads (cold starts, routing reloads) measured by the provider. One record from
+        # the baseline pipelines (generation_cold_start), a list from the quality pipeline.
+        loads = list((response.metadata or {}).get("cold_starts") or [])
+        if (response.metadata or {}).get("generation_cold_start"):
+            loads.append(response.metadata["generation_cold_start"])
+        load_energies = [((c or {}).get("energy") or {}).get("energy_j") for c in loads]
+        load_j = sum(e for e in load_energies if e is not None) if loads else None
         in_tok = response.input_tokens or 0
         out_tok = response.output_tokens or 0
         tot_tok = in_tok + out_tok
@@ -439,6 +494,17 @@ class M5BenchmarkRunner:
         # counter; ESTIMATED if a rerank power sample is included), CPU energy,
         # CO2e and cost ESTIMATED; totals inherit the weakest tier.
         gpu_joules = response.energy_joules
+        trial_gpu = (md.get("trial_gpu_energy") or {}).get("energy_j")
+        retrieval_gpu = None
+        if trial_gpu is not None:
+            # Whole-trial GPU energy, MEASURED, minus model loads (reported separately, plan
+            # §10.4). This replaces generation-only energy + the single-sample rerank estimate,
+            # so retrieval (embedding, reranker) is now inside the measured total.
+            gpu_joules = trial_gpu - (load_j or 0.0)
+            gen_measured = md.get("generation_energy_measured_joules")
+            if gen_measured is not None:
+                retrieval_gpu = max(0.0, gpu_joules - gen_measured)
+            md["energy_tier"] = "MEASURED"
         cpu_window = md.get("cpu_window")
         cpu_joules = None
         if cpu_window and cpu_window.get("utilisation") is not None:
@@ -455,10 +521,10 @@ class M5BenchmarkRunner:
         chunks_count = len(response.retrieval.chunks) if response.retrieval else 0
         graph_count = sum(1 for c in response.retrieval.chunks if c.metadata.get("graph_context")) if response.retrieval else 0
 
-        # Derived Ratios
-        qpj = round(composite_q / max(0.001, en_joules), 4)
-        qpd = round(composite_q / max(1e-7, cost), 2)
-        qps = round(composite_q / max(0.001, (lat / 1000.0)), 4)
+        # Derived Ratios (None without a composite)
+        qpj = None if composite_q is None else round(composite_q / max(0.001, en_joules), 4)
+        qpd = None if composite_q is None else round(composite_q / max(1e-7, cost), 2)
+        qps = None if composite_q is None else round(composite_q / max(0.001, (lat / 1000.0)), 4)
 
         return TrialResult(
             experiment_id=f"exp-m5-{split_name}",
@@ -489,18 +555,29 @@ class M5BenchmarkRunner:
             energy_tier=md.get("energy_tier"),
             total_energy_tier="ESTIMATED" if cpu_joules is not None else md.get("energy_tier"),
             gpu_max_temp_c=md.get("gpu_max_temp_c"),
+            model_load_energy_joules=_round(load_j),
+            trial_gpu_energy_measured_joules=_round(trial_gpu),
+            retrieval_gpu_energy_joules=_round(retrieval_gpu),
+            model_loads=len(loads),
             cost_usd=round(cost, 6),
             co2e_grams=round(co2e, 6),
-            task_correctness=round(task_corr, 4),
-            citation_grounding=round(cit_score, 4),
-            query_relevance=round(rel_score, 4),
-            evidence_coverage=round(cov_score, 4),
-            evidence_consistency=round(con_score, 4),
-            correctness_score=round(task_corr, 4),
-            groundedness_score=round(cov_score, 4),
-            relevance_score=round(rel_score, 4),
-            consistency_score=round(con_score, 4),
-            citation_validity_rate=round(cit_valid_ratio, 4),
+            task_correctness=_round(task_corr),
+            citation_grounding=_round(cit_score),
+            query_relevance=_round(rel_score),
+            evidence_coverage=_round(cov_score),
+            evidence_consistency=_round(con_score),
+            correctness_score=_round(task_corr),
+            groundedness_score=_round(cov_score),
+            relevance_score=_round(rel_score),
+            consistency_score=_round(con_score),
+            citation_validity_rate=_round(cit_valid_ratio),
+            missing_scores=missing_scores,
+            has_retrieval_label=indep.has_label,
+            line_citations=indep.line_citations,
+            cited_span_precision=_round(indep.cited_span_precision),
+            cited_span_recall=_round(indep.cited_span_recall),
+            cited_file_recall=_round(indep.cited_file_recall),
+            answer_supported=indep.supported,
             is_grounded_refusal=is_refusal,
             grounded_refusal_score=refusal_score,
             composite_quality=composite_q,

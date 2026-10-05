@@ -43,7 +43,8 @@ class CannedResponseLLMProvider(BaseLLMProvider):
         )
 
 
-def _make_dummy_task(ground_truth: str = "In Flask, routes are registered using app.add_url_rule() or the @app.route decorator.") -> BenchmarkTask:
+def _make_dummy_task(ground_truth: str = "In Flask, routes are registered using app.add_url_rule() or the @app.route decorator.",
+                     threshold: float = 0.70) -> BenchmarkTask:
     return BenchmarkTask(
         task_id="test-task-p0-001",
         sdlc_stage="development",
@@ -54,13 +55,18 @@ def _make_dummy_task(ground_truth: str = "In Flask, routes are registered using 
         repository="pallets/flask",
         query="How are URL routes added in Flask?",
         ground_truth=ground_truth,
-        expected_quality_threshold=0.70,
+        expected_quality_threshold=threshold,
     )
 
 
 def test_scenario_1_correct_answer():
-    """Scenario 1: Correct answer with proper citation -> FACTUAL_SUCCESS."""
-    task = _make_dummy_task(ground_truth="In Flask, routes are registered using app.add_url_rule() or the @app.route decorator.")
+    """Scenario 1: Correct answer with proper citation -> FACTUAL_SUCCESS.
+
+    Correctness is plain token F1 (0.774 here). Until 2026-10-05 it was silently multiplied by
+    1.5 and capped at 1.0; this scenario uses a 0.60 threshold instead of relying on that.
+    """
+    task = _make_dummy_task(ground_truth="In Flask, routes are registered using app.add_url_rule() or the @app.route decorator.",
+                            threshold=0.60)
     llm = CannedResponseLLMProvider(
         "SUPPORTED BY EVIDENCE:\nIn Flask, routes are registered using `app.add_url_rule()` or the `@app.route` decorator [`src/flask/app.py:L10-L25`]."
     )
@@ -85,8 +91,8 @@ def test_scenario_1_correct_answer():
 
     trial = runner._evaluate_trial("baseline_b", task, eng_resp, trial_index=0, split_name="dev")
 
-    assert trial.task_correctness > 0.60
-    assert trial.composite_quality >= 0.70
+    assert trial.task_correctness == 0.7742  # plain F1: no x1.5
+    assert trial.composite_quality >= 0.60 and trial.missing_scores == []
     assert trial.success_type == "FACTUAL_SUCCESS"
     assert trial.quality_constrained_success is True
 
@@ -229,3 +235,34 @@ def test_scenario_5_partially_correct_answer():
 
     assert trial.composite_quality < task.expected_quality_threshold
     assert trial.quality_constrained_success is False
+
+
+def test_correctness_is_plain_token_f1():
+    from evaluation.scorers.correctness import CorrectnessEvaluator
+
+    ev = CorrectnessEvaluator()
+    # pred {a,b,c,d}, ref {a,b,x,y}: P = R = 0.5 -> F1 = 0.5 (was min(1, 0.75))
+    assert ev.compute_f1_score("a b c d", "a b x y") == 0.5
+
+
+def test_missing_scores_are_not_invented():
+    """An evaluator that returns no score leaves the component None, no composite, excluded."""
+    task = _make_dummy_task()
+    llm = CannedResponseLLMProvider("Routes use add_url_rule [`src/flask/app.py:L10-L25`].")
+    runner = M5BenchmarkRunner(llm_provider=llm)
+    runner._relevance_eval.evaluate = lambda req, resp: []  # evaluator produced nothing
+    eng_resp = EngTaskResponse(
+        task_id=task.task_id, answer=llm.response_text,
+        retrieval=RetrievalResult(task_id=task.task_id, strategy_used="hybrid", chunks=[]),
+        latency_ms=20.0, energy_joules=1.0, cost_usd=0.0, co2e_grams=0.0,
+    )
+    trial = runner._evaluate_trial("baseline_b", task, eng_resp, trial_index=0, split_name="dev")
+    assert trial.query_relevance is None and trial.missing_scores == ["query_relevance"]
+    assert trial.composite_quality is None and trial.quality_constrained_success is None
+    assert trial.success_type == "MISSING_SCORES" and trial.quality_per_joule is None
+
+    from experiments.m5.metrics import compute_trial_aggregates
+
+    agg = compute_trial_aggregates([trial])
+    assert agg.trials_missing_scores == 1 and agg.composite_quality_mean is None
+    assert agg.quality_constrained_success_rate is None

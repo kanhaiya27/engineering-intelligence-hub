@@ -1,0 +1,293 @@
+{
+  "batch_id": "calibration-01",
+  "created_at": "2026-10-05T16:40:14.343876+00:00",
+  "purpose": "calibration",
+  "assigned_to": [
+    "Avaneesh Kumar Verma",
+    "Sanvi",
+    "Aayan",
+    "Radhesh"
+  ],
+  "items": [
+    {
+      "item_id": "eih-phase1-code-015",
+      "kind": "existing_task",
+      "split": "dev",
+      "repository": "pallets/flask",
+      "commit_sha": "c12a5d874c5a014495eb2db8a73f40037bc813ac",
+      "sdlc_stage": "architecture",
+      "task_type": "code_explanation",
+      "complexity": "low",
+      "criticality": "low",
+      "query": "How does Flask's url_for function in src/flask/helpers.py build endpoint URLs?",
+      "proposed_answer": "Flask's `url_for(endpoint, **values)` resolves the endpoint against the routing URL map (`current_app.url_map.bind_to_environ(...)` or `bind(...)`). It converts positional/keyword arguments into path parameters or appends excess arguments as query string parameters.",
+      "acceptable_alternatives": [
+        "url_for calls url_map.bind_to_environ and builds URLs matching endpoint rules with provided values."
+      ],
+      "evidence": [
+        {
+          "file": "src/flask/helpers.py",
+          "start_line": 180,
+          "end_line": 260,
+          "text": "    _method: str | None = None,\n    _scheme: str | None = None,\n    _external: bool | None = None,\n    **values: t.Any,\n) -> str:\n    \"\"\"Generate a URL to the given endpoint with the given values.\n\n    This requires an active request or application context, and calls\n    :meth:`current_app.url_for() <flask.Flask.url_for>`. See that method\n    for full documentation.\n\n    :param endpoint: The endpoint name associated with the URL to\n        generate. If this starts with a ``.``, the current blueprint\n        name (if any) will be used.\n    :param _anchor: If given, append this as ``#anchor`` to the URL.\n    :param _method: If given, generate the URL associated with this\n        method for the endpoint.\n    :param _scheme: If given, the URL will have this scheme if it is\n        external.\n    :param _external: If given, prefer the URL to be internal (False) or\n        require it to be external (True). External URLs include the\n        scheme and domain. When not in an active request, URLs are\n        external by default.\n    :param values: Values to use for the variable parts of the URL rule.\n        Unknown keys are appended as query string arguments, like\n        ``?a=b&c=d``.\n\n    .. versionchanged:: 2.2\n        Calls ``current_app.url_for``, allowing an app to override the\n        behavior.\n\n    .. versionchanged:: 0.10\n       The ``_scheme`` parameter was added.\n\n    .. versionchanged:: 0.9\n       The ``_anchor`` and ``_method`` parameters were added.\n\n    .. versionchanged:: 0.9\n       Calls ``app.handle_url_build_error`` on build errors.\n    \"\"\"\n    return current_app.url_for(\n        endpoint,\n        _anchor=_anchor,\n        _method=_method,\n        _scheme=_scheme,\n        _external=_external,\n        **values,\n    )\n\n\ndef redirect(\n    location: str, code: int = 302, Response: type[BaseResponse] | None = None\n) -> BaseResponse:\n    \"\"\"Create a redirect response object.\n\n    If :data:`~flask.current_app` is available, it will use its\n    :meth:`~flask.Flask.redirect` method, otherwise it will use\n    :func:`werkzeug.utils.redirect`.\n\n    :param location: The URL to redirect to.\n    :param code: The status code for the redirect.\n    :param Response: The response class to use. Not used when\n        ``current_app`` is active, which uses ``app.response_class``.\n\n    .. versionadded:: 2.2\n        Calls ``current_app.redirect`` if available instead of always\n        using Werkzeug's default ``redirect``.\n    \"\"\"\n    if current_app:\n        return current_app.redirect(location, code=code)\n\n    return _wz_redirect(location, code=code, Response=Response)\n\n\ndef abort(code: int | BaseResponse, *args: t.Any, **kwargs: t.Any) -> t.NoReturn:\n    \"\"\"Raise an :exc:`~werkzeug.exceptions.HTTPException` for the given\n    status code.\n\n    If :data:`~flask.current_app` is available, it will call its\n    :attr:`~flask.Flask.aborter` object, otherwise it will use\n    :func:`werkzeug.exceptions.abort`.",
+          "span_sha256": "sha256:54c1f25ceb3a4f0a5421c2d0554796553df0a8e28b1c84c94229bf269bdfc5d3"
+        }
+      ],
+      "drafted_by": "lead_researcher (pilot benchmark, Aug 2026)",
+      "requested_by": null,
+      "status_note": "existing benchmark task"
+    },
+    {
+      "item_id": "eih-phase1-code-016",
+      "kind": "existing_task",
+      "split": "val",
+      "repository": "fastapi/fastapi",
+      "commit_sha": "1c3e6918750ccb3f20ea260e9a4238ce2c0e5f63",
+      "sdlc_stage": "architecture",
+      "task_type": "code_explanation",
+      "complexity": "low",
+      "criticality": "low",
+      "query": "How does FastAPI handle HTTPException vs Starlette HTTPException in fastapi/exceptions.py?",
+      "proposed_answer": "FastAPI subclassed `starlette.exceptions.HTTPException` to allow passing extra headers and arbitrary JSON-serializable `detail` objects, registering a default exception handler `http_exception_handler` that converts it into a JSONResponse with status code and detail payload.",
+      "acceptable_alternatives": [
+        "FastAPI's HTTPException extends Starlette's HTTPException with headers and custom detail payloads handled by default exception handlers."
+      ],
+      "evidence": [
+        {
+          "file": "fastapi/exceptions.py",
+          "start_line": 1,
+          "end_line": 35,
+          "text": "from typing import Any, Dict, Optional, Sequence, Type, Union\n\nfrom pydantic import BaseModel, create_model\nfrom starlette.exceptions import HTTPException as StarletteHTTPException\nfrom starlette.exceptions import WebSocketException as StarletteWebSocketException\nfrom typing_extensions import Annotated, Doc\n\n\nclass HTTPException(StarletteHTTPException):\n    \"\"\"\n    An HTTP exception you can raise in your own code to show errors to the client.\n\n    This is for client errors, invalid authentication, invalid data, etc. Not for server\n    errors in your code.\n\n    Read more about it in the\n    [FastAPI docs for Handling Errors](https://fastapi.tiangolo.com/tutorial/handling-errors/).\n\n    ## Example\n\n    ```python\n    from fastapi import FastAPI, HTTPException\n\n    app = FastAPI()\n\n    items = {\"foo\": \"The Foo Wrestlers\"}\n\n\n    @app.get(\"/items/{item_id}\")\n    async def read_item(item_id: str):\n        if item_id not in items:\n            raise HTTPException(status_code=404, detail=\"Item not found\")\n        return {\"item\": items[item_id]}\n    ```\n    \"\"\"",
+          "span_sha256": "sha256:eaa3fb67e37e5bc6ddc54a7f3a36de0d6c785daff3e50314c147267bc0c01161"
+        }
+      ],
+      "drafted_by": "lead_researcher (pilot benchmark, Aug 2026)",
+      "requested_by": null,
+      "status_note": "existing benchmark task"
+    },
+    {
+      "item_id": "eih-phase1-rev-043",
+      "kind": "existing_task",
+      "split": "dev",
+      "repository": "pallets/flask",
+      "commit_sha": "c12a5d874c5a014495eb2db8a73f40037bc813ac",
+      "sdlc_stage": "code_review",
+      "task_type": "defect_detection",
+      "complexity": "medium",
+      "criticality": "high",
+      "query": "Review this Flask snippet: `template = '<h1>Hello ' + request.args.get('name') + '</h1>'; return render_template_string(template)`. Identify the vulnerability.",
+      "proposed_answer": "Defect: Server-Side Template Injection (SSTI, CWE-1336). Dynamically constructing the template string with unescaped user input executes arbitrary Jinja2 template expressions (e.g. `{{ config }}` or RCE payloads). Fix: Pass user input as a template parameter: `render_template_string('<h1>Hello {{ name }}</h1>', name=name)`.",
+      "acceptable_alternatives": [
+        "Server-Side Template Injection (SSTI); user input must be passed as template context variables, not string-concatenated."
+      ],
+      "evidence": [
+        {
+          "file": "src/flask/templating.py",
+          "start_line": 120,
+          "end_line": 160,
+          "text": "                for template in loader.list_templates():\n                    result.add(template)\n\n        return list(result)\n\n\ndef _render(app: Flask, template: Template, context: dict[str, t.Any]) -> str:\n    app.update_template_context(context)\n    before_render_template.send(\n        app, _async_wrapper=app.ensure_sync, template=template, context=context\n    )\n    rv = template.render(context)\n    template_rendered.send(\n        app, _async_wrapper=app.ensure_sync, template=template, context=context\n    )\n    return rv\n\n\ndef render_template(\n    template_name_or_list: str | Template | list[str | Template],\n    **context: t.Any,\n) -> str:\n    \"\"\"Render a template by name with the given context.\n\n    :param template_name_or_list: The name of the template to render. If\n        a list is given, the first name to exist will be rendered.\n    :param context: The variables to make available in the template.\n    \"\"\"\n    app = current_app._get_current_object()  # type: ignore[attr-defined]\n    template = app.jinja_env.get_or_select_template(template_name_or_list)\n    return _render(app, template, context)\n\n\ndef render_template_string(source: str, **context: t.Any) -> str:\n    \"\"\"Render a template from the given source string with the given\n    context.\n\n    :param source: The source code of the template to render.\n    :param context: The variables to make available in the template.\n    \"\"\"\n    app = current_app._get_current_object()  # type: ignore[attr-defined]",
+          "span_sha256": "sha256:2e9c23f0cf26fb216c737fd690921617ca93607d7496b0a2ed3f615dc969f71d"
+        }
+      ],
+      "drafted_by": "lead_researcher (pilot benchmark, Aug 2026)",
+      "requested_by": null,
+      "status_note": "existing benchmark task"
+    },
+    {
+      "item_id": "eih-phase1-rev-046",
+      "kind": "existing_task",
+      "split": "val",
+      "repository": "fastapi/fastapi",
+      "commit_sha": "1c3e6918750ccb3f20ea260e9a4238ce2c0e5f63",
+      "sdlc_stage": "code_review",
+      "task_type": "defect_detection",
+      "complexity": "medium",
+      "criticality": "high",
+      "query": "Review this FastAPI endpoint: `@app.get('/heavy') async def heavy_calc(): time.sleep(10); return {'status': 'done'}`. What performance defect exists?",
+      "proposed_answer": "Defect: Event loop blocking. Calling blocking synchronous functions (`time.sleep(10)` or synchronous I/O) inside an `async def` route blocks the entire asyncio event loop thread, preventing all other concurrent requests from progressing. Fix: Use `await asyncio.sleep(10)` or define the endpoint as a synchronous `def heavy_calc()` so FastAPI offloads it to a threadpool worker.",
+      "acceptable_alternatives": [
+        "Blocking time.sleep inside async def blocks the single-threaded event loop; use await asyncio.sleep or def without async."
+      ],
+      "evidence": [
+        {
+          "file": "docs/en/docs/async.md",
+          "start_line": 5,
+          "end_line": 52,
+          "text": "## In a hurry?\n\n<abbr title=\"too long; didn't read\"><strong>TL;DR:</strong></abbr>\n\nIf you are using third party libraries that tell you to call them with `await`, like:\n\n```Python\nresults = await some_library()\n```\n\nThen, declare your *path operation functions* with `async def` like:\n\n```Python hl_lines=\"2\"\n@app.get('/')\nasync def read_results():\n    results = await some_library()\n    return results\n```\n\n!!! note\n    You can only use `await` inside of functions created with `async def`.\n\n---\n\nIf you are using a third party library that communicates with something (a database, an API, the file system, etc.) and doesn't have support for using `await`, (this is currently the case for most database libraries), then declare your *path operation functions* as normally, with just `def`, like:\n\n```Python hl_lines=\"2\"\n@app.get('/')\ndef results():\n    results = some_library()\n    return results\n```\n\n---\n\nIf your application (somehow) doesn't have to communicate with anything else and wait for it to respond, use `async def`.\n\n---\n\nIf you just don't know, use normal `def`.\n\n---\n\n**Note**: You can mix `def` and `async def` in your *path operation functions* as much as you need and define each one using the best option for you. FastAPI will do the right thing with them.\n\nAnyway, in any of the cases above, FastAPI will still work asynchronously and be extremely fast.\n\nBut by following the steps above, it will be able to do some performance optimizations.",
+          "span_sha256": "sha256:a689c4238019f01b407d43a9036b3ea5c91fc43a96da3776eb91e5c5f14864a2"
+        }
+      ],
+      "drafted_by": "lead_researcher (pilot benchmark, Aug 2026)",
+      "requested_by": null,
+      "status_note": "existing benchmark task; task cites ['docs/en/docs/async.md'] without lines - lines shown are from its draft retrieval label"
+    },
+    {
+      "item_id": "eih-phase1-dev-021",
+      "kind": "existing_task",
+      "split": "val",
+      "repository": "pallets/flask",
+      "commit_sha": "c12a5d874c5a014495eb2db8a73f40037bc813ac",
+      "sdlc_stage": "development",
+      "task_type": "code_generation",
+      "complexity": "low",
+      "criticality": "low",
+      "query": "Write a minimal Flask application factory function `create_app` that initializes a Flask app, sets config, and registers a health check route returning JSON.",
+      "proposed_answer": "```python\nfrom flask import Flask, jsonify\n\ndef create_app(test_config=None) -> Flask:\n    app = Flask(__name__)\n    if test_config:\n        app.config.update(test_config)\n\n    @app.route('/health')\n    def health():\n        return jsonify({'status': 'healthy'})\n\n    return app\n```",
+      "acceptable_alternatives": [
+        "A standard Flask application factory returning `app = Flask(__name__)` with `/health` endpoint returning `{'status': 'healthy'}`."
+      ],
+      "evidence": [
+        {
+          "file": "docs/tutorial/factory.rst",
+          "start_line": 23,
+          "end_line": 122,
+          "text": "The Application Factory\n-----------------------\n\nIt's time to start coding! Create the ``flaskr`` directory and add the\n``__init__.py`` file. The ``__init__.py`` serves double duty: it will\ncontain the application factory, and it tells Python that the ``flaskr``\ndirectory should be treated as a package.\n\n.. code-block:: none\n\n    $ mkdir flaskr\n\n.. code-block:: python\n    :caption: ``flaskr/__init__.py``\n\n    import os\n\n    from flask import Flask\n\n\n    def create_app(test_config=None):\n        # create and configure the app\n        app = Flask(__name__, instance_relative_config=True)\n        app.config.from_mapping(\n            SECRET_KEY='dev',\n            DATABASE=os.path.join(app.instance_path, 'flaskr.sqlite'),\n        )\n\n        if test_config is None:\n            # load the instance config, if it exists, when not testing\n            app.config.from_pyfile('config.py', silent=True)\n        else:\n            # load the test config if passed in\n            app.config.from_mapping(test_config)\n\n        # ensure the instance folder exists\n        try:\n            os.makedirs(app.instance_path)\n        except OSError:\n            pass\n\n        # a simple page that says hello\n        @app.route('/hello')\n        def hello():\n            return 'Hello, World!'\n\n        return app\n\n``create_app`` is the application factory function. You'll add to it\nlater in the tutorial, but it already does a lot.\n\n#.  ``app = Flask(__name__, instance_relative_config=True)`` creates the\n    :class:`Flask` instance.\n\n    *   ``__name__`` is the name of the current Python module. The app\n        needs to know where it's located to set up some paths, and\n        ``__name__`` is a convenient way to tell it that.\n\n    *   ``instance_relative_config=True`` tells the app that\n        configuration files are relative to the\n        :ref:`instance folder <instance-folders>`. The instance folder\n        is located outside the ``flaskr`` package and can hold local\n        data that shouldn't be committed to version control, such as\n        configuration secrets and the database file.\n\n#.  :meth:`app.config.from_mapping() <Config.from_mapping>` sets\n    some default configuration that the app will use:\n\n    *   :data:`SECRET_KEY` is used by Flask and extensions to keep data\n        safe. It's set to ``'dev'`` to provide a convenient value\n        during development, but it should be overridden with a random\n        value when deploying.\n\n    *   ``DATABASE`` is the path where the SQLite database file will be\n        saved. It's under\n        :attr:`app.instance_path <Flask.instance_path>`, which is the\n        path that Flask has chosen for the instance folder. You'll learn\n        more about the database in the next section.\n\n#.  :meth:`app.config.from_pyfile() <Config.from_pyfile>` overrides\n    the default configuration with values taken from the ``config.py``\n    file in the instance folder if it exists. For example, when\n    deploying, this can be used to set a real ``SECRET_KEY``.\n\n    *   ``test_config`` can also be passed to the factory, and will be\n        used instead of the instance configuration. This is so the tests\n        you'll write later in the tutorial can be configured\n        independently of any development values you have configured.\n\n#.  :func:`os.makedirs` ensures that\n    :attr:`app.instance_path <Flask.instance_path>` exists. Flask\n    doesn't create the instance folder automatically, but it needs to be\n    created because your project will create the SQLite database file\n    there.\n\n#.  :meth:`@app.route() <Flask.route>` creates a simple route so you can\n    see the application working before getting into the rest of the\n    tutorial. It creates a connection between the URL ``/hello`` and a\n    function that returns a response, the string ``'Hello, World!'`` in\n    this case.",
+          "span_sha256": "sha256:0876913c994cbe8f9937994d3bc053ef0345cba1cc2d970d8c82aea4932214c1"
+        }
+      ],
+      "drafted_by": "lead_researcher (pilot benchmark, Aug 2026)",
+      "requested_by": null,
+      "status_note": "existing benchmark task; task cites ['docs/tutorial/factory.rst'] without lines - lines shown are from its draft retrieval label"
+    },
+    {
+      "item_id": "eih-phase1-dev-028",
+      "kind": "existing_task",
+      "split": "dev",
+      "repository": "fastapi/fastapi",
+      "commit_sha": "1c3e6918750ccb3f20ea260e9a4238ce2c0e5f63",
+      "sdlc_stage": "development",
+      "task_type": "code_generation",
+      "complexity": "medium",
+      "criticality": "medium",
+      "query": "Write a custom Starlette/FastAPI middleware that measures request execution time and adds an `X-Process-Time` response header.",
+      "proposed_answer": "```python\nimport time\nfrom fastapi import FastAPI, Request\n\napp = FastAPI()\n\n@app.middleware('http')\nasync def add_process_time_header(request: Request, call_next):\n    start_time = time.perf_counter()\n    response = await call_next(request)\n    process_time = time.perf_counter() - start_time\n    response.headers['X-Process-Time'] = str(process_time)\n    return response\n```",
+      "acceptable_alternatives": [
+        "Using @app.middleware('http') async def middleware(request, call_next) and setting response.headers['X-Process-Time']."
+      ],
+      "evidence": [
+        {
+          "file": "docs/en/docs/tutorial/middleware.md",
+          "start_line": 19,
+          "end_line": 55,
+          "text": "## Create a middleware\n\nTo create a middleware you use the decorator `@app.middleware(\"http\")` on top of a function.\n\nThe middleware function receives:\n\n* The `request`.\n* A function `call_next` that will receive the `request` as a parameter.\n    * This function will pass the `request` to the corresponding *path operation*.\n    * Then it returns the `response` generated by the corresponding *path operation*.\n* You can then modify further the `response` before returning it.\n\n```Python hl_lines=\"8-9  11  14\"\n{!../../../docs_src/middleware/tutorial001.py!}\n```\n\n!!! tip\n    Keep in mind that custom proprietary headers can be added <a href=\"https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers\" class=\"external-link\" target=\"_blank\">using the 'X-' prefix</a>.\n\n    But if you have custom headers that you want a client in a browser to be able to see, you need to add them to your CORS configurations ([CORS (Cross-Origin Resource Sharing)](cors.md){.internal-link target=_blank}) using the parameter `expose_headers` documented in <a href=\"https://www.starlette.io/middleware/#corsmiddleware\" class=\"external-link\" target=\"_blank\">Starlette's CORS docs</a>.\n\n!!! note \"Technical Details\"\n    You could also use `from starlette.requests import Request`.\n\n    **FastAPI** provides it as a convenience for you, the developer. But it comes directly from Starlette.\n\n### Before and after the `response`\n\nYou can add code to be run with the `request`,  before any *path operation* receives it.\n\nAnd also after the `response` is generated, before returning it.\n\nFor example, you could add a custom header `X-Process-Time` containing the time in seconds that it took to process the request and generate a response:\n\n```Python hl_lines=\"10  12-13\"\n{!../../../docs_src/middleware/tutorial001.py!}\n```",
+          "span_sha256": "sha256:9f8834fdf7ec154cc7ddaca4ec0eebaed3af1ea9b85310c064b3bb12b1265213"
+        }
+      ],
+      "drafted_by": "lead_researcher (pilot benchmark, Aug 2026)",
+      "requested_by": null,
+      "status_note": "existing benchmark task; task cites ['docs/en/docs/tutorial/middleware.md'] without lines - lines shown are from its draft retrieval label"
+    },
+    {
+      "item_id": "eih-phase1-ops-059",
+      "kind": "existing_task",
+      "split": "dev",
+      "repository": "pallets/flask",
+      "commit_sha": "c12a5d874c5a014495eb2db8a73f40037bc813ac",
+      "sdlc_stage": "maintenance",
+      "task_type": "change_understanding",
+      "complexity": "low",
+      "criticality": "low",
+      "query": "How did Flask replace `werkzeug.wrappers.Request` with `flask.wrappers.Request`?",
+      "proposed_answer": "`flask.wrappers.Request` subclasses Werkzeug's `Request` to inject Flask-specific conveniences such as `blueprint` name detection, endpoint resolution, JSON parsing helpers (`get_json`), and max content length enforcement.",
+      "acceptable_alternatives": [
+        "flask.Request inherits from werkzeug Request and adds json helpers and blueprint routing metadata."
+      ],
+      "evidence": [
+        {
+          "file": "src/flask/wrappers.py",
+          "start_line": 15,
+          "end_line": 50,
+          "text": "    from werkzeug.routing import Rule\n\n\nclass Request(RequestBase):\n    \"\"\"The request object used by default in Flask.  Remembers the\n    matched endpoint and view arguments.\n\n    It is what ends up as :class:`~flask.request`.  If you want to replace\n    the request object used you can subclass this and set\n    :attr:`~flask.Flask.request_class` to your subclass.\n\n    The request object is a :class:`~werkzeug.wrappers.Request` subclass and\n    provides all of the attributes Werkzeug defines plus a few Flask\n    specific ones.\n    \"\"\"\n\n    json_module: t.Any = json\n\n    #: The internal URL rule that matched the request.  This can be\n    #: useful to inspect which methods are allowed for the URL from\n    #: a before/after handler (``request.url_rule.methods``) etc.\n    #: Though if the request's method was invalid for the URL rule,\n    #: the valid list is available in ``routing_exception.valid_methods``\n    #: instead (an attribute of the Werkzeug exception\n    #: :exc:`~werkzeug.exceptions.MethodNotAllowed`)\n    #: because the request was never internally bound.\n    #:\n    #: .. versionadded:: 0.6\n    url_rule: Rule | None = None\n\n    #: A dict of view arguments that matched the request.  If an exception\n    #: happened when matching, this will be ``None``.\n    view_args: dict[str, t.Any] | None = None\n\n    #: If matching the URL failed, this is the exception that will be\n    #: raised / was raised as part of the request handling.  This is",
+          "span_sha256": "sha256:34a5f67554187b79e2a37106a0b54b42cea66ceb06538e263f886046a941ce83"
+        }
+      ],
+      "drafted_by": "lead_researcher (pilot benchmark, Aug 2026)",
+      "requested_by": null,
+      "status_note": "existing benchmark task"
+    },
+    {
+      "item_id": "eih-phase1-ops-054",
+      "kind": "existing_task",
+      "split": "dev",
+      "repository": "fastapi/fastapi",
+      "commit_sha": "1c3e6918750ccb3f20ea260e9a4238ce2c0e5f63",
+      "sdlc_stage": "maintenance",
+      "task_type": "change_understanding",
+      "complexity": "low",
+      "criticality": "medium",
+      "query": "How did FastAPI update its dependency requirements for Pydantic V2 compatibility in version 0.100.0+?",
+      "proposed_answer": "Starting in version 0.100.0, FastAPI added support for Pydantic V2 while retaining backward compatibility with Pydantic V1 using internal adapter utilities in `fastapi._compat`.",
+      "acceptable_alternatives": [
+        "FastAPI 0.100+ introduced Pydantic v2 support alongside v1 backwards compatibility via _compat layer."
+      ],
+      "evidence": [
+        {
+          "file": "fastapi/_compat.py",
+          "start_line": 1,
+          "end_line": 50,
+          "text": "from collections import deque\nfrom copy import copy\nfrom dataclasses import dataclass, is_dataclass\nfrom enum import Enum\nfrom typing import (\n    Any,\n    Callable,\n    Deque,\n    Dict,\n    FrozenSet,\n    List,\n    Mapping,\n    Sequence,\n    Set,\n    Tuple,\n    Type,\n    Union,\n)\n\nfrom fastapi.exceptions import RequestErrorModel\nfrom fastapi.types import IncEx, ModelNameMap, UnionType\nfrom pydantic import BaseModel, create_model\nfrom pydantic.version import VERSION as P_VERSION\nfrom starlette.datastructures import UploadFile\nfrom typing_extensions import Annotated, Literal, get_args, get_origin\n\n# Reassign variable to make it reexported for mypy\nPYDANTIC_VERSION = P_VERSION\nPYDANTIC_V2 = PYDANTIC_VERSION.startswith(\"2.\")\n\n\nsequence_annotation_to_type = {\n    Sequence: list,\n    List: list,\n    list: list,\n    Tuple: tuple,\n    tuple: tuple,\n    Set: set,\n    set: set,\n    FrozenSet: frozenset,\n    frozenset: frozenset,\n    Deque: deque,\n    deque: deque,\n}\n\nsequence_types = tuple(sequence_annotation_to_type.keys())\n\nif PYDANTIC_V2:\n    from pydantic import PydanticSchemaGenerationError as PydanticSchemaGenerationError\n    from pydantic import TypeAdapter",
+          "span_sha256": "sha256:46b8a168d4b4becc3e3da4e5d802401bf1d2312d98c37f8e50b875880ca93ce2"
+        }
+      ],
+      "drafted_by": "lead_researcher (pilot benchmark, Aug 2026)",
+      "requested_by": null,
+      "status_note": "existing benchmark task"
+    },
+    {
+      "item_id": "eih-phase1-req-005",
+      "kind": "existing_task",
+      "split": "dev",
+      "repository": "pallets/flask",
+      "commit_sha": "c12a5d874c5a014495eb2db8a73f40037bc813ac",
+      "sdlc_stage": "requirements",
+      "task_type": "requirement_retrieval",
+      "complexity": "low",
+      "criticality": "low",
+      "query": "What configuration key controls debug mode in Flask 3.x?",
+      "proposed_answer": "In Flask 3.x, debug mode is controlled by app.config['DEBUG'] or the FLASK_DEBUG environment variable when running via the CLI.",
+      "acceptable_alternatives": [
+        "FLASK_DEBUG or config['DEBUG']"
+      ],
+      "evidence": [
+        {
+          "file": "src/flask/config.py",
+          "start_line": 20,
+          "end_line": 50,
+          "text": "class ConfigAttribute(t.Generic[T]):\n    \"\"\"Makes an attribute forward to the config\"\"\"\n\n    def __init__(\n        self, name: str, get_converter: t.Callable[[t.Any], T] | None = None\n    ) -> None:\n        self.__name__ = name\n        self.get_converter = get_converter\n\n    @t.overload\n    def __get__(self, obj: None, owner: None) -> te.Self: ...\n\n    @t.overload\n    def __get__(self, obj: App, owner: type[App]) -> T: ...\n\n    def __get__(self, obj: App | None, owner: type[App] | None = None) -> T | te.Self:\n        if obj is None:\n            return self\n\n        rv = obj.config[self.__name__]\n\n        if self.get_converter is not None:\n            rv = self.get_converter(rv)\n\n        return rv  # type: ignore[no-any-return]\n\n    def __set__(self, obj: App, value: t.Any) -> None:\n        obj.config[self.__name__] = value\n\n\nclass Config(dict):  # type: ignore[type-arg]",
+          "span_sha256": "sha256:9e75d14d0d148c29d815c5e64fb4dec8aa66302ab9073244c17f7bae52e6b9f1"
+        }
+      ],
+      "drafted_by": "lead_researcher (pilot benchmark, Aug 2026)",
+      "requested_by": null,
+      "status_note": "existing benchmark task"
+    },
+    {
+      "item_id": "eih-phase1-test-038",
+      "kind": "existing_task",
+      "split": "dev",
+      "repository": "fastapi/fastapi",
+      "commit_sha": "1c3e6918750ccb3f20ea260e9a4238ce2c0e5f63",
+      "sdlc_stage": "testing",
+      "task_type": "test_generation",
+      "complexity": "high",
+      "criticality": "medium",
+      "query": "Write an asynchronous pytest test for a FastAPI async endpoint using `httpx.AsyncClient` and `ASGITransport`.",
+      "proposed_answer": "```python\nimport pytest\nimport httpx\nfrom fastapi import FastAPI\n\napp = FastAPI()\n\n@app.get('/async-hello')\nasync def async_hello():\n    return {'message': 'async world'}\n\n@pytest.mark.asyncio\nasync def test_async_endpoint():\n    transport = httpx.ASGITransport(app=app)\n    async with httpx.AsyncClient(transport=transport, base_url='http://test') as client:\n        response = await client.get('/async-hello')\n        assert response.status_code == 200\n        assert response.json() == {'message': 'async world'}\n```",
+      "acceptable_alternatives": [
+        "Async test using httpx.AsyncClient with ASGITransport(app=app) asserting async endpoint response."
+      ],
+      "evidence": [
+        {
+          "file": "docs/en/docs/advanced/async-tests.md",
+          "start_line": 21,
+          "end_line": 43,
+          "text": "## Example\n\nFor a simple example, let's consider a file structure similar to the one described in [Bigger Applications](../tutorial/bigger-applications.md){.internal-link target=_blank} and [Testing](../tutorial/testing.md){.internal-link target=_blank}:\n\n```\n.\n├── app\n│   ├── __init__.py\n│   ├── main.py\n│   └── test_main.py\n```\n\nThe file `main.py` would have:\n\n```Python\n{!../../../docs_src/async_tests/main.py!}\n```\n\nThe file `test_main.py` would have the tests for `main.py`, it could look like this now:\n\n```Python\n{!../../../docs_src/async_tests/test_main.py!}\n```",
+          "span_sha256": "sha256:5479ad273052c7ed4b44fe91690cd921bf6865aea289804a68eae00fb60ddad0"
+        }
+      ],
+      "drafted_by": "lead_researcher (pilot benchmark, Aug 2026)",
+      "requested_by": null,
+      "status_note": "existing benchmark task; task cites ['docs/en/docs/advanced/async-tests.md'] without lines - lines shown are from its draft retrieval label"
+    }
+  ]
+}

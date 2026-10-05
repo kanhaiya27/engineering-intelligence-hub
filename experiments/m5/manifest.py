@@ -14,7 +14,8 @@ from __future__ import annotations
 import hashlib
 import json
 from enum import Enum
-from typing import Any, Dict, List
+from pathlib import Path
+from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -82,13 +83,27 @@ class FrozenVariables(BaseModel):
     input_cost_per_1m_tokens_usd: float = 0.15
     output_cost_per_1m_tokens_usd: float = 0.60
 
+    # Retrieval and data identity (master prompt Step 1g). Static: file hashes and names.
+    retrieval_config_sha256: Optional[str] = None   # configs/retrieval.yaml (strategies, thresholds)
+    inference_config_sha256: Optional[str] = None   # configs/inference.yaml (models, ctx, output limit)
+    models_config_sha256: Optional[str] = None      # configs/models.yaml (routing ladder)
+    vector_collection: Optional[str] = None
+    benchmark_tasks_sha256: Optional[str] = None    # benchmark/data/meib_phase1_tasks.json
+    benchmark_splits_sha256: Optional[str] = None   # benchmark/data/splits_v1.0.json
+    retrieval_labels_sha256: Optional[str] = None   # benchmark/data/retrieval_labels_v1.json
+    graph_build_report_sha256: Optional[str] = None  # experiments/results/graph_build/*/graph_build_wave1.json
+    # Live: read from the running services when a manifest is frozen with live=True.
+    collection_points: Optional[int] = None
+    graph_nodes: Optional[int] = None
+    graph_edges: Optional[int] = None
+
     # Experimental Repetitions
     trials_per_task: int = 3
 
     model_config = ConfigDict(use_enum_values=True)
 
     @classmethod
-    def from_runtime(cls) -> "FrozenVariables":
+    def from_runtime(cls, live: bool = False) -> "FrozenVariables":
         """The values the pipelines will ACTUALLY use, read from the same sources they read.
 
         The class defaults above are historical (gpt-4o-mini, UK grid, 2 repos) and
@@ -102,6 +117,9 @@ class FrozenVariables(BaseModel):
 
         sus = settings.sustainability
         local = settings.model.default_provider == "ollama"
+        ids = static_data_identity()
+        if live:
+            ids.update(live_data_identity())
         return cls(
             repositories=wave1_repository_pins(),
             llm_provider=settings.model.default_provider,
@@ -118,6 +136,7 @@ class FrozenVariables(BaseModel):
             gpu_tdp_watts=sus.gpu_tdp_watts,
             input_cost_per_1m_tokens_usd=0.0 if local else sus.default_input_cost_per_1m_tokens,
             output_cost_per_1m_tokens_usd=0.0 if local else sus.default_output_cost_per_1m_tokens,
+            **ids,
         )
 
 
@@ -136,12 +155,79 @@ def wave1_repository_pins() -> Dict[str, str]:
     }
 
 
-def runtime_mismatches(manifest: "ExperimentManifest") -> List[Dict[str, Any]]:
-    """Fields where the manifest differs from what the pipelines would actually run with."""
-    want = FrozenVariables.from_runtime().model_dump()
+LIVE_FIELDS = ("collection_points", "graph_nodes", "graph_edges")
+
+
+def _sha256_file(path: Path) -> Optional[str]:
+    return "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest() if path.exists() else None
+
+
+def graph_build_report() -> Optional[Path]:
+    """The wave-1 graph build report (exactly one expected)."""
+    from core.config import PROJECT_ROOT
+
+    found = sorted((PROJECT_ROOT / "experiments" / "results" / "graph_build").glob("*/graph_build_wave1.json"))
+    if len(found) > 1:
+        raise RuntimeError(f"several wave-1 graph build reports: {found}")
+    return found[0] if found else None
+
+
+def static_data_identity() -> Dict[str, Any]:
+    """Hashes of the configs and data files a run depends on; no service is contacted."""
+    from core.config import PROJECT_ROOT, settings
+
+    data = PROJECT_ROOT / "benchmark" / "data"
+    report = graph_build_report()
+    return {
+        "retrieval_config_sha256": _sha256_file(PROJECT_ROOT / "configs" / "retrieval.yaml"),
+        "inference_config_sha256": _sha256_file(PROJECT_ROOT / "configs" / "inference.yaml"),
+        "models_config_sha256": _sha256_file(PROJECT_ROOT / "configs" / "models.yaml"),
+        "vector_collection": settings.vector_store.collection_name,
+        "benchmark_tasks_sha256": _sha256_file(data / "meib_phase1_tasks.json"),
+        "benchmark_splits_sha256": _sha256_file(data / "splits_v1.0.json"),
+        "retrieval_labels_sha256": _sha256_file(data / "retrieval_labels_v1.json"),
+        "graph_build_report_sha256": _sha256_file(report) if report else None,
+    }
+
+
+def live_data_identity() -> Dict[str, Any]:
+    """Point count of the vector collection and node/edge counts of the live graph."""
+    from core.config import settings
+    from knowledge.graph.neo4j import Neo4jGraphStore
+    from knowledge.vector.qdrant import QdrantVectorStore
+
+    vs = QdrantVectorStore()
+    gs = settings.graph_store
+    graph = Neo4jGraphStore(uri=gs.uri, username=gs.username, password=gs.password)
+    if not graph.is_available():
+        raise RuntimeError("Neo4j is not reachable; the graph identity cannot be checked")
+    return {"collection_points": vs.count(settings.vector_store.collection_name),
+            "graph_nodes": graph.count_nodes(), "graph_edges": graph.count_edges()}
+
+
+def runtime_mismatches(manifest: "ExperimentManifest", live: bool = False) -> List[Dict[str, Any]]:
+    """Fields where the manifest differs from what the pipelines would actually run with.
+
+    With live=True the running Qdrant collection and Neo4j graph are checked too, and the live
+    graph must equal the graph build report (a graph changed after its build, even by 2 test
+    nodes, is not the graph the report describes).
+    """
+    want = FrozenVariables.from_runtime(live=live).model_dump()
     have = manifest.frozen_variables.model_dump()
-    return [{"field": k, "manifest": have.get(k), "runtime": v}
-            for k, v in want.items() if k != "trials_per_task" and have.get(k) != v]
+    skip = {"trials_per_task"} | (set() if live else set(LIVE_FIELDS))
+    out = [{"field": k, "manifest": have.get(k), "runtime": v}
+           for k, v in want.items() if k not in skip and have.get(k) != v]
+    if live:
+        report = graph_build_report()
+        if report is None:
+            out.append({"field": "graph_build_report", "manifest": None, "runtime": "missing"})
+        else:
+            rb = json.loads(report.read_text(encoding="utf-8"))["results"]["read_back"]
+            if (rb["nodes"], rb["edges"]) != (want["graph_nodes"], want["graph_edges"]):
+                out.append({"field": "graph_vs_build_report",
+                            "manifest": {"nodes": rb["nodes"], "edges": rb["edges"]},
+                            "runtime": {"nodes": want["graph_nodes"], "edges": want["graph_edges"]}})
+    return out
 
 
 class ExperimentManifest(BaseModel):
@@ -167,7 +253,7 @@ class ExperimentManifest(BaseModel):
     model_config = ConfigDict(use_enum_values=True)
 
     @classmethod
-    def create_default(cls) -> "ExperimentManifest":
+    def create_default(cls, live: bool = False) -> "ExperimentManifest":
         """Factory: build default M5 manifest with the 5 standard systems."""
         systems = {
             SystemID.BASELINE_A.value: SystemConfig(
@@ -236,7 +322,7 @@ class ExperimentManifest(BaseModel):
                            "(small 1.5B, medium 3B, large 7B; escalation climbs the ladder).",
             "model_routing_enabled": True,
         })
-        return cls(systems=systems, frozen_variables=FrozenVariables.from_runtime())
+        return cls(systems=systems, frozen_variables=FrozenVariables.from_runtime(live=live))
 
     def compute_hash(self) -> str:
         """Compute SHA-256 fingerprint of the manifest configuration."""

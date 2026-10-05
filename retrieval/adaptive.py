@@ -216,6 +216,10 @@ class AdaptiveRetrievalPipeline:
 
         return result
 
+    def resolve_strategy(self, classification: TaskClassification) -> RetrievalStrategyConfig:
+        """The registered strategy the adaptive policy picks for a classification (attempt 0)."""
+        return self._policy.resolve(classification=classification, override_strategy_name=None)
+
     def list_strategies(self) -> Dict[str, RetrievalStrategyConfig]:
         """Return the strategy registry for inspection / API exposure."""
         return self._router.list_strategies()
