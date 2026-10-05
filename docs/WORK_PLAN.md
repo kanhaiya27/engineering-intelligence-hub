@@ -56,7 +56,7 @@ Status: ✅ done · 🟡 started · ⬜ not started. Each step is one branch and
 | 1 | RAG corpus: ingest + index (Qdrant vectors, BM25) the 6 wave-1 repositories (Flask, FastAPI, Requests, Pytest, Sphinx, Pylint) | Phase 0 | ✅ 48,046 chunks |
 | 2 | Local LLMs 1.5B / 3B / 7B installed, measured, routing wired; job queue; single config `configs/inference.yaml` | Phase 1 | ✅ PRs #4, #8, #10 + audit |
 | 3 | Measurement and validity fixes from the restore-original-plan audit (§5 C6–C7, C12–C18) | P0 audit | ✅ branches `feat/m5-live-calibration`, `restore-original-plan` (PRs to merge) |
-| 4 | **Fix oversized chunks** (81 > 2,048 tokens, largest 67,021): cap ~512 tokens, skip lockfiles/generated files, re-ingest, new snapshot | Phase 0 | ⬜ **next** |
+| 4 | **Fix oversized chunks**: 3,485 of 48,046 chunks exceeded BGE's 512-token window (wrong tokenizer, long functions/paragraphs/lines never split, code between definitions dropped, wrong sub-chunk line ranges). Fixed; re-ingested into `eih_knowledge_v2` (53,905 chunks, 0 over 512, every line covered); retrieved chunks now carry line ranges into the prompt and citation check | Phase 0 | ✅ branch `fix/ingestion-chunk-size` |
 | 5 | **Build our own knowledge-graph builder** and the graph for the 6 repositories (reachable by the graph retriever; expansion not via the Repository hub node) | Phase 3 | ⬜ |
 | 6 | Finish answer locations (retrieval labels) for all 60 questions; fix or exclude ops-052 / ops-053; human check of the drafts; blind protocol for the 24 test questions | Phase 4 | 🟡 36 drafted |
 | 7 | **Calibration** on the 12 practice questions with the live 7B; freeze the manifest | P0-3 | ⬜ |

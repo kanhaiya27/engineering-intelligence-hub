@@ -260,7 +260,11 @@ class BM25Retriever(BaseRetriever):
                     artifact_type=chunk.artifact_type.value if hasattr(chunk.artifact_type, "value") else str(chunk.artifact_type),
                     repository=chunk.repository,
                     source_path=chunk.metadata.get("file_path") or chunk.metadata.get("source_path"),
-                    metadata=chunk.metadata,
+                    # start/end lines are top-level chunk fields, not metadata: without
+                    # copying them the prompt showed no line ranges (so no [file:Lx-Ly]
+                    # citations were possible) and the citation check had nothing to
+                    # compare cited lines against.
+                    metadata={**chunk.metadata, "start_line": chunk.start_line, "end_line": chunk.end_line},
                 )
             )
 

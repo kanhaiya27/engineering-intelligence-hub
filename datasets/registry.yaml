@@ -1,5 +1,4 @@
 corpus_version: v2.0-multilang
-default_collection: eih_knowledge
 repositories:
 - repo_id: flask
   owner: pallets

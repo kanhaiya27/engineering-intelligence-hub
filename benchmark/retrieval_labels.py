@@ -34,6 +34,7 @@ from typing import Dict, List, Optional, Sequence, Tuple
 
 import yaml
 
+from core.config import settings
 from knowledge.schemas.benchmark import (
     RequiredEvidence,
     RetrievalGroundTruth,
@@ -52,7 +53,7 @@ LABELS_VERSION = "1.0-draft"
 ANNOTATOR = "laptop-b (Claude Opus 5.5 draft; requires human verification)"
 CREATED_AT = "2026-10-05T00:00:00+00:00"
 
-# Commits ingested into the Qdrant collection eih_knowledge (read from chunk
+# Commits ingested into the Qdrant collection (read from chunk
 # payload metadata.commit_sha on 2026-10-05; one commit per repository).
 PINNED_COMMITS: Dict[str, str] = {
     "pallets/flask": "c12a5d874c5a014495eb2db8a73f40037bc813ac",
@@ -60,7 +61,7 @@ PINNED_COMMITS: Dict[str, str] = {
 }
 
 QDRANT_URL = "http://localhost:6333"
-COLLECTION = "eih_knowledge"
+COLLECTION = settings.vector_store.collection_name
 
 
 # ---------------------------------------------------------------------------
