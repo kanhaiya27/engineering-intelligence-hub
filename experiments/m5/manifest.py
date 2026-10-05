@@ -149,7 +149,9 @@ class ExperimentManifest(BaseModel):
     Self-describing experiment manifest for Phase-2 M5.
     """
     manifest_version: str = "1.0"
-    benchmark_version: str = "v1.0-phase1-60"
+    # v1.1 (2026-10-05): 16 dev/val tasks corrected against the pinned source, approved by
+    # Avaneesh (4 answers/questions, 12 cited-evidence locations); split assignment unchanged.
+    benchmark_version: str = "v1.1-phase1-60"
     created_at: str = "2026-08-20T00:00:00Z"
     frozen_variables: FrozenVariables = Field(default_factory=FrozenVariables)
     systems: Dict[str, SystemConfig] = Field(default_factory=dict)

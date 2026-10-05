@@ -1,5 +1,5 @@
 {
-  "version": "1.0",
+  "version": "1.1",
   "task_count": 60,
   "tasks": [
     {
@@ -60,7 +60,7 @@
     },
     {
       "task_id": "eih-phase1-req-003",
-      "version": "1.0",
+      "version": "1.1",
       "repository": "pallets/flask",
       "sdlc_stage": "requirements",
       "task_type": "architecture_qa",
@@ -76,16 +76,42 @@
       "expected_quality_threshold": 0.8,
       "source_evidence": [
         {
+          "evidence_type": "documentation",
+          "repository": "pallets/flask",
+          "file_path": "docs/blueprints.rst",
+          "line_start": 84,
+          "line_end": 121,
+          "excerpt": "Registering Blueprints ---------------------- So how do you register that blueprint?  Like this:: from flask import Flask from yourapplication.simple_page import simple_page app = Flask(__name__) app.register_blueprint(simple_page) If you c"
+        },
+        {
           "evidence_type": "source_file",
           "repository": "pallets/flask",
-          "file_path": "src/flask/blueprints.py",
-          "line_start": 50,
-          "line_end": 120,
-          "excerpt": "class Blueprint(Scaffold): ... def register(self, app, options): ... app.add_url_rule(rule, ...)"
+          "file_path": "src/flask/sansio/blueprints.py",
+          "line_start": 41,
+          "line_end": 85,
+          "excerpt": "def __init__( self, blueprint: Blueprint, app: App, options: t.Any, first_registration: bool, ) -> None: #: a reference to the current application self.app = app #: a reference to the blueprint that created this setup state. self.blueprint "
+        },
+        {
+          "evidence_type": "source_file",
+          "repository": "pallets/flask",
+          "file_path": "src/flask/sansio/blueprints.py",
+          "line_start": 273,
+          "line_end": 377,
+          "excerpt": "def register(self, app: App, options: dict[str, t.Any]) -> None: \"\"\"Called by :meth:`Flask.register_blueprint` to register all views and callbacks registered on the blueprint with the application. Creates a :class:`.BlueprintSetupState` and"
+        },
+        {
+          "evidence_type": "source_file",
+          "repository": "pallets/flask",
+          "file_path": "src/flask/sansio/app.py",
+          "line_start": 569,
+          "line_end": 595,
+          "excerpt": "@setupmethod def register_blueprint(self, blueprint: Blueprint, **options: t.Any) -> None: \"\"\"Register a :class:`~flask.Blueprint` on the application. Keyword arguments passed to this method will override the defaults set on the blueprint. "
         }
       ],
       "status": "approved",
-      "human_approved_by": "lead_researcher"
+      "human_approved_by": "Avaneesh Kumar Verma",
+      "human_approved_at": "2026-10-05",
+      "notes": "Evidence corrected 2026-10-05 (answer unchanged): Evidence cites src/flask/blueprints.py L50-120; Blueprint.register is in sansio/blueprints.py."
     },
     {
       "task_id": "eih-phase1-req-004",
@@ -128,7 +154,9 @@
       "security_sensitivity": "none",
       "query": "What configuration key controls debug mode in Flask 3.x?",
       "ground_truth": "In Flask 3.x, debug mode is controlled by app.config['DEBUG'] or the FLASK_DEBUG environment variable when running via the CLI.",
-      "acceptable_alternatives": ["FLASK_DEBUG or config['DEBUG']"],
+      "acceptable_alternatives": [
+        "FLASK_DEBUG or config['DEBUG']"
+      ],
       "expected_quality_threshold": 0.85,
       "source_evidence": [
         {
@@ -231,7 +259,7 @@
     },
     {
       "task_id": "eih-phase1-req-009",
-      "version": "1.0",
+      "version": "1.1",
       "repository": "pallets/flask",
       "sdlc_stage": "requirements",
       "task_type": "architecture_qa",
@@ -250,13 +278,23 @@
           "evidence_type": "source_file",
           "repository": "pallets/flask",
           "file_path": "src/flask/signals.py",
-          "line_start": 10,
-          "line_end": 45,
-          "excerpt": "_signals = Namespace() ... request_started = _signals.signal('request-started')"
+          "line_start": 1,
+          "line_end": 17,
+          "excerpt": "from __future__ import annotations from blinker import Namespace # This namespace is only for signals provided by Flask itself. _signals = Namespace() template_rendered = _signals.signal(\"template-rendered\") before_render_template = _signal"
+        },
+        {
+          "evidence_type": "documentation",
+          "repository": "pallets/flask",
+          "file_path": "docs/signals.rst",
+          "line_start": 20,
+          "line_end": 24,
+          "excerpt": "Core Signals ------------ See :ref:`core-signals-list` for a list of all built-in signals. The :doc:`lifecycle` page also describes the order that signals and decorators execute."
         }
       ],
       "status": "approved",
-      "human_approved_by": "lead_researcher"
+      "human_approved_by": "Avaneesh Kumar Verma",
+      "human_approved_at": "2026-10-05",
+      "notes": "Evidence corrected 2026-10-05 (answer unchanged): Evidence cites signals.py L10-45; the file has 17 lines."
     },
     {
       "task_id": "eih-phase1-req-010",
@@ -287,10 +325,9 @@
       "status": "approved",
       "human_approved_by": "lead_researcher"
     },
-
     {
       "task_id": "eih-phase1-code-011",
-      "version": "1.0",
+      "version": "1.1",
       "repository": "pallets/flask",
       "sdlc_stage": "architecture",
       "task_type": "code_explanation",
@@ -309,13 +346,23 @@
           "evidence_type": "source_file",
           "repository": "pallets/flask",
           "file_path": "src/flask/ctx.py",
-          "line_start": 200,
-          "line_end": 280,
-          "excerpt": "def push(self): ... _cv_request.set(self) ... def pop(self, exc=...): ... app.do_teardown_request(exc)"
+          "line_start": 367,
+          "line_end": 394,
+          "excerpt": "def push(self) -> None: # Before we push the request context we have to ensure that there # is an application context. app_ctx = _cv_app.get(None) if app_ctx is None or app_ctx.app is not self.app: app_ctx = self.app.app_context() app_ctx.p"
+        },
+        {
+          "evidence_type": "source_file",
+          "repository": "pallets/flask",
+          "file_path": "src/flask/ctx.py",
+          "line_start": 396,
+          "line_end": 431,
+          "excerpt": "def pop(self, exc: BaseException | None = _sentinel) -> None:  # type: ignore \"\"\"Pops the request context and unbinds it by doing that.  This will also trigger the execution of functions registered by the :meth:`~flask.Flask.teardown_reques"
         }
       ],
       "status": "approved",
-      "human_approved_by": "lead_researcher"
+      "human_approved_by": "Avaneesh Kumar Verma",
+      "human_approved_at": "2026-10-05",
+      "notes": "Evidence corrected 2026-10-05 (answer unchanged): Evidence cites ctx.py L200-280 (has_request_context..AppContext); RequestContext.push/pop are 367-431."
     },
     {
       "task_id": "eih-phase1-code-012",
@@ -377,7 +424,7 @@
     },
     {
       "task_id": "eih-phase1-code-014",
-      "version": "1.0",
+      "version": "1.1",
       "repository": "fastapi/fastapi",
       "sdlc_stage": "architecture",
       "task_type": "code_explanation",
@@ -386,9 +433,9 @@
       "criticality": "medium",
       "security_sensitivity": "none",
       "query": "Explain how solve_dependencies in fastapi/dependencies/utils.py caches dependency results when use_cache=True.",
-      "ground_truth": "In `fastapi/dependencies/utils.py`, `solve_dependencies` maintains an `async_exit_stack` and an in-memory dictionary `values: Dict[Tuple[Callable, Tuple[str]], Any]`. When a dependency is evaluated and `use_cache=True` (the default), the resolved value is stored in `values` keyed by dependency callable/sub-dependant, reusing it across multiple parameters within the same HTTP request.",
+      "ground_truth": "`solve_dependencies` in `fastapi/dependencies/utils.py` takes a `dependency_cache` dict (L532, created at L547) keyed by each sub-dependant's `cache_key` — the dependency callable plus its sorted security scopes (`fastapi/dependencies/models.py` L58). When `use_cache` is true and the key is already present the cached value is reused (L593-594); otherwise the solved value is stored (L605-606). The cache lives for one request, so a dependency used by several parameters runs once per request.",
       "acceptable_alternatives": [
-        "solve_dependencies stores computed dependency outputs in a values cache keyed by the dependency function during the request scope if use_cache is True."
+        "solve_dependencies keeps a per-request dependency_cache keyed by cache_key (callable + security scopes) and reuses solved values when use_cache is True."
       ],
       "expected_quality_threshold": 0.8,
       "source_evidence": [
@@ -396,13 +443,23 @@
           "evidence_type": "source_file",
           "repository": "fastapi/fastapi",
           "file_path": "fastapi/dependencies/utils.py",
-          "line_start": 450,
-          "line_end": 520,
-          "excerpt": "async def solve_dependencies(..., use_cache: bool = True): if use_cache and sub_dependant.call in solved_dependencies: ..."
+          "line_start": 524,
+          "line_end": 606,
+          "excerpt": "async def solve_dependencies(..., dependency_cache=...): ... if sub_dependant.use_cache and sub_dependant.cache_key in dependency_cache: solved = dependency_cache[...]"
+        },
+        {
+          "evidence_type": "source_file",
+          "repository": "fastapi/fastapi",
+          "file_path": "fastapi/dependencies/models.py",
+          "line_start": 58,
+          "line_end": 58,
+          "excerpt": "self.cache_key = (self.call, tuple(sorted(set(self.security_scopes or []))))"
         }
       ],
       "status": "approved",
-      "human_approved_by": "lead_researcher"
+      "human_approved_by": "Avaneesh Kumar Verma",
+      "human_approved_at": "2026-10-05",
+      "notes": "Corrected 2026-10-05: the original named the cache `values: Dict[...]`; at the pinned commit it is `dependency_cache` keyed by `cache_key`."
     },
     {
       "task_id": "eih-phase1-code-015",
@@ -493,7 +550,7 @@
     },
     {
       "task_id": "eih-phase1-code-018",
-      "version": "1.0",
+      "version": "1.1",
       "repository": "fastapi/fastapi",
       "sdlc_stage": "architecture",
       "task_type": "code_explanation",
@@ -512,13 +569,15 @@
           "evidence_type": "source_file",
           "repository": "fastapi/fastapi",
           "file_path": "fastapi/routing.py",
-          "line_start": 500,
-          "line_end": 600,
-          "excerpt": "def include_router(self, router: APIRouter, *, prefix: str = '', tags: Optional[List[Union[str, Enum]]] = None, ...):"
+          "line_start": 1072,
+          "line_end": 1310,
+          "excerpt": "def include_router( self, router: Annotated[\"APIRouter\", Doc(\"The `APIRouter` to include.\")], *, prefix: Annotated[str, Doc(\"An optional path prefix for the router.\")] = \"\", tags: Annotated[ Optional[List[Union[str, Enum]]], Doc( \"\"\" A list"
         }
       ],
       "status": "approved",
-      "human_approved_by": "lead_researcher"
+      "human_approved_by": "Avaneesh Kumar Verma",
+      "human_approved_at": "2026-10-05",
+      "notes": "Evidence corrected 2026-10-05 (answer unchanged): Evidence lines 500-600 are APIRoute/APIRouter.__init__; include_router is 1072-1310."
     },
     {
       "task_id": "eih-phase1-code-019",
@@ -578,7 +637,6 @@
       "status": "approved",
       "human_approved_by": "lead_researcher"
     },
-
     {
       "task_id": "eih-phase1-dev-021",
       "version": "1.0",
@@ -693,7 +751,7 @@
     },
     {
       "task_id": "eih-phase1-dev-025",
-      "version": "1.0",
+      "version": "1.1",
       "repository": "pallets/flask",
       "sdlc_stage": "development",
       "task_type": "code_generation",
@@ -711,14 +769,24 @@
         {
           "evidence_type": "source_file",
           "repository": "pallets/flask",
-          "file_path": "src/flask/app.py",
-          "line_start": 1000,
-          "line_end": 1080,
-          "excerpt": "def errorhandler(self, code_or_exception): ... registers handler in error_handler_spec."
+          "file_path": "src/flask/sansio/scaffold.py",
+          "line_start": 597,
+          "line_end": 639,
+          "excerpt": "@setupmethod def errorhandler( self, code_or_exception: type[Exception] | int ) -> t.Callable[[T_error_handler], T_error_handler]: \"\"\"Register a function to handle errors by code or exception class. A decorator that is used to register a fu"
+        },
+        {
+          "evidence_type": "source_file",
+          "repository": "pallets/flask",
+          "file_path": "src/flask/sansio/scaffold.py",
+          "line_start": 641,
+          "line_end": 654,
+          "excerpt": "@setupmethod def register_error_handler( self, code_or_exception: type[Exception] | int, f: ft.ErrorHandlerCallable, ) -> None: \"\"\"Alternative error attach function to the :meth:`errorhandler` decorator that is more straightforward to use f"
         }
       ],
       "status": "approved",
-      "human_approved_by": "lead_researcher"
+      "human_approved_by": "Avaneesh Kumar Verma",
+      "human_approved_at": "2026-10-05",
+      "notes": "Evidence corrected 2026-10-05 (answer unchanged): Evidence cites src/flask/app.py L1000-1080 (inside Flask.url_for); errorhandler lives in sansio/scaffold.py."
     },
     {
       "task_id": "eih-phase1-dev-026",
@@ -861,7 +929,6 @@
       "status": "approved",
       "human_approved_by": "lead_researcher"
     },
-
     {
       "task_id": "eih-phase1-test-031",
       "version": "1.0",
@@ -893,7 +960,7 @@
     },
     {
       "task_id": "eih-phase1-test-032",
-      "version": "1.0",
+      "version": "1.1",
       "repository": "fastapi/fastapi",
       "sdlc_stage": "testing",
       "task_type": "test_generation",
@@ -913,16 +980,26 @@
           "repository": "fastapi/fastapi",
           "file_path": "fastapi/testclient.py",
           "line_start": 1,
-          "line_end": 30,
-          "excerpt": "from starlette.testclient import TestClient ... export TestClient"
+          "line_end": 1,
+          "excerpt": "from starlette.testclient import TestClient as TestClient  # noqa"
+        },
+        {
+          "evidence_type": "documentation",
+          "repository": "fastapi/fastapi",
+          "file_path": "docs/en/docs/tutorial/testing.md",
+          "line_start": 9,
+          "line_end": 43,
+          "excerpt": "## Using `TestClient` !!! info To use `TestClient`, first install <a href=\"https://www.python-httpx.org\" class=\"external-link\" target=\"_blank\">`httpx`</a>. E.g. `pip install httpx`. Import `TestClient`. Create a `TestClient` by passing your"
         }
       ],
       "status": "approved",
-      "human_approved_by": "lead_researcher"
+      "human_approved_by": "Avaneesh Kumar Verma",
+      "human_approved_at": "2026-10-05",
+      "notes": "Evidence corrected 2026-10-05 (answer unchanged): Evidence cites testclient.py L1-30; the file has 1 line."
     },
     {
       "task_id": "eih-phase1-test-033",
-      "version": "1.0",
+      "version": "1.1",
       "repository": "pallets/flask",
       "sdlc_stage": "testing",
       "task_type": "test_explanation",
@@ -941,13 +1018,31 @@
           "evidence_type": "source_file",
           "repository": "pallets/flask",
           "file_path": "src/flask/testing.py",
-          "line_start": 120,
-          "line_end": 170,
-          "excerpt": "class FlaskCliRunner(CliRunner): def invoke(self, cli=None, args=None, **extra): ... with app.app_context(): ..."
+          "line_start": 265,
+          "line_end": 298,
+          "excerpt": "class FlaskCliRunner(CliRunner): \"\"\"A :class:`~click.testing.CliRunner` for testing a Flask app's CLI commands. Typically created using :meth:`~flask.Flask.test_cli_runner`. See :ref:`testing-cli`. \"\"\" def __init__(self, app: Flask, **kwarg"
+        },
+        {
+          "evidence_type": "source_file",
+          "repository": "pallets/flask",
+          "file_path": "src/flask/app.py",
+          "line_start": 690,
+          "line_end": 705,
+          "excerpt": "def test_cli_runner(self, **kwargs: t.Any) -> FlaskCliRunner: \"\"\"Create a CLI runner for testing CLI commands. See :ref:`testing-cli`. Returns an instance of :attr:`test_cli_runner_class`, by default :class:`~flask.testing.FlaskCliRunner`. "
+        },
+        {
+          "evidence_type": "documentation",
+          "repository": "pallets/flask",
+          "file_path": "docs/testing.rst",
+          "line_start": 245,
+          "line_end": 272,
+          "excerpt": "Running Commands with the CLI Runner ------------------------------------ Flask provides :meth:`~flask.Flask.test_cli_runner` to create a :class:`~flask.testing.FlaskCliRunner`, which runs CLI commands in isolation and captures the output i"
         }
       ],
       "status": "approved",
-      "human_approved_by": "lead_researcher"
+      "human_approved_by": "Avaneesh Kumar Verma",
+      "human_approved_at": "2026-10-05",
+      "notes": "Evidence corrected 2026-10-05 (answer unchanged): Evidence cites testing.py L120-170 (FlaskClient); FlaskCliRunner is 265-298."
     },
     {
       "task_id": "eih-phase1-test-034",
@@ -978,7 +1073,7 @@
     },
     {
       "task_id": "eih-phase1-test-035",
-      "version": "1.0",
+      "version": "1.1",
       "repository": "pallets/flask",
       "sdlc_stage": "testing",
       "task_type": "test_failure_analysis",
@@ -997,13 +1092,23 @@
           "evidence_type": "source_file",
           "repository": "pallets/flask",
           "file_path": "src/flask/globals.py",
-          "line_start": 20,
-          "line_end": 60,
-          "excerpt": "current_app = LocalProxy(_find_app, name='current_app') ... raise RuntimeError('Working outside of application context.')"
+          "line_start": 17,
+          "line_end": 33,
+          "excerpt": "_no_app_msg = \"\"\"\\ Working outside of application context. This typically means that you attempted to use functionality that needed the current application. To solve this, set up an application context with app.app_context(). See the docume"
+        },
+        {
+          "evidence_type": "source_file",
+          "repository": "pallets/flask",
+          "file_path": "src/flask/ctx.py",
+          "line_start": 251,
+          "line_end": 254,
+          "excerpt": "def push(self) -> None: \"\"\"Binds the app context to the current context.\"\"\" self._cv_tokens.append(_cv_app.set(self)) appcontext_pushed.send(self.app, _async_wrapper=self.app.ensure_sync)"
         }
       ],
       "status": "approved",
-      "human_approved_by": "lead_researcher"
+      "human_approved_by": "Avaneesh Kumar Verma",
+      "human_approved_at": "2026-10-05",
+      "notes": "Evidence corrected 2026-10-05 (answer unchanged): Evidence cites globals.py L20-60; the file has 51 lines."
     },
     {
       "task_id": "eih-phase1-test-036",
@@ -1036,7 +1141,7 @@
     },
     {
       "task_id": "eih-phase1-test-037",
-      "version": "1.0",
+      "version": "1.1",
       "repository": "pallets/flask",
       "sdlc_stage": "testing",
       "task_type": "test_generation",
@@ -1052,16 +1157,26 @@
       "expected_quality_threshold": 0.85,
       "source_evidence": [
         {
+          "evidence_type": "documentation",
+          "repository": "pallets/flask",
+          "file_path": "docs/testing.rst",
+          "line_start": 202,
+          "line_end": 240,
+          "excerpt": "Accessing and Modifying the Session ----------------------------------- To access Flask's context variables, mainly :data:`~flask.session`, use the client in a ``with`` statement. The app and request context will remain active *after* makin"
+        },
+        {
           "evidence_type": "source_file",
           "repository": "pallets/flask",
           "file_path": "src/flask/testing.py",
-          "line_start": 50,
-          "line_end": 100,
-          "excerpt": "class FlaskClient(Client): ... session_transaction() context manager."
+          "line_start": 135,
+          "line_end": 183,
+          "excerpt": "@contextmanager def session_transaction( self, *args: t.Any, **kwargs: t.Any ) -> t.Iterator[SessionMixin]: \"\"\"When used in combination with a ``with`` statement this opens a session transaction.  This can be used to modify the session that"
         }
       ],
       "status": "approved",
-      "human_approved_by": "lead_researcher"
+      "human_approved_by": "Avaneesh Kumar Verma",
+      "human_approved_at": "2026-10-05",
+      "notes": "Evidence corrected 2026-10-05 (answer unchanged): Evidence cites testing.py L50-100 (EnvironBuilder), not FlaskClient."
     },
     {
       "task_id": "eih-phase1-test-038",
@@ -1146,7 +1261,6 @@
       "status": "approved",
       "human_approved_by": "lead_researcher"
     },
-
     {
       "task_id": "eih-phase1-rev-041",
       "version": "1.0",
@@ -1234,7 +1348,7 @@
     },
     {
       "task_id": "eih-phase1-rev-044",
-      "version": "1.0",
+      "version": "1.1",
       "repository": "fastapi/fastapi",
       "sdlc_stage": "code_review",
       "task_type": "review_assistance",
@@ -1250,20 +1364,46 @@
       "expected_quality_threshold": 0.85,
       "source_evidence": [
         {
+          "evidence_type": "documentation",
+          "repository": "fastapi/fastapi",
+          "file_path": "docs/en/docs/tutorial/path-params.md",
+          "line_start": 17,
+          "line_end": 28,
+          "excerpt": "## Path parameters with types You can declare the type of a path parameter in the function, using standard Python type annotations: ```Python hl_lines=\"7\" {!../../../docs_src/path_params/tutorial002.py!} ``` In this case, `item_id` is decla"
+        },
+        {
+          "evidence_type": "documentation",
+          "repository": "fastapi/fastapi",
+          "file_path": "docs/en/docs/tutorial/path-params.md",
+          "line_start": 43,
+          "line_end": 73,
+          "excerpt": "## Data validation But if you go to the browser at <a href=\"http://127.0.0.1:8000/items/foo\" class=\"external-link\" target=\"_blank\">http://127.0.0.1:8000/items/foo</a>, you will see a nice HTTP error of: ```JSON { \"detail\": [ { \"type\": \"int_"
+        },
+        {
           "evidence_type": "source_file",
           "repository": "fastapi/fastapi",
-          "file_path": "fastapi/routing.py",
-          "line_start": 180,
+          "file_path": "fastapi/dependencies/utils.py",
+          "line_start": 207,
           "line_end": 220,
-          "excerpt": "inspects parameter type annotations from function signature to configure path converters."
+          "excerpt": "def get_typed_signature(call: Callable[..., Any]) -> inspect.Signature: signature = inspect.signature(call) globalns = getattr(call, \"__globals__\", {}) typed_params = [ inspect.Parameter( name=param.name, kind=param.kind, default=param.defa"
+        },
+        {
+          "evidence_type": "source_file",
+          "repository": "fastapi/fastapi",
+          "file_path": "fastapi/dependencies/utils.py",
+          "line_start": 317,
+          "line_end": 453,
+          "excerpt": "def analyze_param( *, param_name: str, annotation: Any, value: Any, is_path_param: bool, ) -> Tuple[Any, Optional[params.Depends], Optional[ModelField]]: field_info = None depends = None type_annotation: Any = Any use_annotation: Any = Any "
         }
       ],
       "status": "approved",
-      "human_approved_by": "lead_researcher"
+      "human_approved_by": "Avaneesh Kumar Verma",
+      "human_approved_at": "2026-10-05",
+      "notes": "Evidence corrected 2026-10-05 (answer unchanged): Evidence cites fastapi/routing.py L180-220 (serialize_response..get_request_handler); parameter analysis is in fastapi/dependencies/utils.py."
     },
     {
       "task_id": "eih-phase1-rev-045",
-      "version": "1.0",
+      "version": "1.1",
       "repository": "pallets/flask",
       "sdlc_stage": "code_review",
       "task_type": "defect_detection",
@@ -1272,9 +1412,9 @@
       "criticality": "medium",
       "security_sensitivity": "none",
       "query": "Review this Flask route: `@app.route('/items', methods=['POST']) def add(): item = request.json['name']`. What defect occurs if invalid JSON or no payload is sent?",
-      "ground_truth": "Defect: Unhandled KeyError / TypeError. If the request content-type is not JSON or the body is missing, `request.json` is `None`, raising `TypeError: 'NoneType' object is not subscriptable`. If `name` is missing, `request.json['name']` raises `KeyError`. Fix: Use `data = request.get_json(silent=True) or {}` and `data.get('name')`.",
+      "ground_truth": "Defect: the route assumes a JSON body with a `name` key. With Flask 3.0 (Werkzeug >= 3.0), `request.json` on a non-JSON or missing body raises 415 Unsupported Media Type; invalid JSON gives 400 Bad Request (`Request.on_json_loading_failed`); a JSON body without `name` raises `KeyError` -> 500. Fix: `data = request.get_json(silent=True) or {}` and validate `data.get('name')`, returning 400 when it is missing.",
       "acceptable_alternatives": [
-        "request.json will be None or missing key causing 500 error; use request.get_json() and check dictionary keys safely."
+        "Non-JSON body gives 415, invalid JSON 400, missing key KeyError (500); use get_json(silent=True) and validate the key."
       ],
       "expected_quality_threshold": 0.85,
       "source_evidence": [
@@ -1282,13 +1422,15 @@
           "evidence_type": "source_file",
           "repository": "pallets/flask",
           "file_path": "src/flask/wrappers.py",
-          "line_start": 30,
-          "line_end": 70,
-          "excerpt": "class Request(RequestBase): def get_json(self, force=False, silent=False, cache=True): ..."
+          "line_start": 129,
+          "line_end": 136,
+          "excerpt": "def on_json_loading_failed(self, e): ... raise BadRequest() from e"
         }
       ],
       "status": "approved",
-      "human_approved_by": "lead_researcher"
+      "human_approved_by": "Avaneesh Kumar Verma",
+      "human_approved_at": "2026-10-05",
+      "notes": "Corrected 2026-10-05: the original said request.json is None for a non-JSON body (TypeError). Executed on Flask 3.0.3 + Werkzeug 3.1.9: non-JSON or no body 415, invalid JSON 400, JSON without 'name' KeyError -> 500."
     },
     {
       "task_id": "eih-phase1-rev-046",
@@ -1348,7 +1490,7 @@
     },
     {
       "task_id": "eih-phase1-rev-048",
-      "version": "1.0",
+      "version": "1.1",
       "repository": "fastapi/fastapi",
       "sdlc_stage": "code_review",
       "task_type": "defect_detection",
@@ -1364,16 +1506,26 @@
       "expected_quality_threshold": 0.85,
       "source_evidence": [
         {
+          "evidence_type": "documentation",
+          "repository": "fastapi/fastapi",
+          "file_path": "docs/en/docs/tutorial/path-params-numeric-validations.md",
+          "line_start": 183,
+          "line_end": 208,
+          "excerpt": "## Number validations: greater than or equal With `Query` and `Path` (and others you'll see later) you can declare number constraints. Here, with `ge=1`, `item_id` will need to be an integer number \"`g`reater than or `e`qual\" to `1`. === \"P"
+        },
+        {
           "evidence_type": "source_file",
           "repository": "fastapi/fastapi",
-          "file_path": "fastapi/params.py",
-          "line_start": 20,
-          "line_end": 50,
-          "excerpt": "ge, le, gt, lt parameters on Query provide numeric range validation."
+          "file_path": "fastapi/param_functions.py",
+          "line_start": 339,
+          "line_end": 640,
+          "excerpt": "def Query(  # noqa: N802 default: Annotated[ Any, Doc( \"\"\" Default value if the parameter field is not set. \"\"\" ), ] = Undefined, *, default_factory: Annotated[ Union[Callable[[], Any], None], Doc( \"\"\" A callable to generate the default val"
         }
       ],
       "status": "approved",
-      "human_approved_by": "lead_researcher"
+      "human_approved_by": "Avaneesh Kumar Verma",
+      "human_approved_at": "2026-10-05",
+      "notes": "Evidence corrected 2026-10-05 (answer unchanged): Evidence cites fastapi/params.py L20-50 (Param.__init__ start), not the Query ge/le docs."
     },
     {
       "task_id": "eih-phase1-rev-049",
@@ -1431,10 +1583,9 @@
       "status": "approved",
       "human_approved_by": "lead_researcher"
     },
-
     {
       "task_id": "eih-phase1-ops-051",
-      "version": "1.0",
+      "version": "1.1",
       "repository": "pallets/flask",
       "sdlc_stage": "maintenance",
       "task_type": "error_analysis",
@@ -1453,17 +1604,27 @@
           "evidence_type": "source_file",
           "repository": "pallets/flask",
           "file_path": "src/flask/globals.py",
-          "line_start": 30,
-          "line_end": 70,
-          "excerpt": "def _cv_request_lookup(): ... raise RuntimeError('Working outside of request context.')"
+          "line_start": 35,
+          "line_end": 51,
+          "excerpt": "_no_req_msg = \"\"\"\\ Working outside of request context. This typically means that you attempted to use functionality that needed an active HTTP request. Consult the documentation on testing for information about how to avoid this problem.\\ \""
+        },
+        {
+          "evidence_type": "source_file",
+          "repository": "pallets/flask",
+          "file_path": "src/flask/app.py",
+          "line_start": 1385,
+          "line_end": 1439,
+          "excerpt": "def test_request_context(self, *args: t.Any, **kwargs: t.Any) -> RequestContext: \"\"\"Create a :class:`~flask.ctx.RequestContext` for a WSGI environment created from the given values. This is mostly useful during testing, where you may want t"
         }
       ],
       "status": "approved",
-      "human_approved_by": "lead_researcher"
+      "human_approved_by": "Avaneesh Kumar Verma",
+      "human_approved_at": "2026-10-05",
+      "notes": "Evidence corrected 2026-10-05 (answer unchanged): Evidence cites globals.py L30-70 and a function _cv_request_lookup; the file has 51 lines and no such function (the error comes from LocalProxy unbound_message)."
     },
     {
       "task_id": "eih-phase1-ops-052",
-      "version": "1.0",
+      "version": "1.1",
       "repository": "fastapi/fastapi",
       "sdlc_stage": "maintenance",
       "task_type": "error_analysis",
@@ -1471,10 +1632,10 @@
       "complexity": "medium",
       "criticality": "high",
       "security_sensitivity": "none",
-      "query": "Diagnose this FastAPI error: `AssertionError: A dependency cycle was detected in Depends(...)`.",
-      "ground_truth": "Root cause: Circular dependency chain in FastAPI dependency injection graph (e.g. Dependency A depends on Dependency B, which in turn depends on Dependency A). Fix: Refactor the shared logic into a separate base dependency callable C that both A and B can depend on independently.",
+      "query": "Diagnose this FastAPI startup error: `AssertionError: Cannot specify `Depends` in `Annotated` and default value together for 'db'`.",
+      "ground_truth": "It is raised by `analyze_param` in `fastapi/dependencies/utils.py` (assertion at L368-371) when one parameter declares its dependency twice: inside `Annotated[..., Depends(x)]` and as a default value `= Depends(y)`. Fix: declare the dependency once, either in `Annotated` or as the default value.",
       "acceptable_alternatives": [
-        "Circular dependency between Depends callables; break the cycle by extracting shared logic."
+        "The parameter uses Depends both in Annotated and as the default; keep only one of them."
       ],
       "expected_quality_threshold": 0.85,
       "source_evidence": [
@@ -1482,17 +1643,19 @@
           "evidence_type": "source_file",
           "repository": "fastapi/fastapi",
           "file_path": "fastapi/dependencies/utils.py",
-          "line_start": 100,
-          "line_end": 150,
-          "excerpt": "get_dependant detects recursive cycles in sub-dependencies graph."
+          "line_start": 368,
+          "line_end": 371,
+          "excerpt": "assert depends is None, (\"Cannot specify `Depends` in `Annotated` and default value\" f\" together for {param_name!r}\")"
         }
       ],
       "status": "approved",
-      "human_approved_by": "lead_researcher"
+      "human_approved_by": "Avaneesh Kumar Verma",
+      "human_approved_at": "2026-10-05",
+      "notes": "Replaced 2026-10-05: the original error 'A dependency cycle was detected in Depends(...)' does not exist in FastAPI at the pinned commit. Same repository, SDLC stage and task type."
     },
     {
       "task_id": "eih-phase1-ops-053",
-      "version": "1.0",
+      "version": "1.1",
       "repository": "pallets/flask",
       "sdlc_stage": "maintenance",
       "task_type": "change_understanding",
@@ -1500,22 +1663,34 @@
       "complexity": "low",
       "criticality": "medium",
       "security_sensitivity": "none",
-      "query": "What changed in Flask 3.0 regarding the removal of deprecated `flask.json` functions like `tojson_filter`?",
-      "ground_truth": "In Flask 3.0, deprecated JSON utility aliases (`flask.json.tojson_filter`, `flask.json.JSONEncoder`, `flask.json.JSONDecoder`) were removed in favor of `app.json` (the pluggable `DefaultJSONProvider` interface introduced in Flask 2.2).",
+      "query": "Which Flask version removed `json.JSONEncoder` / `JSONDecoder` and the app's `json_encoder` / `json_decoder` attributes, and what replaced them?",
+      "ground_truth": "They were deprecated in Flask 2.2.0 and removed in Flask 2.3.0. JSON behaviour is now customised through the `app.json` provider interface (`DefaultJSONProvider`) instead of custom encoder/decoder classes.",
       "acceptable_alternatives": [
-        "Flask 3.0 removed deprecated json functions in favor of the app.json DefaultJSONProvider architecture."
+        "Deprecated in 2.2, removed in 2.3; use the app.json provider (DefaultJSONProvider) instead."
       ],
       "expected_quality_threshold": 0.8,
       "source_evidence": [
         {
           "evidence_type": "documentation",
           "repository": "pallets/flask",
-          "file_path": "docs/changes.rst",
-          "excerpt": "Version 3.0.0: Remove deprecated code. flask.json functions removed in favor of app.json provider."
+          "file_path": "CHANGES.rst",
+          "line_start": 100,
+          "line_end": 101,
+          "excerpt": "Version 2.3.0: json_encoder and json_decoder attributes on app and blueprint, and the corresponding json.JSONEncoder and JSONDecoder classes, are removed."
+        },
+        {
+          "evidence_type": "documentation",
+          "repository": "pallets/flask",
+          "file_path": "CHANGES.rst",
+          "line_start": 232,
+          "line_end": 235,
+          "excerpt": "Version 2.2.0: ... json.JSONEncoder and JSONDecoder classes, are deprecated. JSON behavior can now be overridden using the app.json provider interface."
         }
       ],
       "status": "approved",
-      "human_approved_by": "lead_researcher"
+      "human_approved_by": "Avaneesh Kumar Verma",
+      "human_approved_at": "2026-10-05",
+      "notes": "Corrected 2026-10-05: the original said Flask 3.0 removed these (and tojson_filter); the pinned CHANGES.rst shows removal in 2.3.0 (L100-101), deprecation in 2.2.0 (L232-235); tojson_filter does not appear."
     },
     {
       "task_id": "eih-phase1-ops-054",

@@ -122,6 +122,10 @@ class LabelSpec:
     extra_symbols: Tuple[str, ...] = field(default=())
 
 
+# Human verification (docs/RETRIEVAL_LABELS_REVIEW.md): task_id -> "name, date". Only a
+# label listed here is "verified"; every other label stays "draft". Never filled in by a script.
+VERIFIED: Dict[str, str] = {}
+
 _ERR = "fastapi/dependencies/utils.py"
 
 SPECS: Dict[str, LabelSpec] = {
@@ -131,9 +135,8 @@ SPECS: Dict[str, LabelSpec] = {
             Sym(_ERR, "solve_dependencies", "Looks up and stores solved sub-dependencies in dependency_cache when use_cache is set."),
             Lines("fastapi/dependencies/models.py", 58, 58, "self.cache_key", "Defines cache_key = (call, sorted security scopes), the cache key."),
         ),
-        ground_truth_issue="Ground truth names the cache 'values: Dict[...]'; at the pinned commit it is "
-        "'dependency_cache' keyed by Dependant.cache_key. Evidence lines 450-520 cover analyze_param..solve_generator, "
-        "not solve_dependencies (524-649).",
+        notes="Task corrected 2026-10-05 (approved by Avaneesh Kumar Verma): the cache is 'dependency_cache' "
+        "keyed by Dependant.cache_key (was 'values'); evidence now points at solve_dependencies (L524-606).",
     ),
     "eih-phase1-code-015": LabelSpec(
         evidence=(
@@ -149,7 +152,7 @@ SPECS: Dict[str, LabelSpec] = {
     ),
     "eih-phase1-code-018": LabelSpec(
         evidence=(Sym("fastapi/routing.py", "APIRouter.include_router", "Copies child routes with merged prefix, tags and dependencies."),),
-        ground_truth_issue="Evidence lines 500-600 are APIRoute/APIRouter.__init__; include_router is 1072-1310.",
+        notes="Task evidence corrected 2026-10-05 (approved by Avaneesh Kumar Verma). Was: Evidence lines 500-600 are APIRoute/APIRouter.__init__; include_router is 1072-1310.",
     ),
     "eih-phase1-dev-023": LabelSpec(
         evidence=(
@@ -162,7 +165,7 @@ SPECS: Dict[str, LabelSpec] = {
             Sym("src/flask/sansio/scaffold.py", "Scaffold.errorhandler", "Decorator registering a handler for a status code or exception."),
             Sym("src/flask/sansio/scaffold.py", "Scaffold.register_error_handler", "Non-decorator form of errorhandler."),
         ),
-        ground_truth_issue="Evidence cites src/flask/app.py L1000-1080 (inside Flask.url_for); errorhandler lives in sansio/scaffold.py.",
+        notes="Task evidence corrected 2026-10-05 (approved by Avaneesh Kumar Verma). Was: Evidence cites src/flask/app.py L1000-1080 (inside Flask.url_for); errorhandler lives in sansio/scaffold.py.",
     ),
     "eih-phase1-dev-028": LabelSpec(
         evidence=(
@@ -181,7 +184,7 @@ SPECS: Dict[str, LabelSpec] = {
             Lines("src/flask/globals.py", 35, 51, '_no_req_msg = """', "The 'Working outside of request context' message and the request/session proxies that raise it."),
             Sym("src/flask/app.py", "Flask.test_request_context", "The fix named in the ground truth for tests."),
         ),
-        ground_truth_issue="Evidence cites globals.py L30-70 and a function _cv_request_lookup; the file has 51 lines and "
+        notes="Task evidence corrected 2026-10-05 (approved by Avaneesh Kumar Verma). Was: Evidence cites globals.py L30-70 and a function _cv_request_lookup; the file has 51 lines and "
         "no such function (the error comes from LocalProxy unbound_message).",
     ),
     "eih-phase1-ops-054": LabelSpec(
@@ -221,7 +224,7 @@ SPECS: Dict[str, LabelSpec] = {
             WholeFile("src/flask/signals.py", "Blinker Namespace and every core signal."),
             Section("docs/signals.rst", "Core Signals", "Docs for the core signals."),
         ),
-        ground_truth_issue="Evidence cites signals.py L10-45; the file has 17 lines.",
+        notes="Task evidence corrected 2026-10-05 (approved by Avaneesh Kumar Verma). Was: Evidence cites signals.py L10-45; the file has 17 lines.",
     ),
     "eih-phase1-req-010": LabelSpec(
         evidence=(
@@ -239,21 +242,20 @@ SPECS: Dict[str, LabelSpec] = {
             Sym(_ERR, "get_typed_signature", "Reads the endpoint signature's annotations."),
             Sym(_ERR, "analyze_param", "Turns each annotated parameter into a validated field."),
         ),
-        ground_truth_issue="Evidence cites fastapi/routing.py L180-220 (serialize_response..get_request_handler); "
+        notes="Task evidence corrected 2026-10-05 (approved by Avaneesh Kumar Verma). Was: Evidence cites fastapi/routing.py L180-220 (serialize_response..get_request_handler); "
         "parameter analysis is in fastapi/dependencies/utils.py.",
     ),
     "eih-phase1-rev-045": LabelSpec(
         evidence=(Sym("src/flask/wrappers.py", "Request.on_json_loading_failed", "Turns JSON decode failures into BadRequest."),),
-        ground_truth_issue="NEEDS CHECK: ground truth says request.json is None for a non-JSON body. With "
-        "Werkzeug >= 2.3 (Flask at this commit requires >= 3.0) it raises 415 Unsupported Media Type instead. "
-        "Werkzeug is not in the corpus, so this was not verified here.",
+        notes="Task corrected 2026-10-05 (approved by Avaneesh Kumar Verma): verified by execution on Flask "
+        "3.0.3 + Werkzeug 3.1.9 — non-JSON or no body 415, invalid JSON 400, missing key KeyError -> 500.",
     ),
     "eih-phase1-rev-048": LabelSpec(
         evidence=(
             Section("docs/en/docs/tutorial/path-params-numeric-validations.md", "Number validations: greater than or equal", "ge/le constraints."),
             Sym("fastapi/param_functions.py", "Query", "Query(...) accepts ge, gt, le, lt."),
         ),
-        ground_truth_issue="Evidence cites fastapi/params.py L20-50 (Param.__init__ start), not the Query ge/le docs.",
+        notes="Task evidence corrected 2026-10-05 (approved by Avaneesh Kumar Verma). Was: Evidence cites fastapi/params.py L20-50 (Param.__init__ start), not the Query ge/le docs.",
     ),
     "eih-phase1-test-034": LabelSpec(
         evidence=(
@@ -272,14 +274,14 @@ SPECS: Dict[str, LabelSpec] = {
             Lines("src/flask/globals.py", 17, 33, '_no_app_msg = """', "'Working outside of application context' message and the current_app/g proxies."),
             Sym("src/flask/ctx.py", "AppContext.push", "Pushing an app context binds _cv_app."),
         ),
-        ground_truth_issue="Evidence cites globals.py L20-60; the file has 51 lines.",
+        notes="Task evidence corrected 2026-10-05 (approved by Avaneesh Kumar Verma). Was: Evidence cites globals.py L20-60; the file has 51 lines.",
     ),
     "eih-phase1-test-037": LabelSpec(
         evidence=(
             Section("docs/testing.rst", "Accessing and Modifying the Session", "Session access with the test client."),
             Sym("src/flask/testing.py", "FlaskClient.session_transaction", "Opens/saves the session around a block."),
         ),
-        ground_truth_issue="Evidence cites testing.py L50-100 (EnvironBuilder), not FlaskClient.",
+        notes="Task evidence corrected 2026-10-05 (approved by Avaneesh Kumar Verma). Was: Evidence cites testing.py L50-100 (EnvironBuilder), not FlaskClient.",
     ),
     "eih-phase1-test-038": LabelSpec(
         evidence=(
@@ -294,7 +296,7 @@ SPECS: Dict[str, LabelSpec] = {
             Sym("src/flask/ctx.py", "RequestContext.push", "Pushes app context if needed, sets _cv_request, opens session."),
             Sym("src/flask/ctx.py", "RequestContext.pop", "Runs teardown_request functions and resets the context var."),
         ),
-        ground_truth_issue="Evidence cites ctx.py L200-280 (has_request_context..AppContext); RequestContext.push/pop are 367-431.",
+        notes="Task evidence corrected 2026-10-05 (approved by Avaneesh Kumar Verma). Was: Evidence cites ctx.py L200-280 (has_request_context..AppContext); RequestContext.push/pop are 367-431.",
     ),
     "eih-phase1-code-016": LabelSpec(
         evidence=(
@@ -321,20 +323,22 @@ SPECS: Dict[str, LabelSpec] = {
         ),
     ),
     "eih-phase1-ops-052": LabelSpec(
-        flagged=True,
-        ground_truth_issue="The error 'AssertionError: A dependency cycle was detected in Depends(...)' does not "
-        "exist in FastAPI at the pinned commit: git grep for cycle/circular/recurs in fastapi/dependencies and "
-        "fastapi/routing.py finds nothing. The task premise cannot be grounded in the corpus.",
-        notes="No evidence span can be labelled. Recommend rewriting or removing this task (human decision).",
+        evidence=(
+            Lines(_ERR, 368, 371, "assert depends is None, (",
+                  "The assertion that raises 'Cannot specify `Depends` in `Annotated` and default value together'."),
+            Sym(_ERR, "analyze_param", "Where a parameter's Annotated metadata and default value are analysed."),
+        ),
+        notes="Task replaced 2026-10-05 (approved by Avaneesh Kumar Verma): the original error 'A dependency "
+        "cycle was detected in Depends(...)' does not exist in FastAPI at the pinned commit.",
     ),
     "eih-phase1-ops-053": LabelSpec(
         evidence=(
             Section("CHANGES.rst", "Version 2.3.0", "Removal of json_encoder/json_decoder and json.JSONEncoder/JSONDecoder."),
-            Section("CHANGES.rst", "Version 3.0.0", "3.0.0 'Remove previously deprecated code'."),
+            Lines("CHANGES.rst", 232, 235, "-   Setting custom ``json_encoder`` and ``json_decoder`` classes on the",
+                  "2.2.0 deprecation in favour of the app.json provider interface."),
         ),
-        ground_truth_issue="Ground truth says Flask 3.0 removed JSONEncoder/JSONDecoder/tojson_filter. The pinned "
-        "CHANGES.rst lists the JSONEncoder/JSONDecoder removal under 2.3.0 (L100-101) and never mentions "
-        "tojson_filter. Ground truth contradicts the corpus.",
+        notes="Task corrected 2026-10-05 (approved by Avaneesh Kumar Verma): removal is in 2.3.0, not 3.0; "
+        "tojson_filter dropped from the question.",
     ),
     "eih-phase1-req-002": LabelSpec(
         evidence=(
@@ -349,7 +353,7 @@ SPECS: Dict[str, LabelSpec] = {
             Sym("src/flask/sansio/blueprints.py", "Blueprint.register", "Registers deferred functions and nested blueprints on the app."),
             Sym("src/flask/sansio/app.py", "App.register_blueprint", "Entry point called by the app."),
         ),
-        ground_truth_issue="Evidence cites src/flask/blueprints.py L50-120; Blueprint.register is in sansio/blueprints.py.",
+        notes="Task evidence corrected 2026-10-05 (approved by Avaneesh Kumar Verma). Was: Evidence cites src/flask/blueprints.py L50-120; Blueprint.register is in sansio/blueprints.py.",
     ),
     "eih-phase1-rev-046": LabelSpec(
         evidence=(Section("docs/en/docs/async.md", "In a hurry?", "Use def, not async def, for blocking libraries."),),
@@ -365,7 +369,7 @@ SPECS: Dict[str, LabelSpec] = {
             WholeFile("fastapi/testclient.py", "Re-exports Starlette's TestClient."),
             Section("docs/en/docs/tutorial/testing.md", "Using `TestClient`", "TestClient usage."),
         ),
-        ground_truth_issue="Evidence cites testclient.py L1-30; the file has 1 line.",
+        notes="Task evidence corrected 2026-10-05 (approved by Avaneesh Kumar Verma). Was: Evidence cites testclient.py L1-30; the file has 1 line.",
     ),
     "eih-phase1-test-033": LabelSpec(
         evidence=(
@@ -373,7 +377,7 @@ SPECS: Dict[str, LabelSpec] = {
             Sym("src/flask/app.py", "Flask.test_cli_runner", "Creates the runner."),
             Section("docs/testing.rst", "Running Commands with the CLI Runner", "Docs for test_cli_runner."),
         ),
-        ground_truth_issue="Evidence cites testing.py L120-170 (FlaskClient); FlaskCliRunner is 265-298.",
+        notes="Task evidence corrected 2026-10-05 (approved by Avaneesh Kumar Verma). Was: Evidence cites testing.py L120-170 (FlaskClient); FlaskCliRunner is 265-298.",
     ),
 }
 
@@ -646,7 +650,8 @@ def build() -> RetrievalLabelSet:
             relevant_symbols=symbols,
             required_evidence=evidence,
             expected_citations=[f"[{e.file}:L{e.start_line}-L{e.end_line}]" for e in evidence],
-            label_status="flagged" if spec.flagged else "draft",
+            label_status="flagged" if spec.flagged else ("verified" if task_id in VERIFIED else "draft"),
+            verified_by=VERIFIED.get(task_id),
             annotator=ANNOTATOR,
             ground_truth_issue=spec.ground_truth_issue,
             notes=spec.notes,

@@ -53,8 +53,8 @@
       "label_status": "draft",
       "annotator": "laptop-b (Claude Opus 5.5 draft; requires human verification)",
       "verified_by": null,
-      "ground_truth_issue": "Evidence cites ctx.py L200-280 (has_request_context..AppContext); RequestContext.push/pop are 367-431.",
-      "notes": null
+      "ground_truth_issue": null,
+      "notes": "Task evidence corrected 2026-10-05 (approved by Avaneesh Kumar Verma). Was: Evidence cites ctx.py L200-280 (has_request_context..AppContext); RequestContext.push/pop are 367-431."
     },
     {
       "task_id": "eih-phase1-code-014",
@@ -103,8 +103,8 @@
       "label_status": "draft",
       "annotator": "laptop-b (Claude Opus 5.5 draft; requires human verification)",
       "verified_by": null,
-      "ground_truth_issue": "Ground truth names the cache 'values: Dict[...]'; at the pinned commit it is 'dependency_cache' keyed by Dependant.cache_key. Evidence lines 450-520 cover analyze_param..solve_generator, not solve_dependencies (524-649).",
-      "notes": null
+      "ground_truth_issue": null,
+      "notes": "Task corrected 2026-10-05 (approved by Avaneesh Kumar Verma): the cache is 'dependency_cache' keyed by Dependant.cache_key (was 'values'); evidence now points at solve_dependencies (L524-606)."
     },
     {
       "task_id": "eih-phase1-code-015",
@@ -310,8 +310,8 @@
       "label_status": "draft",
       "annotator": "laptop-b (Claude Opus 5.5 draft; requires human verification)",
       "verified_by": null,
-      "ground_truth_issue": "Evidence lines 500-600 are APIRoute/APIRouter.__init__; include_router is 1072-1310.",
-      "notes": null
+      "ground_truth_issue": null,
+      "notes": "Task evidence corrected 2026-10-05 (approved by Avaneesh Kumar Verma). Was: Evidence lines 500-600 are APIRoute/APIRouter.__init__; include_router is 1072-1310."
     },
     {
       "task_id": "eih-phase1-dev-021",
@@ -441,8 +441,8 @@
       "label_status": "draft",
       "annotator": "laptop-b (Claude Opus 5.5 draft; requires human verification)",
       "verified_by": null,
-      "ground_truth_issue": "Evidence cites src/flask/app.py L1000-1080 (inside Flask.url_for); errorhandler lives in sansio/scaffold.py.",
-      "notes": null
+      "ground_truth_issue": null,
+      "notes": "Task evidence corrected 2026-10-05 (approved by Avaneesh Kumar Verma). Was: Evidence cites src/flask/app.py L1000-1080 (inside Flask.url_for); errorhandler lives in sansio/scaffold.py."
     },
     {
       "task_id": "eih-phase1-dev-026",
@@ -683,25 +683,57 @@
       "label_status": "draft",
       "annotator": "laptop-b (Claude Opus 5.5 draft; requires human verification)",
       "verified_by": null,
-      "ground_truth_issue": "Evidence cites globals.py L30-70 and a function _cv_request_lookup; the file has 51 lines and no such function (the error comes from LocalProxy unbound_message).",
-      "notes": null
+      "ground_truth_issue": null,
+      "notes": "Task evidence corrected 2026-10-05 (approved by Avaneesh Kumar Verma). Was: Evidence cites globals.py L30-70 and a function _cv_request_lookup; the file has 51 lines and no such function (the error comes from LocalProxy unbound_message)."
     },
     {
       "task_id": "eih-phase1-ops-052",
       "split": "val",
       "repository": "fastapi/fastapi",
       "commit_sha": "1c3e6918750ccb3f20ea260e9a4238ce2c0e5f63",
-      "relevant_files": [],
+      "relevant_files": [
+        "fastapi/dependencies/utils.py"
+      ],
       "alternative_files": [],
-      "relevant_symbols": [],
-      "required_evidence": [],
+      "relevant_symbols": [
+        "analyze_param"
+      ],
+      "required_evidence": [
+        {
+          "file": "fastapi/dependencies/utils.py",
+          "start_line": 368,
+          "end_line": 371,
+          "symbol": null,
+          "why": "The assertion that raises 'Cannot specify `Depends` in `Annotated` and default value together'.",
+          "span_sha256": "sha256:975cca9383fc35d5ce7b5b7402feb9472f1350cd4000137671cecb93923b2424",
+          "chunk_ids": [
+            "fastapi/fastapi:fastapi/dependencies/utils.py:af29ceaf05ba04a4:chunk:15"
+          ]
+        },
+        {
+          "file": "fastapi/dependencies/utils.py",
+          "start_line": 317,
+          "end_line": 453,
+          "symbol": "analyze_param",
+          "why": "Where a parameter's Annotated metadata and default value are analysed.",
+          "span_sha256": "sha256:302150d7c149a29b354d6bbe5f1564bb1d9fe3ffeed0900c8e8f92a2d00e25fd",
+          "chunk_ids": [
+            "fastapi/fastapi:fastapi/dependencies/utils.py:af29ceaf05ba04a4:chunk:14",
+            "fastapi/fastapi:fastapi/dependencies/utils.py:af29ceaf05ba04a4:chunk:15",
+            "fastapi/fastapi:fastapi/dependencies/utils.py:af29ceaf05ba04a4:chunk:16"
+          ]
+        }
+      ],
       "graph_paths": [],
-      "expected_citations": [],
-      "label_status": "flagged",
+      "expected_citations": [
+        "[fastapi/dependencies/utils.py:L368-L371]",
+        "[fastapi/dependencies/utils.py:L317-L453]"
+      ],
+      "label_status": "draft",
       "annotator": "laptop-b (Claude Opus 5.5 draft; requires human verification)",
       "verified_by": null,
-      "ground_truth_issue": "The error 'AssertionError: A dependency cycle was detected in Depends(...)' does not exist in FastAPI at the pinned commit: git grep for cycle/circular/recurs in fastapi/dependencies and fastapi/routing.py finds nothing. The task premise cannot be grounded in the corpus.",
-      "notes": "No evidence span can be labelled. Recommend rewriting or removing this task (human decision)."
+      "ground_truth_issue": null,
+      "notes": "Task replaced 2026-10-05 (approved by Avaneesh Kumar Verma): the original error 'A dependency cycle was detected in Depends(...)' does not exist in FastAPI at the pinned commit."
     },
     {
       "task_id": "eih-phase1-ops-053",
@@ -728,26 +760,26 @@
         },
         {
           "file": "CHANGES.rst",
-          "start_line": 36,
-          "end_line": 47,
-          "symbol": "Version 3.0.0",
-          "why": "3.0.0 'Remove previously deprecated code'.",
-          "span_sha256": "sha256:b59fee8dc3103fe01596ba500bb910fc0a47ca58680f9bda5a883997a86c4c46",
+          "start_line": 232,
+          "end_line": 235,
+          "symbol": null,
+          "why": "2.2.0 deprecation in favour of the app.json provider interface.",
+          "span_sha256": "sha256:cbaa0a95d7e85552cbb7e575dfde1ea6c08434f7dc01a5b90b24d235c93e91bb",
           "chunk_ids": [
-            "pallets/flask:CHANGES.rst:b408f652cfde809e:chunk:3"
+            "pallets/flask:CHANGES.rst:b408f652cfde809e:chunk:16"
           ]
         }
       ],
       "graph_paths": [],
       "expected_citations": [
         "[CHANGES.rst:L78-L129]",
-        "[CHANGES.rst:L36-L47]"
+        "[CHANGES.rst:L232-L235]"
       ],
       "label_status": "draft",
       "annotator": "laptop-b (Claude Opus 5.5 draft; requires human verification)",
       "verified_by": null,
-      "ground_truth_issue": "Ground truth says Flask 3.0 removed JSONEncoder/JSONDecoder/tojson_filter. The pinned CHANGES.rst lists the JSONEncoder/JSONDecoder removal under 2.3.0 (L100-101) and never mentions tojson_filter. Ground truth contradicts the corpus.",
-      "notes": null
+      "ground_truth_issue": null,
+      "notes": "Task corrected 2026-10-05 (approved by Avaneesh Kumar Verma): removal is in 2.3.0, not 3.0; tojson_filter dropped from the question."
     },
     {
       "task_id": "eih-phase1-ops-054",
@@ -1003,8 +1035,8 @@
       "label_status": "draft",
       "annotator": "laptop-b (Claude Opus 5.5 draft; requires human verification)",
       "verified_by": null,
-      "ground_truth_issue": "Evidence cites src/flask/blueprints.py L50-120; Blueprint.register is in sansio/blueprints.py.",
-      "notes": null
+      "ground_truth_issue": null,
+      "notes": "Task evidence corrected 2026-10-05 (approved by Avaneesh Kumar Verma). Was: Evidence cites src/flask/blueprints.py L50-120; Blueprint.register is in sansio/blueprints.py."
     },
     {
       "task_id": "eih-phase1-req-005",
@@ -1187,8 +1219,8 @@
       "label_status": "draft",
       "annotator": "laptop-b (Claude Opus 5.5 draft; requires human verification)",
       "verified_by": null,
-      "ground_truth_issue": "Evidence cites signals.py L10-45; the file has 17 lines.",
-      "notes": null
+      "ground_truth_issue": null,
+      "notes": "Task evidence corrected 2026-10-05 (approved by Avaneesh Kumar Verma). Was: Evidence cites signals.py L10-45; the file has 17 lines."
     },
     {
       "task_id": "eih-phase1-req-010",
@@ -1351,8 +1383,8 @@
       "label_status": "draft",
       "annotator": "laptop-b (Claude Opus 5.5 draft; requires human verification)",
       "verified_by": null,
-      "ground_truth_issue": "Evidence cites fastapi/routing.py L180-220 (serialize_response..get_request_handler); parameter analysis is in fastapi/dependencies/utils.py.",
-      "notes": null
+      "ground_truth_issue": null,
+      "notes": "Task evidence corrected 2026-10-05 (approved by Avaneesh Kumar Verma). Was: Evidence cites fastapi/routing.py L180-220 (serialize_response..get_request_handler); parameter analysis is in fastapi/dependencies/utils.py."
     },
     {
       "task_id": "eih-phase1-rev-045",
@@ -1386,8 +1418,8 @@
       "label_status": "draft",
       "annotator": "laptop-b (Claude Opus 5.5 draft; requires human verification)",
       "verified_by": null,
-      "ground_truth_issue": "NEEDS CHECK: ground truth says request.json is None for a non-JSON body. With Werkzeug >= 2.3 (Flask at this commit requires >= 3.0) it raises 415 Unsupported Media Type instead. Werkzeug is not in the corpus, so this was not verified here.",
-      "notes": null
+      "ground_truth_issue": null,
+      "notes": "Task corrected 2026-10-05 (approved by Avaneesh Kumar Verma): verified by execution on Flask 3.0.3 + Werkzeug 3.1.9 — non-JSON or no body 415, invalid JSON 400, missing key KeyError -> 500."
     },
     {
       "task_id": "eih-phase1-rev-046",
@@ -1523,8 +1555,8 @@
       "label_status": "draft",
       "annotator": "laptop-b (Claude Opus 5.5 draft; requires human verification)",
       "verified_by": null,
-      "ground_truth_issue": "Evidence cites fastapi/params.py L20-50 (Param.__init__ start), not the Query ge/le docs.",
-      "notes": null
+      "ground_truth_issue": null,
+      "notes": "Task evidence corrected 2026-10-05 (approved by Avaneesh Kumar Verma). Was: Evidence cites fastapi/params.py L20-50 (Param.__init__ start), not the Query ge/le docs."
     },
     {
       "task_id": "eih-phase1-test-032",
@@ -1570,8 +1602,8 @@
       "label_status": "draft",
       "annotator": "laptop-b (Claude Opus 5.5 draft; requires human verification)",
       "verified_by": null,
-      "ground_truth_issue": "Evidence cites testclient.py L1-30; the file has 1 line.",
-      "notes": null
+      "ground_truth_issue": null,
+      "notes": "Task evidence corrected 2026-10-05 (approved by Avaneesh Kumar Verma). Was: Evidence cites testclient.py L1-30; the file has 1 line."
     },
     {
       "task_id": "eih-phase1-test-033",
@@ -1632,8 +1664,8 @@
       "label_status": "draft",
       "annotator": "laptop-b (Claude Opus 5.5 draft; requires human verification)",
       "verified_by": null,
-      "ground_truth_issue": "Evidence cites testing.py L120-170 (FlaskClient); FlaskCliRunner is 265-298.",
-      "notes": null
+      "ground_truth_issue": null,
+      "notes": "Task evidence corrected 2026-10-05 (approved by Avaneesh Kumar Verma). Was: Evidence cites testing.py L120-170 (FlaskClient); FlaskCliRunner is 265-298."
     },
     {
       "task_id": "eih-phase1-test-034",
@@ -1742,8 +1774,8 @@
       "label_status": "draft",
       "annotator": "laptop-b (Claude Opus 5.5 draft; requires human verification)",
       "verified_by": null,
-      "ground_truth_issue": "Evidence cites globals.py L20-60; the file has 51 lines.",
-      "notes": null
+      "ground_truth_issue": null,
+      "notes": "Task evidence corrected 2026-10-05 (approved by Avaneesh Kumar Verma). Was: Evidence cites globals.py L20-60; the file has 51 lines."
     },
     {
       "task_id": "eih-phase1-test-037",
@@ -1790,8 +1822,8 @@
       "label_status": "draft",
       "annotator": "laptop-b (Claude Opus 5.5 draft; requires human verification)",
       "verified_by": null,
-      "ground_truth_issue": "Evidence cites testing.py L50-100 (EnvironBuilder), not FlaskClient.",
-      "notes": null
+      "ground_truth_issue": null,
+      "notes": "Task evidence corrected 2026-10-05 (approved by Avaneesh Kumar Verma). Was: Evidence cites testing.py L50-100 (EnvironBuilder), not FlaskClient."
     },
     {
       "task_id": "eih-phase1-test-038",

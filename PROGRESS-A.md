@@ -8,6 +8,25 @@ measured (with numbers only if actually measured), what is blocked.
 
 ---
 
+## 2026-10-05 (night) — Step 3: benchmark corrections (v1.1) and label review sheet
+
+Branch `fix/benchmark-task-corrections` (WORK_PLAN step 6). PR #16 merged before.
+
+**Done** (every change approved by Avaneesh, recorded per task: `human_approved_by`, date, reason)
+- 4 tasks corrected against the pinned source: ops-053 (removal was Flask 2.3.0, not 3.0), ops-052
+  (replaced a non-existent FastAPI error with the real `Cannot specify Depends in Annotated and default
+  value together`, utils.py L368–371), code-014 (`dependency_cache`, not `values`), rev-045 (415/400/500,
+  verified by executing Flask 3.0.3 + Werkzeug 3.1.9).
+- 12 tasks: cited evidence moved to the verified locations (answers unchanged).
+- Benchmark v1.0 → **v1.1** (split assignment unchanged); manifest hash → `149fa6bf2168fd14`.
+- Labels rebuilt: 36 labels / 78 evidence spans / 0 open ground-truth issues / 0 spans without a chunk;
+  ops-052 no longer flagged. `VERIFIED` record added (only Avaneesh's approvals mark a label verified).
+- `docs/RETRIEVAL_LABELS_REVIEW.md`: question, answer and the real text of every labelled span.
+
+**Next** — Avaneesh reviews the 36 labels; step 4: Mode R metrics.
+
+---
+
 ## 2026-10-05 (night) — Step 2: own knowledge-graph builder; System D gets graph context
 
 Branch `feat/knowledge-graph-wave1` (WORK_PLAN step 5). PR #15 merged before.
