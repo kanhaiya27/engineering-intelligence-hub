@@ -50,12 +50,19 @@ class TrialResult(BaseModel):
         description="[MEASURED] Direct GPU energy reading via NVML API (if available)",
     )
 
-    # --- 2. ESTIMATED METRICS (Modeled Proxies) ---
-    cpu_energy_joules: float = Field(description="[ESTIMATED] CPU energy derived from TDP proxy: TDP * latency")
-    gpu_energy_joules: float = Field(description="[ESTIMATED] GPU energy (NVML measured or TDP fallback)")
-    total_energy_joules: float = Field(description="[ESTIMATED] Total system energy = CPU + GPU energy")
-    cost_usd: float = Field(description="[ESTIMATED] Monetary API cost computed from pricing table")
-    co2e_grams: float = Field(description="[ESTIMATED] Carbon footprint based on UK grid carbon intensity")
+    # --- 2. ENERGY / COST / CARBON (tier per trial in energy_tier) ---
+    cpu_energy_joules: Optional[float] = Field(
+        default=None, description="[NOT MEASURED] CPU energy; None in local runs (no CPU energy counter)")
+    gpu_energy_joules: float = Field(
+        description="GPU board energy: NVML-counter generation energy (MEASURED) + rerank estimate if any")
+    total_energy_joules: float = Field(
+        description="Total energy reported for the trial (= gpu_energy_joules); tier in energy_tier")
+    energy_tier: Optional[str] = Field(
+        default=None, description="MEASURED if every component was measured, else ESTIMATED (weakest tier)")
+    gpu_max_temp_c: Optional[float] = Field(
+        default=None, description="[MEASURED] Highest GPU temperature seen during the trial's generation calls")
+    cost_usd: float = Field(description="[DERIVED] 0 for local models; API price table otherwise (ESTIMATED)")
+    co2e_grams: float = Field(description="[DERIVED] energy x the configured grid intensity (manifest)")
 
     # --- 3. QUALITY METRICS ---
     task_correctness: float = Field(default=0.0, ge=0.0, le=1.0, description="[MEASURED] Factual correctness against ground-truth answer (CorrectnessEvaluator)")

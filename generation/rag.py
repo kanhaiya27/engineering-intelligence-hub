@@ -45,6 +45,20 @@ Grounding rules:
 4. Provide precise, production-ready code snippets and explanations when requested.
 """
 
+# System A (LLM only) gets no evidence, so it must not be told to answer only
+# from evidence: with SYSTEM_PROMPT it refused every task ("INSUFFICIENT
+# EVIDENCE", ~1.5 s), which would make Δ(A→B) measure a strawman instead of the
+# contribution of retrieval (PROJECT_REPORT §7.1). Same refusal marker, so
+# refusal scoring stays comparable across systems.
+NO_RETRIEVAL_SYSTEM_PROMPT = """You are an expert Software Engineering AI Assistant within the Engineering Intelligence Hub.
+No repository evidence is available for this question: answer from your own knowledge of the named project and of software engineering.
+
+Rules:
+1. Do NOT invent file paths, line numbers or citations; you have no repository evidence to cite.
+2. If you do not know the answer reliably, state 'INSUFFICIENT EVIDENCE:' followed by what information you would need.
+3. Provide precise, production-ready code snippets and explanations when requested.
+"""
+
 
 class BaselineRAGPipeline:
     """
@@ -135,19 +149,25 @@ class BaselineRAGPipeline:
                 task_id=request.task_id,
             )
             context_str = self._build_context_prompt(retrieval_result.chunks)
-        else:
-            context_str = "RETRIEVAL DISABLED (Baseline A - LLM Only)."
 
         # 3. Prompt construction
-        user_prompt = (
-            f"ENGINEERING QUESTION / TASK:\n{request.query}\n\n"
-            f"RETRIEVED REPOSITORY EVIDENCE:\n{context_str}\n\n"
-            f"Please provide your grounded engineering answer following the rules."
-        )
+        if skip_retrieval:
+            system_prompt = NO_RETRIEVAL_SYSTEM_PROMPT
+            user_prompt = (
+                f"ENGINEERING QUESTION / TASK:\n{request.query}\n\n"
+                f"Please answer from your own knowledge following the rules."
+            )
+        else:
+            system_prompt = SYSTEM_PROMPT
+            user_prompt = (
+                f"ENGINEERING QUESTION / TASK:\n{request.query}\n\n"
+                f"RETRIEVED REPOSITORY EVIDENCE:\n{context_str}\n\n"
+                f"Please provide your grounded engineering answer following the rules."
+            )
 
         gen_request = GenerationRequest(
             prompt=user_prompt,
-            system_prompt=SYSTEM_PROMPT,
+            system_prompt=system_prompt,
             model_id=self.model_id,
             max_tokens=settings.model.max_tokens,
             temperature=settings.model.temperature,
@@ -163,6 +183,12 @@ class BaselineRAGPipeline:
             self.energy_estimator, self.carbon_estimator, self.cost_estimator,
         )
 
+        # Reranking energy (if this strategy reranked) is a real local-GPU cost;
+        # it is a single-power-sample estimate, so the total becomes ESTIMATED.
+        rerank_energy_j = float((retrieval_result.metadata or {}).get("reranker_energy_joules", 0.0) or 0.0)             if retrieval_result is not None else 0.0
+        total_energy_j = account.energy_joules + rerank_energy_j
+        total_co2e_g = account.co2e_grams + (rerank_energy_j / 3_600_000.0) * self.carbon_estimator.carbon_intensity
+
         # 6. Response assembly
         response = EngTaskResponse(
             task_id=request.task_id,
@@ -174,19 +200,25 @@ class BaselineRAGPipeline:
             input_tokens=gen_response.input_tokens,
             output_tokens=gen_response.output_tokens,
             latency_ms=round(total_latency_ms, 2),
-            energy_joules=account.energy_joules,
+            energy_joules=total_energy_j,
             cost_usd=account.cost_usd,
-            co2e_grams=account.co2e_grams,
+            co2e_grams=total_co2e_g,
             experiment_id=request.experiment_id,
             created_at=datetime.datetime.utcnow().isoformat(),
             metadata={
-                "retrieval_strategy": strategy.strategy_name if strategy else "none",
+                "retrieval_strategy": "none" if skip_retrieval else (strategy.strategy_name if strategy else "none"),
+                "system_prompt": "no_retrieval" if skip_retrieval else "evidence_grounded",
                 "retrieved_chunk_count": len(retrieval_result.chunks) if retrieval_result else 0,
                 "provider": self.llm_provider.provider_name,
                 "models_called": [gen_response.model_id or self.model_id],
                 "model_digest": (gen_response.extra or {}).get("model_digest"),
                 "context_check": (gen_response.extra or {}).get("context_check"),
                 **{f"generation_{k}": v for k, v in account.as_metadata().items()},
+                "generation_energy_measured_joules": (account.energy_joules
+                                                      if account.energy_tier == "MEASURED" else None),
+                "rerank_energy_joules": rerank_energy_j,
+                "energy_tier": account.energy_tier if rerank_energy_j == 0.0 else "ESTIMATED",
+                "gpu_max_temp_c": ((gen_response.extra or {}).get("energy") or {}).get("max_temp_c"),
             },
         )
 

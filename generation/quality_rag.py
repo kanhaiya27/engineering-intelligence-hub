@@ -175,6 +175,13 @@ class QualityAwareRAGPipeline:
         total_energy_joules = 0.0
         total_cost_usd = 0.0
         total_co2e_grams = 0.0
+        # Energy by provenance, so a trial total can carry its weakest tier:
+        # generation energy MEASURED by the provider (NVML counter) vs rerank
+        # energy (one NVML power sample, an estimate).
+        total_gen_measured_j = 0.0
+        total_gen_estimated_j = 0.0
+        total_rerank_j = 0.0
+        gpu_max_temp_c: Optional[float] = None
         attempt_history: List[Dict[str, Any]] = []
 
         current_strategy = initial_strategy
@@ -303,6 +310,17 @@ class QualityAwareRAGPipeline:
                 )
 
             attempt_energy_j = account.energy_joules + rerank_energy_j
+            if account.energy_tier == "MEASURED":
+                total_gen_measured_j += account.energy_joules
+            else:
+                total_gen_estimated_j += account.energy_joules
+            total_rerank_j += rerank_energy_j
+            attempt_energy_tier = (
+                "MEASURED" if account.energy_tier == "MEASURED" and rerank_energy_j == 0.0 else "ESTIMATED"
+            )
+            call_temp = ((gen_response.extra or {}).get("energy") or {}).get("max_temp_c")
+            if call_temp is not None:
+                gpu_max_temp_c = max(gpu_max_temp_c or call_temp, call_temp)
             attempt_co2e_g = account.co2e_grams
             if rerank_energy_j > 0.0:
                 # Convert the reranking energy through the same grid intensity.
@@ -371,6 +389,12 @@ class QualityAwareRAGPipeline:
                 "model_digest": (gen_response.extra or {}).get("model_digest"),
                 "generation_energy_joules": account.energy_joules,
                 "generation_energy_tier": account.energy_tier,
+                "rerank_energy_joules": rerank_energy_j,
+                "rerank_energy_method": (retrieval_result.metadata.get("reranker_energy_method")
+                                         if retrieval_result is not None and rerank_energy_j else None),
+                "attempt_energy_joules": attempt_energy_j,
+                "attempt_energy_tier": attempt_energy_tier,
+                "gpu_max_temp_c": call_temp,
                 "energy_reliability": account.energy_reliability,
                 "cold_start": account.cold_start is not None,
                 "context_check": (gen_response.extra or {}).get("context_check"),
@@ -486,6 +510,13 @@ class QualityAwareRAGPipeline:
             "models_called": models_called,
             "cold_starts": cold_starts,
             "generation_energy_tier": account.energy_tier if account else None,
+            "generation_energy_measured_joules": round(total_gen_measured_j, 6) if total_gen_measured_j else None,
+            "generation_energy_estimated_joules": round(total_gen_estimated_j, 6) if total_gen_estimated_j else None,
+            "rerank_energy_joules": round(total_rerank_j, 6),
+            # A total inherits its weakest component tier (API contract §5).
+            "energy_tier": "MEASURED" if (total_gen_measured_j and not total_gen_estimated_j
+                                            and not total_rerank_j) else "ESTIMATED",
+            "gpu_max_temp_c": gpu_max_temp_c,
         })
 
         # --- G. Experiment Logging ---

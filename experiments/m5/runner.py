@@ -278,14 +278,27 @@ class M5BenchmarkRunner:
                 qc_success = False
 
         # Telemetry extraction
-        lat = response.latency_ms or 50.0
+        # No fallbacks: a missing measurement fails the trial loudly (the job
+        # queue records it as an error) instead of being replaced by an invented
+        # number. These used `x or <estimate>`, so a local model's valid cost of
+        # 0.0 was replaced by gpt-4o-mini prices, and missing energy/CO2e by
+        # 45 W + 60 W x latency at the UK grid intensity.
+        missing = [name for name, value in (
+            ("latency_ms", response.latency_ms), ("energy_joules", response.energy_joules),
+            ("cost_usd", response.cost_usd), ("co2e_grams", response.co2e_grams),
+        ) if value is None]
+        if missing:
+            raise ValueError(f"Trial {system_id}/{task.task_id} has no {missing}; "
+                             "refusing to substitute estimates.")
+        lat = response.latency_ms
         in_tok = response.input_tokens or 0
         out_tok = response.output_tokens or 0
         tot_tok = in_tok + out_tok
 
-        en_joules = response.energy_joules or ((45.0 + 60.0) * (lat / 1000.0))
-        cost = response.cost_usd or ((in_tok * 0.15 + out_tok * 0.60) / 1_000_000.0)
-        co2e = response.co2e_grams or ((en_joules / 3_600_000.0) * 233.0)
+        en_joules = response.energy_joules
+        cost = response.cost_usd
+        co2e = response.co2e_grams
+        md = response.metadata or {}
 
         chunks_count = len(response.retrieval.chunks) if response.retrieval else 0
         graph_count = sum(1 for c in response.retrieval.chunks if c.metadata.get("graph_context")) if response.retrieval else 0
@@ -315,10 +328,12 @@ class M5BenchmarkRunner:
             graph_chunks_count=graph_count,
             escalation_count=response.escalation_count,
             total_attempts=response.verification_details.get("total_attempts", 1) if response.verification_details else 1,
-            gpu_energy_measured_joules=None,
-            cpu_energy_joules=round(45.0 * (lat / 1000.0), 4),
-            gpu_energy_joules=round(60.0 * (lat / 1000.0), 4),
+            gpu_energy_measured_joules=md.get("generation_energy_measured_joules"),
+            cpu_energy_joules=None,  # CPU energy is not measured in local runs
+            gpu_energy_joules=round(en_joules, 4),
             total_energy_joules=round(en_joules, 4),
+            energy_tier=md.get("energy_tier"),
+            gpu_max_temp_c=md.get("gpu_max_temp_c"),
             cost_usd=round(cost, 6),
             co2e_grams=round(co2e, 6),
             task_correctness=round(task_corr, 4),

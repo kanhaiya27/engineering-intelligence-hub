@@ -28,6 +28,10 @@ class EnergyEstimationMethod(str, Enum):
     """How the energy was estimated/measured."""
     TDP_PROXY = "tdp_proxy"             # latency × TDP fraction
     NVML_MEASUREMENT = "nvml_measurement"  # Direct GPU power via pynvml
+    # One instantaneous NVML power reading x duration. It is NOT integrated over
+    # the call (F3), so it is an estimate, not a measurement. Integrated GPU energy
+    # comes from sustainability/energy/nvml_meter.py (energy counter).
+    NVML_POWER_SAMPLE = "nvml_power_sample"
     RAPL_MEASUREMENT = "rapl_measurement"  # Intel RAPL (Linux only)
     NOT_AVAILABLE = "not_available"      # Could not estimate
 
@@ -80,6 +84,14 @@ class EnergyEstimator:
         self.gpu_tdp_watts = gpu_tdp_watts
         self.pue_factor = pue_factor
         self._nvml_available = self._check_nvml()
+        # F5: psutil.cpu_percent(interval=None) returns a meaningless 0.0 on its
+        # first call in a process; later calls cover the time since the previous
+        # call. Priming it here avoids the 0.0; the value is still not tied to one
+        # call, which is why CPU energy is always labelled an estimate.
+        try:
+            psutil.cpu_percent(interval=None)
+        except Exception:  # noqa: BLE001
+            pass
 
     @classmethod
     def from_settings(cls, sustainability_settings: Optional[object] = None) -> "EnergyEstimator":
@@ -155,9 +167,10 @@ class EnergyEstimator:
         method = EnergyEstimationMethod.TDP_PROXY
 
         if is_local_model:
-            if self._nvml_available:
-                gpu_energy_j, gpu_util = self._measure_gpu_energy_nvml(latency_seconds)
-                method = EnergyEstimationMethod.NVML_MEASUREMENT
+            sample = self._measure_gpu_energy_nvml(latency_seconds) if self._nvml_available else None
+            if sample is not None:
+                gpu_energy_j, gpu_util = sample
+                method = EnergyEstimationMethod.NVML_POWER_SAMPLE
             else:
                 # TDP proxy: assume 70% GPU utilisation for active inference
                 gpu_util_fraction = 0.70
@@ -176,7 +189,7 @@ class EnergyEstimator:
                 f"{'Local' if is_local_model else 'API'} model. "
                 f"PUE={self.pue_factor}. "
                 f"CPU TDP proxy={self.cpu_tdp_watts}W. "
-                f"{'NVML measurement' if method == EnergyEstimationMethod.NVML_MEASUREMENT else 'GPU TDP proxy'}."
+                f"{'NVML single power sample x duration' if method == EnergyEstimationMethod.NVML_POWER_SAMPLE else 'GPU TDP proxy'}."
             ),
             latency_ms=latency_ms,
             input_tokens=input_tokens,
@@ -186,7 +199,12 @@ class EnergyEstimator:
         )
 
     def _measure_gpu_energy_nvml(self, duration_seconds: float):
-        """Attempt to read GPU power via pynvml and compute energy."""
+        """One NVML power reading x duration, or None if the read fails.
+
+        Returning None (instead of TDP-proxy numbers) lets the caller label the
+        result as the TDP proxy it then is (F2: a failed read used to be
+        reported as an NVML measurement).
+        """
         try:
             import pynvml  # type: ignore[import]
             handle = pynvml.nvmlDeviceGetHandleByIndex(0)
@@ -196,5 +214,4 @@ class EnergyEstimator:
             energy_j = power_w * duration_seconds
             return energy_j, float(util_info.gpu)
         except Exception:
-            # Fall back to TDP proxy
-            return self.gpu_tdp_watts * 0.70 * duration_seconds, 70.0
+            return None

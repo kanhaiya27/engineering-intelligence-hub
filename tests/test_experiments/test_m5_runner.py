@@ -33,6 +33,8 @@ from pathlib import Path
 
 import pytest
 
+from core.config import settings
+from experiments.m5.manifest import runtime_mismatches
 from experiments.m5.analysis import (
     compute_pareto_frontier,
 )
@@ -143,10 +145,23 @@ class TestExperimentManifest:
         assert SystemID.SYSTEM_D.value in manifest.systems
         assert SystemID.SYSTEM_E.value in manifest.systems
 
-        assert manifest.frozen_variables.llm_model_id == "gpt-4o-mini"
-        assert manifest.frozen_variables.temperature == 0.1
-        assert manifest.frozen_variables.random_seed == 42
-        assert manifest.frozen_variables.trials_per_task == 3
+        # Built from the runtime settings the pipelines actually use, not the
+        # historical class defaults (gpt-4o-mini / temp 0.1 / UK grid).
+        fv = manifest.frozen_variables
+        assert fv.llm_model_id == settings.model.default_model_id
+        assert fv.temperature == settings.model.temperature
+        assert fv.max_output_tokens == settings.model.max_tokens
+        assert fv.random_seed == 42
+        assert fv.trials_per_task == 3
+        assert len(fv.repositories) == 6 and all(len(c) == 40 for c in fv.repositories.values())
+        assert runtime_mismatches(manifest) == []
+
+    def test_manifest_that_differs_from_runtime_is_detected(self):
+        manifest = ExperimentManifest.create_default()
+        manifest.frozen_variables.llm_model_id = "gpt-4o-mini"
+        manifest.frozen_variables.carbon_intensity_gco2_per_kwh = 233.0
+        fields = {m["field"] for m in runtime_mismatches(manifest)}
+        assert fields == {"llm_model_id", "carbon_intensity_gco2_per_kwh"}
 
     def test_hash_invariance(self):
         m1 = ExperimentManifest.create_default()
