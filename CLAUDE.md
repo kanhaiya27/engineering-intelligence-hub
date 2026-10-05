@@ -106,8 +106,10 @@ seed, output limit) is defined once, in `configs/inference.yaml`.
 ## Data
 
 - Code: private GitHub repo `kanhaiya27/engineering-intelligence-hub` (backup).
-- Data is **not** in git: Qdrant collection `eih_knowledge` (48,046 chunks; snapshot in
-  `C:\EIH_share\`), Neo4j graph. Re-ingest with `python -m scripts.ingest_corpus --wave 1`.
+- Data is **not** in git: Qdrant collection `eih_knowledge_v2` (53,905 chunks, Qdrant 1.15.1;
+  the old `eih_knowledge` with 48,046 is kept; snapshot in `C:\EIH_share\`), Neo4j graph.
+  The collection name comes only from `EIH_VECTOR_COLLECTION_NAME` (`.env`). Re-ingest with
+  `python -m scripts.ingest_corpus --wave 1`.
 - Work log: `PROGRESS-A.md`.
 
 ## Common commands (PowerShell, from repo root)

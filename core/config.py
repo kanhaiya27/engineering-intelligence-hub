@@ -241,8 +241,10 @@ class VectorStoreSettings(BaseSettings):
     provider: str = Field(default="qdrant", description="Vector store provider")
     host: str = Field(default="localhost", description="Vector store host")
     port: int = Field(default=6333, description="Vector store port")
+    # eih_knowledge_v2 (2026-10-05): re-chunked so every chunk fits the embedding
+    # window (53,905 chunks); the old eih_knowledge (48,046) is kept for reference.
     collection_name: str = Field(
-        default="eih_knowledge", description="Default collection name"
+        default="eih_knowledge_v2", description="Qdrant collection: the single source for every reader/writer"
     )
     embedding_model: str = Field(
         default="BAAI/bge-small-en-v1.5",

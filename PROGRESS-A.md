@@ -8,6 +8,39 @@ measured (with numbers only if actually measured), what is blocked.
 
 ---
 
+## 2026-10-05 (night) — Step 1: chunk fix, re-ingest, Qdrant 1.15.1, line ranges in prompts
+
+Branch `fix/ingestion-chunk-size` (WORK_PLAN step 4). PR #14 (audit) merged before.
+
+**Done**
+- Qdrant upgraded 1.13.2 → 1.14.1 → 1.15.1 on the same volume (48,046 points verified each hop;
+  now from `docker-compose.yml`, healthy). Backup `C:\EIH_share\eih_knowledge_2026-10-05_qdrant-v1.13.2.snapshot`
+  (sha256 `16d6dc42…258e38`, matches the server checksum).
+- Chunker rewritten (plan §6.2 structure kept): BGE's own tokenizer, split oversized
+  functions/methods/paragraphs/lines, nothing dropped, exact line ranges.
+- Re-ingested into `eih_knowledge_v2`; collection name now only from `.env` (was hard-coded in 6 places).
+- Retrieved chunks now carry start/end lines: before, the prompt showed no line ranges (no
+  `[file:Lx-Ly]` citations possible) and the citation check accepted any cited line.
+- Retrieval labels rebuilt against v2.
+
+**Measured**
+- Before: 3,485 of 48,046 chunks (7.3%) over BGE's 512 tokens (109 over 2,048).
+- After: 53,905 chunks; 0 over 512 (max 512, p50 105, p95 502); 0 files with an uncovered
+  non-blank line. Per repo: flask 1,615 · fastapi 20,353 · requests 1,036 · pytest 7,731 ·
+  sphinx 10,701 · pylint 12,469 (ingest 311 s total).
+- Retrieval check (report §10.3 query): same top-3 files (`docs/reqcontext.rst` L16–29,
+  `tests/test_appctx.py` L32–35, `src/flask/ctx.py` L287–307).
+- Labels: 36 labels / 76 evidence spans identical; every span still maps to ≥ 1 chunk
+  (mean 1.92 → 2.14 chunks per span).
+- Tests: **333 passed**.
+
+**Benchmark** — 4 task corrections (ops-052, ops-053, code-014, rev-045) drafted with evidence and
+**approved by Avaneesh**; applied in step 3 (`docs/BENCHMARK_FIXES_PROPOSED.md`).
+
+**Next** — step 2: own knowledge-graph builder.
+
+---
+
 ## 2026-10-05 (night, final) — restore-original-plan audit (one laptop from now on)
 
 Branch `restore-original-plan` (from `feat/m5-live-calibration`; tag `pre-audit` = state

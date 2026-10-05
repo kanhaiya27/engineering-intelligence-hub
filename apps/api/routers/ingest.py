@@ -9,6 +9,7 @@ from typing import List, Optional
 from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel, Field
 
+from core.config import settings
 from core.logging import get_logger
 from ingestion.loaders.file_loader import FileIngestionSource
 from ingestion.loaders.github_loader import GitHubRepositoryIngestionSource
@@ -44,7 +45,7 @@ class IngestRepositoryRequest(BaseModel):
     local_path: Optional[str] = Field(default=None, description="Local path if already cloned")
     clone_url: Optional[str] = Field(default=None, description="Git clone URL")
     commit_or_tag: Optional[str] = Field(default=None, description="Target commit SHA or tag")
-    collection_name: Optional[str] = Field(default="eih_knowledge")
+    collection_name: Optional[str] = Field(default=None)
 
 
 class IngestRepositoryResponse(BaseModel):
@@ -60,7 +61,7 @@ class IngestFileRequest(BaseModel):
     file_path: str
     content: str
     artifact_type: str = "source_code"
-    collection_name: Optional[str] = Field(default="eih_knowledge")
+    collection_name: Optional[str] = Field(default=None)
 
 
 @router.post("/repository", response_model=IngestRepositoryResponse)
@@ -95,7 +96,7 @@ async def ingest_repository(req: IngestRepositoryRequest):
             repository=req.repository,
             artifacts_ingested=len(artifacts),
             chunks_indexed=len(chunks),
-            collection_name=req.collection_name or "eih_knowledge",
+            collection_name=req.collection_name or settings.vector_store.collection_name,
             status="completed",
         )
     except Exception as e:
@@ -118,7 +119,7 @@ async def ingest_file(req: IngestFileRequest):
         chunks = normalizer.process_artifact(art)
         if chunks:
             emb_model.embed_chunks(chunks)
-            vec_store.upsert(req.collection_name or "eih_knowledge", chunks)
+            vec_store.upsert(req.collection_name or settings.vector_store.collection_name, chunks)
 
         return {
             "status": "completed",

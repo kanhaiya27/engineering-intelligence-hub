@@ -36,6 +36,7 @@ from typing import Any, Dict, List, Optional
 
 import yaml
 
+from core.config import settings
 from core.logging import get_logger
 from ingestion.loaders.file_loader import FileIngestionSource
 from ingestion.processors.normalizer import ArtifactNormalizer
@@ -191,7 +192,7 @@ def main() -> int:
     args = parser.parse_args()
 
     registry = load_registry()
-    collection = args.collection or registry.get("default_collection", "eih_knowledge")
+    collection = args.collection or settings.vector_store.collection_name
     cache_dir = Path(args.cache_dir)
 
     only = {r.strip() for r in args.repos.split(",")} if args.repos else None
