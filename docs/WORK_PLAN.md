@@ -119,6 +119,7 @@ analysis), SWE-bench Multimodal (diagram track) — used as the spec describes, 
 | C15 | 2026-10-05 | Plan §9.2 latency decomposition recorded per trial (T_query, T_retrieval, T_rerank, T_context, T_generation) | audit (restore) | It was missing |
 | C16 | 2026-10-05 | `system_e_routed` (E + task-aware model routing) added for RQ4 | audit (restore) | Plan C1 / Fig. 6.1 routing; no experiment could run RQ4 |
 | C17 | 2026-10-05 | Output limit back to the plan's 2,048 tokens; untimed warm-up before trials | evidence | 1,024 cut off a real answer; one-time loading leaked 16–18 s into a measured trial (plan §10.4) |
+| C19 | 2026-10-05 | Missing evaluator scores are recorded as missing (None), excluded from quality aggregates and counted; the runner used to fill 0.50. Correctness is plain token F1: an unexplained ×1.5 "scale" (capped at 1.0) is removed | fix (Step 1d) | Invented numbers; the ×1.5 inflated every correctness score and appears in no plan or source |
 | C18 | 2026-10-05 | README title and research questions restored to the original (they had become "Task-Aware Energy-Efficient RAG" and a generic research question); two-laptop tooling removed/archived | audit (restore) | Original plan |
 
 ## 6. Routine

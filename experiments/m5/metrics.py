@@ -71,33 +71,38 @@ class TrialResult(BaseModel):
         default=None, description="[MEASURED] True if any generation stopped at the output-token limit")
 
     # --- 3. QUALITY METRICS ---
-    task_correctness: float = Field(default=0.0, ge=0.0, le=1.0, description="[MEASURED] Factual correctness against ground-truth answer (CorrectnessEvaluator)")
-    citation_grounding: float = Field(default=0.0, ge=0.0, le=1.0, description="[MEASURED] Citation validity and support score (CitationGroundingEvaluator)")
-    query_relevance: float = Field(default=0.0, ge=0.0, le=1.0, description="[MEASURED] Query keyword recall and relevance (QueryRelevanceEvaluator)")
-    evidence_coverage: float = Field(default=0.0, ge=0.0, le=1.0, description="[MEASURED] Evidence token coverage and chunk utilization (EvidenceCoverageEvaluator)")
-    evidence_consistency: float = Field(default=1.0, ge=0.0, le=1.0, description="[MEASURED] Contradiction and consistency score (EvidenceConsistencyEvaluator)")
-    correctness_score: float = Field(default=0.0, ge=0.0, le=1.0, description="Alias for task_correctness")
-    groundedness_score: float = Field(default=0.0, ge=0.0, le=1.0, description="Alias for evidence_coverage")
-    relevance_score: float = Field(default=0.0, ge=0.0, le=1.0, description="Alias for query_relevance")
-    consistency_score: float = Field(default=1.0, ge=0.0, le=1.0, description="Alias for evidence_consistency")
-    citation_validity_rate: float = Field(default=1.0, ge=0.0, le=1.0, description="Ratio of valid citations")
+    # None = the evaluator produced no score. Missing scores are never filled with an
+    # invented value (the runner used to substitute 0.50); such trials are excluded from
+    # quality aggregates and counted (`missing_scores`, AggregatedTaskMetrics.trials_missing_scores).
+    task_correctness: Optional[float] = Field(default=None, ge=0.0, le=1.0, description="[MEASURED] Set-based token F1 against the ground-truth answer or best alternative (CorrectnessEvaluator; lexical)")
+    citation_grounding: Optional[float] = Field(default=None, ge=0.0, le=1.0, description="[MEASURED] System E gate signal: citations vs RETRIEVED chunks (CitationGroundingEvaluator)")
+    query_relevance: Optional[float] = Field(default=None, ge=0.0, le=1.0, description="[MEASURED] System E gate signal: query keyword recall (QueryRelevanceEvaluator)")
+    evidence_coverage: Optional[float] = Field(default=None, ge=0.0, le=1.0, description="[MEASURED] System E gate signal: evidence token coverage (EvidenceCoverageEvaluator)")
+    evidence_consistency: Optional[float] = Field(default=None, ge=0.0, le=1.0, description="[MEASURED] System E gate signal: contradiction check (EvidenceConsistencyEvaluator)")
+    correctness_score: Optional[float] = Field(default=None, ge=0.0, le=1.0, description="Alias for task_correctness")
+    groundedness_score: Optional[float] = Field(default=None, ge=0.0, le=1.0, description="Alias for evidence_coverage")
+    relevance_score: Optional[float] = Field(default=None, ge=0.0, le=1.0, description="Alias for query_relevance")
+    consistency_score: Optional[float] = Field(default=None, ge=0.0, le=1.0, description="Alias for evidence_consistency")
+    citation_validity_rate: Optional[float] = Field(default=None, ge=0.0, le=1.0, description="Ratio of valid citations (None if the answer cites nothing)")
+    missing_scores: List[str] = Field(default_factory=list, description="Quality components the evaluators did not score")
 
     # --- Refusal Metrics ---
     is_grounded_refusal: bool = Field(default=False, description="True if response issued an explicit INSUFFICIENT EVIDENCE refusal")
     grounded_refusal_score: float = Field(default=0.0, ge=0.0, le=1.0, description="Refusal precision score (0.50 neutral for missing evidence, 0.0 for unfounded refusal)")
 
-    composite_quality: float = Field(ge=0.0, le=1.0, description="Explicit weighted quality score = 40% correctness + 25% citation + 15% relevance + 10% coverage + 10% consistency")
+    composite_quality: Optional[float] = Field(default=None, ge=0.0, le=1.0, description="Weighted score = 40% correctness + 25% citation + 15% relevance + 10% coverage + 10% consistency; None if any component is missing")
     quality_threshold: float = Field(description="Task-specific quality requirement")
-    passed_quality_gate: bool = Field(description="True if quality and correctness criteria satisfied")
-    success_type: str = Field(default="QUALITY_FAILURE", description="Classification: FACTUAL_SUCCESS | VALID_REFUSAL | UNFOUNDED_REFUSAL | CITATION_FAILURE | QUALITY_FAILURE")
+    passed_quality_gate: Optional[bool] = Field(default=None, description="True if quality and correctness criteria satisfied; None if scores are missing")
+    success_type: str = Field(default="QUALITY_FAILURE", description="Classification: FACTUAL_SUCCESS | VALID_REFUSAL | UNFOUNDED_REFUSAL | CITATION_FAILURE | QUALITY_FAILURE | MISSING_SCORES")
 
     # --- 4. DERIVED RESEARCH METRICS ---
-    quality_constrained_success: bool = Field(
-        description="[DERIVED] True if system satisfied quality and correctness requirements (composite_quality >= threshold and task_correctness >= threshold)"
+    quality_constrained_success: Optional[bool] = Field(
+        default=None,
+        description="[DERIVED] True if system satisfied quality and correctness requirements (composite_quality >= threshold and task_correctness >= threshold); None if scores are missing"
     )
-    quality_per_joule: float = Field(description="[DERIVED] Quality points per Joule of energy")
-    quality_per_dollar: float = Field(description="[DERIVED] Quality points per USD of cost")
-    quality_per_second: float = Field(description="[DERIVED] Quality points per second of latency")
+    quality_per_joule: Optional[float] = Field(default=None, description="[DERIVED] Quality points per Joule of energy")
+    quality_per_dollar: Optional[float] = Field(default=None, description="[DERIVED] Quality points per USD of cost")
+    quality_per_second: Optional[float] = Field(default=None, description="[DERIVED] Quality points per second of latency")
 
     # Raw Artifacts
     generated_answer: str = Field(description="Generated output text")
@@ -114,12 +119,13 @@ class AggregatedTaskMetrics(BaseModel):
     task_id: str
     trials_count: int
 
-    # Quality aggregates
-    composite_quality_mean: float
-    composite_quality_std: float
-    composite_quality_median: float
+    # Quality aggregates (over trials with all quality scores; None if there are none)
+    trials_missing_scores: int = 0
+    composite_quality_mean: Optional[float]
+    composite_quality_std: Optional[float]
+    composite_quality_median: Optional[float]
     quality_threshold: float
-    pass_rate: float
+    pass_rate: Optional[float]
 
     # Efficiency aggregates
     latency_ms_mean: float
@@ -134,11 +140,11 @@ class AggregatedTaskMetrics(BaseModel):
     co2e_grams_mean: float
     co2e_grams_std: float
 
-    # Research ratios
-    quality_per_joule_mean: float
-    quality_per_dollar_mean: float
-    quality_per_second_mean: float
-    quality_constrained_success_rate: float
+    # Research ratios (over scored trials)
+    quality_per_joule_mean: Optional[float]
+    quality_per_dollar_mean: Optional[float]
+    quality_per_second_mean: Optional[float]
+    quality_constrained_success_rate: Optional[float]
 
     model_config = ConfigDict(use_enum_values=True)
 
@@ -169,35 +175,40 @@ def compute_trial_aggregates(trials: List[TrialResult]) -> AggregatedTaskMetrics
         mid = len(s) // 2
         return (s[mid] if len(s) % 2 != 0 else (s[mid - 1] + s[mid]) / 2.0) if s else 0.0
 
-    qualities = [t.composite_quality for t in trials]
+    scored = [t for t in trials if t.composite_quality is not None]
+    qualities = [t.composite_quality for t in scored]
     latencies = [t.latency_ms for t in trials]
     tokens = [float(t.total_tokens) for t in trials]
     energies = [t.total_energy_joules for t in trials]
     costs = [t.cost_usd for t in trials]
     co2s = [t.co2e_grams for t in trials]
-    qpj = [t.quality_per_joule for t in trials]
-    qpd = [t.quality_per_dollar for t in trials]
-    qps = [t.quality_per_second for t in trials]
+    qpj = [t.quality_per_joule for t in scored]
+    qpd = [t.quality_per_dollar for t in scored]
+    qps = [t.quality_per_second for t in scored]
 
-    q_mean = _mean(qualities)
+    def _r(x: Optional[float], nd: int) -> Optional[float]:
+        return None if x is None else round(x, nd)
+
+    q_mean = _mean(qualities) if scored else None
     lat_mean = _mean(latencies)
     tok_mean = _mean(tokens)
     en_mean = _mean(energies)
     cost_mean = _mean(costs)
     co2_mean = _mean(co2s)
 
-    passes = sum(1 for t in trials if t.passed_quality_gate) / n
-    qc_successes = sum(1 for t in trials if t.quality_constrained_success) / n
+    passes = sum(1 for t in scored if t.passed_quality_gate) / len(scored) if scored else None
+    qc_successes = sum(1 for t in scored if t.quality_constrained_success) / len(scored) if scored else None
 
     return AggregatedTaskMetrics(
         system_id=system_id,
         task_id=task_id,
         trials_count=n,
-        composite_quality_mean=round(q_mean, 4),
-        composite_quality_std=round(_std(qualities, q_mean), 4),
-        composite_quality_median=round(_median(qualities), 4),
+        trials_missing_scores=n - len(scored),
+        composite_quality_mean=_r(q_mean, 4),
+        composite_quality_std=_r(_std(qualities, q_mean), 4) if scored else None,
+        composite_quality_median=_r(_median(qualities), 4) if scored else None,
         quality_threshold=thresh,
-        pass_rate=round(passes, 4),
+        pass_rate=_r(passes, 4),
         latency_ms_mean=round(lat_mean, 2),
         latency_ms_std=round(_std(latencies, lat_mean), 2),
         latency_ms_median=round(_median(latencies), 2),
@@ -209,8 +220,8 @@ def compute_trial_aggregates(trials: List[TrialResult]) -> AggregatedTaskMetrics
         cost_usd_std=round(_std(costs, cost_mean), 6),
         co2e_grams_mean=round(co2_mean, 6),
         co2e_grams_std=round(_std(co2s, co2_mean), 6),
-        quality_per_joule_mean=round(_mean(qpj), 4),
-        quality_per_dollar_mean=round(_mean(qpd), 2),
-        quality_per_second_mean=round(_mean(qps), 4),
-        quality_constrained_success_rate=round(qc_successes, 4),
+        quality_per_joule_mean=_r(_mean(qpj), 4) if scored else None,
+        quality_per_dollar_mean=_r(_mean(qpd), 2) if scored else None,
+        quality_per_second_mean=_r(_mean(qps), 4) if scored else None,
+        quality_constrained_success_rate=_r(qc_successes, 4),
     )

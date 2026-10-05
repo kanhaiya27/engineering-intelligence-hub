@@ -84,15 +84,20 @@ def diagnose_trial_failure(
             details.append("Graph augmentation failed to retrieve structural context.")
 
     # 2. Citation & Evidence Grounding Failures
-    if trial.citation_validity_rate < 0.70 and "INSUFFICIENT EVIDENCE" not in trial.generated_answer:
+    # None = not scored (missing) - never compared as if it were a number.
+    refused = "INSUFFICIENT EVIDENCE" in trial.generated_answer
+    if not refused and trial.citation_validity_rate is None:
+        failures.append(FailureCategory.UNSUPPORTED_CITATION)
+        details.append("Answer cites nothing.")
+    elif not refused and trial.citation_validity_rate < 0.70:
         failures.append(FailureCategory.UNSUPPORTED_CITATION)
         details.append(f"Citation validity low: {trial.citation_validity_rate:.1%}.")
 
-    if trial.consistency_score < 0.70:
+    if trial.consistency_score is not None and trial.consistency_score < 0.70:
         failures.append(FailureCategory.HALLUCINATION)
         details.append(f"Consistency score low: {trial.consistency_score:.2f}.")
 
-    if trial.relevance_score < 0.50:
+    if trial.relevance_score is not None and trial.relevance_score < 0.50:
         failures.append(FailureCategory.IRRELEVANT_EVIDENCE)
         details.append(f"Relevance score low: {trial.relevance_score:.2f}.")
 
@@ -110,7 +115,7 @@ def diagnose_trial_failure(
         details.append(f"Cost ${trial.cost_usd:.6f} exceeded 3x Baseline B.")
 
     # 4. Quality Gate Failures
-    if trial.system_id == "system_e":
+    if trial.system_id == "system_e" and trial.correctness_score is not None and trial.passed_quality_gate is not None:
         if not trial.passed_quality_gate and trial.correctness_score >= 0.85:
             failures.append(FailureCategory.QUALITY_GATE_FALSE_NEGATIVE)
             details.append("Quality gate rejected a highly correct answer.")

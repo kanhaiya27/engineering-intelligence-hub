@@ -25,7 +25,9 @@ def _normalize_tokens(text: str) -> Set[str]:
 class CorrectnessEvaluator(BaseEvaluator):
     """
     Evaluates response correctness by comparing generated text against ground truth.
-    Uses token F1 overlap and acceptable alternative matching.
+    Set-based token F1 against the ground truth or the best acceptable alternative.
+    Lexical only: it rewards shared words, not correct meaning, so it is validated against
+    human ratings and reported next to the citation-span measures (evaluation/outcome.py).
     """
 
     @property
@@ -46,8 +48,9 @@ class CorrectnessEvaluator(BaseEvaluator):
 
         precision = len(common) / len(pred_tokens)
         recall = len(common) / len(ref_tokens)
-        f1 = (2 * precision * recall) / (precision + recall)
-        return min(1.0, f1 * 1.5)  # Scale slightly for concise technical definitions
+        # Plain F1. An unexplained x1.5 "scale" (capped at 1.0) was removed on 2026-10-05:
+        # it inflated every correctness score and was not in any plan or source.
+        return (2 * precision * recall) / (precision + recall)
 
     def evaluate(
         self,
@@ -57,6 +60,11 @@ class CorrectnessEvaluator(BaseEvaluator):
     ) -> QualityMetrics:
         prediction = result.answer_text or ""
         ref = ground_truth if ground_truth is not None else (getattr(result, "ground_truth", "") or "")
+
+        if not ref and not acceptable_alternatives:
+            # No reference answer: correctness is not measurable (None), not zero.
+            return QualityMetrics(task_id=result.task_id, task_correctness=None,
+                                  quality_threshold=result.quality_threshold)
 
         best_score = 0.0
         if ref:
