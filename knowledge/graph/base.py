@@ -239,3 +239,79 @@ class BaseGraphStore(ABC):
         Return the total number of edges, optionally filtered by type.
         """
         ...
+
+    # ------------------------------------------------------------------
+    # Concrete helpers shared by all stores (Neo4j overrides them for speed)
+    # ------------------------------------------------------------------
+
+    def upsert_nodes(self, nodes: List[GraphNode]) -> None:
+        for n in nodes:
+            self.upsert_node(n)
+
+    def upsert_edges(self, edges: List[GraphEdge]) -> None:
+        for e in edges:
+            self.upsert_edge(e)
+
+    def expand(
+        self,
+        node_id: str,
+        max_depth: int = 2,
+        limit: int = 50,
+        hub_labels: Tuple[str, ...] = ("Repository", "Commit"),
+    ) -> List[Dict[str, Any]]:
+        """Structural neighbours of a node, nearest first, never routed THROUGH a hub.
+
+        Every file hangs off its Repository node and a commit links all files it
+        touched, so walking through those hubs reaches arbitrary files at depth 2.
+        Hubs are neither returned nor crossed (co-change is `co_changed`).
+        Returns [{"node": GraphNode, "hop": int, "paths": [[(relationship, src_id, tgt_id), ...], ...],
+                  "path": paths[0]}] — `paths` holds every shortest connection (up to 5).
+        """
+        seen = {node_id}
+        frontier: List[Tuple[str, List[Tuple[str, str, str]]]] = [(node_id, [])]
+        out: List[Dict[str, Any]] = []
+        for hop in range(1, max_depth + 1):
+            level: Dict[str, Dict[str, Any]] = {}
+            for nid, path in frontier:
+                for edge, nb in self.get_neighbours(nid, direction="both", max_depth=1):
+                    if nb.node_id in seen or nb.label in hub_labels:
+                        continue
+                    entry = level.setdefault(nb.node_id, {"node": nb, "hop": hop, "paths": []})
+                    if len(entry["paths"]) < 5:  # all shortest connections (e.g. IMPORTS and TESTS)
+                        entry["paths"].append(path + [(edge.relationship, edge.source_id, edge.target_id)])
+            for nid, entry in sorted(level.items()):
+                seen.add(nid)
+                entry["path"] = entry["paths"][0]
+                out.append(entry)
+                if len(out) >= limit:
+                    return out
+            frontier = [(nid, e["paths"][0]) for nid, e in sorted(level.items())]
+        return out
+
+    def co_changed(self, file_node_id: str, limit: int = 5, min_shared: int = 2) -> List[Tuple[GraphNode, int]]:
+        """Files most strongly changed together with this one (Commit-MODIFIES->File).
+
+        Ranked by cosine = shared / sqrt(changes(a) * changes(b)), so a file that changes
+        with everything (e.g. a changelog) does not dominate; at least `min_shared`
+        shared commits. Returns (node, shared commit count).
+        """
+        def n_changes(nid: str) -> int:
+            return len(self.get_neighbours(nid, relationship=RelationshipType.MODIFIES, direction="inbound"))
+
+        counts: Dict[str, int] = {}
+        nodes: Dict[str, GraphNode] = {}
+        for _, commit in self.get_neighbours(file_node_id, relationship=RelationshipType.MODIFIES,
+                                             direction="inbound"):
+            for _, other in self.get_neighbours(commit.node_id, relationship=RelationshipType.MODIFIES,
+                                                direction="outbound"):
+                if other.node_id != file_node_id:
+                    counts[other.node_id] = counts.get(other.node_id, 0) + 1
+                    nodes[other.node_id] = other
+        mine = max(1, n_changes(file_node_id))
+        scored = [(k, n, n / (mine * max(1, n_changes(k))) ** 0.5) for k, n in counts.items() if n >= min_shared]
+        ranked = sorted(scored, key=lambda t: (-t[2], -t[1], t[0]))[:limit]
+        return [(nodes[k], n) for k, n, _ in ranked]
+
+    def clear(self) -> None:
+        """Delete every node and edge (used before a full rebuild)."""
+        raise NotImplementedError

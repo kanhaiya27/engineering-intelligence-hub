@@ -43,39 +43,55 @@ _HEURISTIC_MAX_GRAPH_CHUNKS = 4
 _HEURISTIC_MAX_TOTAL_NODES = 20
 
 
+# Which structural relations are most informative to inject first (lower = earlier).
+_RELATION_PRIORITY = {"TESTS": 0, "IMPORTS": 1, "CALLS": 2, "CONTAINS": 3}
+# Per retrieved file: at most this many structural + co-change neighbours.
+_PER_SEED = 2
+
+
+def _short(node_id: str) -> str:
+    """Readable name from a node id: file path, or path::Symbol."""
+    kind, _, rest = node_id.partition(":")
+    if kind == "file":
+        return rest.split(":", 1)[-1] if ":" in rest else rest
+    if kind == "sym":
+        parts = rest.split(":")
+        return f"{parts[-2]}::{parts[-1]}" if len(parts) >= 3 else rest
+    return node_id
+
+
+def _describe(path: List[tuple]) -> str:
+    return " ; ".join(f"{_short(src)} --{rel}--> {_short(tgt)}" for rel, src, tgt in path)
+
+
 def _node_to_context_chunk(
     node: Any,
     seed_chunk_id: str,
     task_id: str,
     hop: int,
+    relation: str,
+    relation_text: str,
 ) -> RetrievedChunk:
     """
-    Convert a graph neighbour node into a RetrievedChunk for context injection.
+    Convert a graph neighbour into a RetrievedChunk for context injection.
 
-    The resulting chunk is clearly labelled as GRAPH_CONTEXT so
-    evaluation pipelines can distinguish injected nodes from retrieved
-    text chunks.  Score is set to 0.0 (below any score_threshold) but
-    the chunk is always forwarded as it is explicitly selected by the
-    graph expansion logic.
+    The chunk states HOW the neighbour is related to the retrieved evidence
+    (e.g. "src/flask/app.py --IMPORTS--> src/flask/ctx.py"): that relation is the
+    structural context System D adds (RQ2). It is labelled GRAPH_CONTEXT so the
+    evaluation can tell injected nodes from retrieved text; score 0.0.
     """
     props = node.properties
     name = props.get("name") or props.get("symbol_name") or node.node_id
-    path = props.get("path") or props.get("file_path") or ""
+    path = props.get("file_path") or props.get("path") or ""
     start_l = props.get("start_line")
     end_l = props.get("end_line")
-    commit = props.get("commit_sha", "")
 
-    content_parts = [f"[GRAPH_CONTEXT | {node.label} | hop={hop}]"]
-    content_parts.append(f"Name: {name}")
-    if path:
+    content_parts = [f"[GRAPH_CONTEXT | {relation} | hop={hop}]", f"Relation: {relation_text}",
+                     f"{node.label}: {name}"]
+    if path and path != name:
         content_parts.append(f"Path: {path}")
     if start_l is not None and end_l is not None:
         content_parts.append(f"Lines: {start_l}-{end_l}")
-    if commit:
-        content_parts.append(f"Commit: {commit}")
-    for k, v in props.items():
-        if k not in {"name", "symbol_name", "path", "file_path", "start_line", "end_line", "commit_sha"}:
-            content_parts.append(f"{k}: {v}")
 
     return RetrievedChunk(
         chunk_id=f"graph_ctx:{node.node_id}:{seed_chunk_id}",
@@ -88,10 +104,11 @@ def _node_to_context_chunk(
             "graph_node_id": node.node_id,
             "graph_node_label": node.label,
             "graph_hop": hop,
+            "graph_relation": relation,
             "graph_seed_chunk_id": seed_chunk_id,
             "start_line": start_l,
             "end_line": end_l,
-            "commit_sha": commit,
+            "commit_sha": props.get("commit_sha", ""),
         },
     )
 
@@ -216,72 +233,78 @@ class GraphAugmentedRetriever(BaseRetriever):
         task_id: str,
     ) -> tuple[List[RetrievedChunk], int]:
         """
-        Expand graph neighbourhood for retrieved chunks.
+        Structural + co-change context for the retrieved files.
 
-        For each chunk, we look up the file path in the graph and traverse
-        outbound + inbound edges up to `hop_depth` hops.  We bound the
-        total injected chunks by `max_graph_chunks` to prevent context explosion.
+        For each retrieved file (in retrieval order, each file once), up to _PER_SEED
+        neighbours are injected: first structural neighbours in OTHER files reached
+        within `hop_depth` hops without passing through hub nodes (Repository,
+        Commit), nearest first, then TESTS > IMPORTS > CALLS > CONTAINS; then the
+        files most strongly co-changed in Git history (cosine of shared commits, so a
+        changelog that changes with everything does not dominate). Bounded by
+        `max_graph_chunks` overall.
 
-        Returns
-        -------
-        (graph_context_chunks, total_nodes_visited)
+        Returns (graph_context_chunks, nodes_considered).
         """
         if self._graph_store is None:
             return [], 0
 
-        injected_chunks: List[RetrievedChunk] = []
-        seen_node_ids: Set[str] = set()
-        total_nodes_visited = 0
+        injected: List[RetrievedChunk] = []
+        seen_nodes: Set[str] = set()
+        seen_files: Set[str] = set()
+        considered = 0
 
         for chunk in chunks:
-            if len(injected_chunks) >= max_graph_chunks:
+            if len(injected) >= max_graph_chunks or considered >= _HEURISTIC_MAX_TOTAL_NODES * 10:
                 break
-            if total_nodes_visited >= _HEURISTIC_MAX_TOTAL_NODES:
-                break
-
-            # Build a deterministic node ID from the chunk's source path.
-            # This mirrors the `file:{path}` URI convention used in M2.
             source_path = chunk.source_path or ""
-            if not source_path:
+            if not source_path or chunk.metadata.get("graph_context"):
                 continue
-
-            repo = chunk.repository or ""
-            file_node_id = f"file:{repo}:{source_path}" if repo else f"file:{source_path}"
-
+            seed = f"file:{chunk.repository}:{source_path}" if chunk.repository else f"file:{source_path}"
+            if seed in seen_files:
+                continue
+            seen_files.add(seed)
+            seen_nodes.add(seed)
             try:
-                node = self._graph_store.get_node(file_node_id)
-                if node is None:
+                if self._graph_store.get_node(seed) is None:
                     continue
-
-                # Get neighbours up to hop_depth
-                pairs = self._graph_store.get_neighbours(
-                    node_id=file_node_id,
-                    direction="both",
-                    max_depth=hop_depth,
+                candidates = self._graph_store.expand(seed, max_depth=hop_depth, limit=60)
+                considered += len(candidates)
+                # Other files first (what the retrieved text cannot show), then structure
+                # inside the same file; within each, by relation priority and distance.
+                for c in candidates:  # the most informative of the shortest connections
+                    c["path"] = min(c.get("paths") or [c["path"]],
+                                    key=lambda p: min(_RELATION_PRIORITY.get(r[0], 9) for r in p))
+                ranked = sorted(
+                    candidates,
+                    key=lambda c: (
+                        (c["node"].properties.get("file_path") or c["node"].properties.get("path")
+                         or "") in ("", source_path),
+                        c["hop"], min(_RELATION_PRIORITY.get(r[0], 9) for r in c["path"]), c["node"].node_id),
                 )
-                total_nodes_visited += len(pairs)
-
-                for edge, neighbour in pairs:
-                    if len(injected_chunks) >= max_graph_chunks:
+                picked = 0
+                for c in ranked:
+                    if picked >= _PER_SEED or len(injected) >= max_graph_chunks:
                         break
-                    if neighbour.node_id in seen_node_ids:
+                    node = c["node"]
+                    if node.node_id in seen_nodes:
                         continue
-                    seen_node_ids.add(neighbour.node_id)
-
-                    hop = edge.properties.get("depth", 1)
-                    ctx_chunk = _node_to_context_chunk(
-                        node=neighbour,
-                        seed_chunk_id=chunk.chunk_id,
-                        task_id=task_id,
-                        hop=hop,
-                    )
-                    injected_chunks.append(ctx_chunk)
-
-            except Exception as exc:  # noqa: BLE001 — graceful degradation
-                logger.warning(
-                    f"Task {task_id}: graph expansion failed for node "
-                    f"'{file_node_id}': {exc}"
-                )
+                    seen_nodes.add(node.node_id)
+                    relation = min((r[0] for r in c["path"]), key=lambda t: _RELATION_PRIORITY.get(t, 9))
+                    injected.append(_node_to_context_chunk(node, chunk.chunk_id, task_id, c["hop"],
+                                                           relation, _describe(c["path"])))
+                    picked += 1
+                for other, n_commits in self._graph_store.co_changed(seed, limit=_PER_SEED):
+                    if len(injected) >= max_graph_chunks or picked >= _PER_SEED + 1:
+                        break
+                    if other.node_id in seen_nodes:
+                        continue
+                    seen_nodes.add(other.node_id)
+                    injected.append(_node_to_context_chunk(
+                        other, chunk.chunk_id, task_id, 2, "CO_CHANGED",
+                        f"{source_path} and {_short(other.node_id)} changed together in {n_commits} commits"))
+                    picked += 1
+            except Exception as exc:  # noqa: BLE001 — graceful degradation, but visible
+                logger.warning(f"Task {task_id}: graph expansion failed for node '{seed}': {exc}")
                 continue
 
-        return injected_chunks, total_nodes_visited
+        return injected, considered

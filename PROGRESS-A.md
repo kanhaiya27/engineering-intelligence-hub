@@ -8,6 +8,43 @@ measured (with numbers only if actually measured), what is blocked.
 
 ---
 
+## 2026-10-05 (night) — Step 2: own knowledge-graph builder; System D gets graph context
+
+Branch `feat/knowledge-graph-wave1` (WORK_PLAN step 5). PR #15 merged before.
+
+**Found in the existing graph code (master)** — all fixed: file ids embedded the commit so the
+retriever never found a seed (0 graph chunks ever); module names via `rstrip(".py")` and `src/` kept,
+relative imports ignored (imports never resolved); call targets in another id format, same file only;
+"test" substring made all of `src/_pytest/` tests; Neo4j store read only OS env (not `.env`); the
+in-memory store invented "Unknown" nodes for dangling edges; expansion walked through the Repository
+hub, unordered, and injected chunks did not state the relation; no Git-history layer (plan §6.2).
+
+**Done**
+- `knowledge/graph/extractor.py` (repository-level: module map, src layout, relative imports, calls
+  incl. methods/self/aliases, TESTS by naming convention, Git history with bulk-commit skip),
+  `builder.py` (batched writes, read-back counts, history artifacts — commits/PRs/issues/ADRs/incidents
+  ported with the new ids), Neo4j/in-memory `expand` (no hub crossing, all shortest connections) and
+  `co_changed` (cosine of shared commits, ≥ 2), retriever ranking (other files first, nearest, then
+  TESTS > IMPORTS > CALLS > CONTAINS) with relation-stating chunks, `scripts/build_graph.py`.
+- `.corpus_cache` clones were shallow (1 commit each): deepened by 600 commits; HEAD and all files
+  unchanged (verified per repo).
+
+**Measured** (`experiments/results/graph_build/machine_A/graph_build_wave1.json`)
+- 37,066 nodes (Repository 6, File 7,109, Class 4,071, Function 5,930, Method 9,187, Test 8,193,
+  Commit 2,570) / 58,982 edges (CONTAINS 34,490, IMPORTS 5,414, CALLS 11,012, TESTS 1,952, MODIFIES
+  6,114), read back from Neo4j = written; 0 dropped edges; 6,919 / 6,919 indexed files have a node;
+  24 bulk commits skipped; 19 pylint files unparsable (intentional bad-syntax test data, py3.12 syntax).
+- Graph preflight passes. Real query (Flask app context): 4 graph chunks (app.py imports, cli.py,
+  app.py↔helpers.py co-changed in 20 commits, reqcontext.rst↔appcontext.rst) in ~277 ms retrieval.
+- **Found for calibration (D17):** fused hybrid scores of the 36 dev+val questions are 0.58–0.96;
+  with the fixed strategy thresholds 2–5 of 36 get zero evidence (e.g. a FastAPI question: all
+  scores ≈ 0.57 < 0.60) — C/D would answer without evidence while B (no threshold) would not.
+- Tests: **349 passed**.
+
+**Next** — step 3 (benchmark fixes approved by Avaneesh + labels), then Mode R metrics.
+
+---
+
 ## 2026-10-05 (night) — Step 1: chunk fix, re-ingest, Qdrant 1.15.1, line ranges in prompts
 
 Branch `fix/ingestion-chunk-size` (WORK_PLAN step 4). PR #14 (audit) merged before.

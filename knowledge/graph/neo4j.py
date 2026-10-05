@@ -35,9 +35,14 @@ class Neo4jGraphStore(BaseGraphStore):
         password: Optional[str] = None,
         database: str = "neo4j",
     ) -> None:
-        self.uri = uri or os.getenv("EIH_GRAPH_URI", "bolt://localhost:7687")
-        self.username = username or os.getenv("EIH_GRAPH_USERNAME", "neo4j")
-        self.password = password or os.getenv("EIH_GRAPH_PASSWORD", "changeme")
+        # Defaults come from settings (which read .env); this used to read only OS
+        # environment variables, so a default-constructed store could not log in.
+        from core.config import settings
+
+        gs = settings.graph_store
+        self.uri = uri or gs.uri
+        self.username = username or gs.username
+        self.password = password or gs.password or "changeme"
         self.database = database
         self._driver: Optional[neo4j.Driver] = None
 
@@ -250,3 +255,101 @@ class Neo4jGraphStore(BaseGraphStore):
             result = session.run(cypher)
             record = result.single()
             return record["cnt"] if record else 0
+
+    # ------------------------------------------------------------------
+    # Batch writes, hub-free expansion, co-change (fast Cypher versions)
+    # ------------------------------------------------------------------
+    _BATCH = 2000
+
+    @staticmethod
+    def _safe(name: str) -> str:
+        return "".join(c for c in name if c.isalnum() or c == "_") or "Entity"
+
+    def upsert_nodes(self, nodes: List[GraphNode]) -> None:
+        if not self._driver:
+            self.connect()
+        by_label: Dict[str, List[Dict[str, Any]]] = {}
+        for n in nodes:
+            by_label.setdefault(self._safe(n.label), []).append({"id": n.node_id, "props": n.properties})
+        with self._driver.session(database=self.database) as session:
+            for label, rows in by_label.items():
+                for i in range(0, len(rows), self._BATCH):
+                    session.run(
+                        f"UNWIND $rows AS row MERGE (n:Entity {{node_id: row.id}}) "
+                        f"SET n:{label}, n += row.props",
+                        {"rows": rows[i: i + self._BATCH]},
+                    )
+
+    def upsert_edges(self, edges: List[GraphEdge]) -> None:
+        if not self._driver:
+            self.connect()
+        by_type: Dict[str, List[Dict[str, Any]]] = {}
+        for e in edges:
+            by_type.setdefault(self._safe(e.relationship), []).append(
+                {"src": e.source_id, "tgt": e.target_id, "props": e.properties})
+        with self._driver.session(database=self.database) as session:
+            for rel, rows in by_type.items():
+                for i in range(0, len(rows), self._BATCH):
+                    session.run(
+                        f"UNWIND $rows AS row MATCH (a:Entity {{node_id: row.src}}) "
+                        f"MATCH (b:Entity {{node_id: row.tgt}}) MERGE (a)-[r:{rel}]->(b) SET r += row.props",
+                        {"rows": rows[i: i + self._BATCH]},
+                    )
+
+    def expand(self, node_id: str, max_depth: int = 2, limit: int = 50,
+               hub_labels: Tuple[str, ...] = ("Repository", "Commit")) -> List[Dict[str, Any]]:
+        if not self._driver:
+            self.connect()
+        depth = max(1, int(max_depth))
+        hubs = " OR ".join(f"x:{self._safe(h)}" for h in hub_labels) or "false"
+        cypher = f"""
+        MATCH p = (s:Entity {{node_id: $node_id}})-[*1..{depth}]-(m:Entity)
+        WHERE m <> s AND none(x IN nodes(p)[1..] WHERE {hubs})
+        WITH m, p ORDER BY length(p)
+        WITH m, collect(p) AS ps
+        WITH m, ps, length(ps[0]) AS hop
+        WITH m, hop, [x IN ps WHERE length(x) = hop][..5] AS shortest
+        RETURN m.node_id AS id, labels(m) AS labels, properties(m) AS props, hop,
+               [x IN shortest | [r IN relationships(x) | [type(r), startNode(r).node_id, endNode(r).node_id]]] AS paths
+        ORDER BY hop, id LIMIT $limit
+        """
+        out: List[Dict[str, Any]] = []
+        with self._driver.session(database=self.database) as session:
+            for rec in session.run(cypher, {"node_id": node_id, "limit": int(limit)}):
+                labels = [lbl for lbl in rec["labels"] if lbl != "Entity"]
+                node = GraphNode(rec["id"], labels[0] if labels else "Entity", dict(rec["props"]))
+                paths = [[tuple(r) for r in p] for p in rec["paths"]]
+                out.append({"node": node, "hop": rec["hop"], "paths": paths, "path": paths[0]})
+        return out
+
+    def co_changed(self, file_node_id: str, limit: int = 5, min_shared: int = 2) -> List[Tuple[GraphNode, int]]:
+        if not self._driver:
+            self.connect()
+        cypher = """
+        MATCH (f:Entity {node_id: $node_id})<-[:MODIFIES]-(c:Commit)-[:MODIFIES]->(o:File)
+        WHERE o <> f
+        WITH f, o, count(DISTINCT c) AS n WHERE n >= $min_shared
+        MATCH (f)<-[:MODIFIES]-(cf:Commit) WITH f, o, n, count(DISTINCT cf) AS nf
+        MATCH (o)<-[:MODIFIES]-(co:Commit) WITH o, n, nf, count(DISTINCT co) AS no
+        RETURN o.node_id AS id, labels(o) AS labels, properties(o) AS props, n,
+               toFloat(n) / sqrt(toFloat(nf * no)) AS score
+        ORDER BY score DESC, n DESC, id LIMIT $limit
+        """
+        out: List[Tuple[GraphNode, int]] = []
+        with self._driver.session(database=self.database) as session:
+            for rec in session.run(cypher, {"node_id": file_node_id, "limit": int(limit),
+                                            "min_shared": int(min_shared)}):
+                labels = [lbl for lbl in rec["labels"] if lbl != "Entity"]
+                out.append((GraphNode(rec["id"], labels[0] if labels else "Entity", dict(rec["props"])), rec["n"]))
+        return out
+
+    def clear(self) -> None:
+        if not self._driver:
+            self.connect()
+        with self._driver.session(database=self.database) as session:
+            while True:
+                deleted = session.run(
+                    "MATCH (n) WITH n LIMIT 10000 DETACH DELETE n RETURN count(n) AS c").single()["c"]
+                if not deleted:
+                    break
+
