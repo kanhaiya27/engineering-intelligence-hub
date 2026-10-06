@@ -175,5 +175,6 @@
       "requested_by": null,
       "status_note": "existing benchmark task"
     }
-  ]
+  ],
+  "priority": 30
 }

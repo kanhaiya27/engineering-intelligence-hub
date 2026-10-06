@@ -71,6 +71,15 @@ def main(argv=None) -> int:
         d.add_argument("--note", default=None)
         d.add_argument("--failed", default="", help=f"comma list of failed checks: {CHECK_HELP}")
         d.add_argument("--minutes", type=float, default=None, help="time spent, if you did not use `next`")
+    rn = sub.add_parser("rate-next")
+    rn.add_argument("--reviewer", required=True)
+    rt = sub.add_parser("rate")
+    rt.add_argument("blind_id")
+    rt.add_argument("--reviewer", required=True)
+    rt.add_argument("--correctness", type=int, required=True, choices=range(1, 6))
+    rt.add_argument("--completeness", type=int, required=True, choices=range(1, 6))
+    rt.add_argument("--accept", required=True, choices=["yes", "no"])
+    rt.add_argument("--note", default=None)
     r = sub.add_parser("report")
     r.add_argument("--day", default=None)
     r.add_argument("--json", action="store_true")
@@ -102,6 +111,31 @@ def main(argv=None) -> int:
             _, item = store.find(args.item_id)
             print(f"Recorded: {rec.reviewer} {rec.decision} {rec.item_id} ({rec.minutes_spent} min). "
                   f"Item is now {store.status(item)}.")
+        elif args.cmd in ("rate-next", "rate"):
+            from benchmark.rating import RatingStore
+
+            rs = RatingStore(Path(args.root)) if args.root else RatingStore()
+            if args.cmd == "rate-next":
+                found = rs.next_unit(args.reviewer)
+                if not found:
+                    print("No answers left for you to rate.")
+                    return 0
+                b, u = found
+                out = ["=" * 78, f"RATE {u.blind_id}   (batch {b.batch_id}; you do not see which system wrote it)",
+                       "-" * 78, "QUESTION", u.query, "", "REFERENCE ANSWER", u.reference_answer, "",
+                       "ANSWER TO RATE", u.answer]
+                for e in u.evidence:
+                    out += ["", f"EVIDENCE  {e['file']}  lines {e['start_line']}-{e['end_line']}"]
+                    out += [f"{n:>6} | {line}" for n, line in enumerate(str(e["text"]).splitlines(),
+                                                                         start=int(e["start_line"]))]
+                out += ["-" * 78, "correctness 1-5: states the reference's key facts without contradicting the code?",
+                        "completeness 1-5: covers everything the reference needs?  accept: would you accept it as correct?",
+                        f"Then: rate {u.blind_id} --correctness N --completeness N --accept yes|no"]
+                print("\n".join(out))
+            else:
+                rec = rs.rate(args.blind_id, args.reviewer, args.correctness, args.completeness,
+                              args.accept == "yes", args.note)
+                print(f"Recorded rating of {rec.blind_id} by {rec.rater}.")
         elif args.cmd == "report":
             ledgers = sorted((REPO_ROOT / "experiments" / "results" / "queue").glob("*/*/results.jsonl"))
             rep = progress_report(store, args.day, ledgers, REPO_ROOT / "ASK_ME.md")

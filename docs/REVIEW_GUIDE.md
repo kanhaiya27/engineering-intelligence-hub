@@ -54,3 +54,40 @@ python scripts/review.py reject  <task_id> --reviewer <name> --failed question_c
 All four of you review the **same 10 tasks** (batch `calibration-01`) on your own, without
 talking about them. We measure how often you agree (Cohen's kappa). This number goes in the
 paper. After everyone has finished, we discuss the disagreements.
+
+## What is in the queue (served in this order)
+
+`python scripts/review.py next --reviewer <name>` gives you the highest-priority item you may
+decide on:
+
+| Priority | Batch | What you check |
+|---|---|---|
+| 10 | `calibration-01` | Day-one agreement: all four of you, same 10 tasks |
+| 20 | `labels-L1-01/02` | Retrieval labels: do the shown lines contain the evidence needed for the answer? (`evidence_correct`) |
+| 25 | `audit-fixes-01` | Proposed fixes to 20 dev/val tasks (`docs/BENCHMARK_AUDIT.md`). Approve only if the corrected task is right against the shown lines |
+| 30 | `test-correctness-01..04` | The 24 held-out test tasks, two different reviewers each, before any tuning |
+| 50 | `draft-*` | New tasks drafted by Claude: never approve one you requested |
+
+## Test-task fixes
+
+If a test task is wrong, use `fix` and write the correction in the note: exact file and lines
+(e.g. `src/flask/app.py L966-1090`) plus the corrected answer. Claude does not read test tasks. A
+person, not Claude, turns your note into a proposal, and two *other* reviewers must approve it.
+
+## Blind answer rating (M1)
+
+These 40 answers decide how answer correctness is measured. You never see which system wrote an
+answer, and you should not try to guess (some never cite files).
+
+```
+python scripts/review.py rate-next --reviewer <name>
+python scripts/review.py rate <H0xx> --reviewer <name> --correctness 1-5 --completeness 1-5 --accept yes|no
+```
+
+| Field | Question to ask |
+|---|---|
+| correctness | Does it state the reference's key facts without contradicting the shown code? |
+| completeness | Does it cover everything the reference needs? |
+| accept | Would you accept it as a correct answer? Extra correct detail is fine |
+
+Each of you rates 20 answers, and each answer is rated by two of you.

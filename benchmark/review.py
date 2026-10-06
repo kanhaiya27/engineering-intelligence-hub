@@ -93,8 +93,9 @@ class ReviewItem(BaseModel):
 class ReviewBatch(BaseModel):
     batch_id: str
     created_at: str
-    purpose: str = Field(description="calibration | review | test_correctness_pass")
+    purpose: str = Field(description="calibration | review | test_correctness_pass | label_review | fix_proposal")
     assigned_to: List[str] = Field(default_factory=list)
+    priority: int = Field(default=50, description="lower is served first by `review.py next`")
     items: List[ReviewItem]
 
     @field_validator("items")
@@ -185,8 +186,9 @@ class ReviewStore:
     def batches(self) -> List[ReviewBatch]:
         if not self.queue_dir.exists():
             return []
-        return [ReviewBatch.model_validate_json(p.read_text(encoding="utf-8"))
-                for p in sorted(self.queue_dir.glob("*.json"))]
+        batches = [ReviewBatch.model_validate_json(p.read_text(encoding="utf-8"))
+                   for p in sorted(self.queue_dir.glob("*.json"))]
+        return sorted(batches, key=lambda b: (b.priority, b.batch_id))
 
     def save_batch(self, batch: ReviewBatch, overwrite: bool = False) -> Path:
         self.queue_dir.mkdir(parents=True, exist_ok=True)
@@ -525,3 +527,37 @@ def item_from_task(task: dict, split: str, drafted_by: str, requested_by: Option
                       proposed_answer=task["ground_truth"],
                       acceptable_alternatives=task.get("acceptable_alternatives", []), evidence=ev,
                       drafted_by=drafted_by, requested_by=requested_by, status_note=note)
+
+
+def item_from_label(label: dict, task: dict) -> ReviewItem:
+    """A retrieval label (L1) as a review item: do these exact lines hold the evidence for the answer?"""
+    ev = [snippet(label["repository"], e["file"], e["start_line"], e["end_line"]) for e in label["required_evidence"]]
+    return ReviewItem(
+        item_id=f"label-{label['task_id']}", kind="retrieval_label", split=label["split"],
+        repository=label["repository"], commit_sha=label["commit_sha"], sdlc_stage=task["sdlc_stage"],
+        task_type=task["task_type"], complexity=task.get("complexity"), criticality=task.get("criticality"),
+        query=task["query"], proposed_answer=task["ground_truth"], evidence=ev,
+        drafted_by=label["annotator"], requested_by=None,
+        status_note=("RETRIEVAL LABEL (L1): approve if these lines contain the evidence needed to answer and "
+                     "nothing essential is missing; fix = name the missing/wrong lines. The question/answer "
+                     "themselves are checked elsewhere."))
+
+
+def item_from_proposal(task: dict, proposal: dict, label: Optional[dict], requested_by: str) -> ReviewItem:
+    """A proposed fix to an existing task (audit), shown as the full corrected task with exact evidence."""
+    from experiments.m5.manifest import wave1_repository_pins
+
+    spans = ([(e["file"], e["start_line"], e["end_line"]) for e in label["required_evidence"]]
+             if proposal.get("evidence") == "label" else [tuple(e) for e in proposal["evidence"]])
+    ev = [snippet(task["repository"], f, s, e) for f, s, e in spans]   # raises if any line is missing
+    changed = [k for k in ("query", "ground_truth", "acceptable_alternatives") if k in proposal]
+    return ReviewItem(
+        item_id=f"{task['task_id']}-fix-v1.2", kind="fix_proposal", split=label["split"] if label else "dev",
+        repository=task["repository"], commit_sha=wave1_repository_pins()[task["repository"]],
+        sdlc_stage=task["sdlc_stage"], task_type=task["task_type"], complexity=task.get("complexity"),
+        criticality=task.get("criticality"), query=proposal.get("query", task["query"]),
+        proposed_answer=proposal.get("ground_truth", task["ground_truth"]),
+        acceptable_alternatives=proposal.get("acceptable_alternatives", task.get("acceptable_alternatives", [])),
+        evidence=ev, drafted_by="Claude Opus 5.5 (benchmark audit 2026-10-06)", requested_by=requested_by,
+        status_note=(f"PROPOSED FIX ({', '.join(changed + ['evidence']) }) - audit reason: {proposal['why']} "
+                     "Approve only if the corrected task is right against the shown lines."))

@@ -289,5 +289,6 @@
       "requested_by": null,
       "status_note": "existing benchmark task; task cites ['docs/en/docs/advanced/async-tests.md'] without lines - lines shown are from its draft retrieval label"
     }
-  ]
+  ],
+  "priority": 10
 }
