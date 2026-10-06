@@ -1,19 +1,19 @@
 # ROADMAP
 
-Engineering Intelligence Hub — Six-Month Development Roadmap.
+Engineering Intelligence Hub — Development Roadmap. No deadlines (WORK_PLAN C31).
 Task-level assignment per laptop lives in [docs/WORK_PLAN.md](docs/WORK_PLAN.md); this file
 tracks milestones. Last updated 2026-10-05.
 
 ---
 
-## Milestone 1 — Research Presentation (25 August 2026) ✅
+## Milestone 1 — Research Presentation ✅
 
 Research PPT: problem statement, literature review (RAG, green AI, SE agents, adaptive
 retrieval, model routing), conservative novelty statement, architecture, evaluation method.
 
 ---
 
-## Milestone 2 — Baseline System + Initial Benchmark (15 September 2026) ✅
+## Milestone 2 — Baseline System + Initial Benchmark ✅
 
 - [x] Ingestion: Git history, Python AST chunking, Markdown/RST, config files
 - [x] Embeddings: BAAI/bge-small-en-v1.5 on the local GPU
@@ -26,7 +26,7 @@ retrieval, model routing), conservative novelty statement, architecture, evaluat
 
 ---
 
-## Milestone 3 — Major Implementation + Experiments (25 October 2026) 🟡
+## Milestone 3 — Major Implementation + Experiments 🟡
 
 ### Implemented
 - [x] **M1 Task intelligence** — rule-based classifier, complexity and criticality analysers
@@ -42,7 +42,7 @@ retrieval, model routing), conservative novelty statement, architecture, evaluat
       `machine_id`; measured VRAM/throughput/energy study
       (`experiments/results/phase1/machine_A/`)
 
-### Remaining for 25 October (owners in WORK_PLAN.md)
+### Remaining (owners in WORK_PLAN.md)
 - [ ] **Phase 1b** — OllamaProvider, model routing wired into the pipeline, escalation 2→3, long-context probe, GPU job queue (A)
 - [ ] **Retrieval ground truth** for the 60 tasks (B) → **Mode R** retrieval metrics (A)
 - [ ] **Knowledge graph populated** for wave-1 repos (B) — required for System D to differ from C
@@ -53,7 +53,7 @@ retrieval, model routing), conservative novelty statement, architecture, evaluat
 
 ---
 
-## Milestone 4 — Final Submission (15 November 2026)
+## Milestone 4 — Final Submission
 
 - [ ] Paper and report with the measured results (B: docs, A: results)
 - [ ] Project website (`web/`, B): overview, live pipeline demo, results dashboard from the measured JSON

@@ -139,7 +139,7 @@ Measurement and validity fixes on `restore-original-plan` (real classifier for C
 §9.1 tiers, CPU estimate, §9.2 latency breakdown, RQ4 routed system). Knowledge graph built
 (own builder, AST + Git history; 37,066 nodes / 58,982 edges in Neo4j; `python -m scripts.build_graph
 --wave 1 --reset`). **No real System A–E
-comparison has been run yet.** Deadlines: experiments complete 25 Oct 2026; final 15 Nov 2026.
+comparison has been run yet.** No deadlines (WORK_PLAN C31).
 
 ## Measurement rules learned the hard way (Laptop A, RTX 4050, driver 617.14)
 

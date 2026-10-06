@@ -8,6 +8,19 @@ measured (with numbers only if actually measured), what is blocked.
 
 ---
 
+## 2026-10-06 (evening) — Lock and deadlines removed (C30, C31)
+
+- C30: the 12 Oct hash lock is removed (`lock_sets` and `draft_tasks.py lock` deleted). The seeded
+  split, run-once and no tuning on held-out sets stay.
+- C31: every deadline removed from the plan docs (SCHEDULE is now an order of work; README,
+  ROADMAP, WORK_PLAN, DATASET_PLAN, EXPERIMENT_PLAN, CLAUDE.md, REVIEW_GUIDE). G1 and D3 closed;
+  new questions F2 (Fresh back to ~150) and P2 (Mode P scope) in ASK_ME.
+- Tests: 435 passed.
+
+**Next** — Step 4 (RQ6) after "go".
+
+---
+
 ## 2026-10-06 (later) — Step 3: drafting tool, review queue, M1 rating batch, power check
 
 Decisions recorded (ASK_ME Decided; WORK_PLAN C27–C29).

@@ -169,12 +169,14 @@ Every experiment must record:
 
 ---
 
-## Timeline
+## Order of work
 
-| Phase | Experiment | Target |
-|---|---|---|
-| Phase-1 | Baseline A | September 2026 |
-| Phase-1 | Baseline B, C | September 2026 |
-| Phase-2 | Experiments D, E, F | October 2026 |
-| Phase-2 | Ablations ABL-01 to 07 | October 2026 |
-| Phase-3 | Advanced (graph + agents) | November 2026 |
+No dates (WORK_PLAN C31).
+
+| Phase | Experiment |
+|---|---|
+| Phase-1 | Baseline A |
+| Phase-1 | Baseline B, C |
+| Phase-2 | Experiments D, E, F |
+| Phase-2 | Ablations ABL-01 to 07 |
+| Phase-3 | Advanced (graph + agents) |

@@ -37,15 +37,10 @@ in §5, it has not changed. Nothing is dropped without Avaneesh's decision.
 
 ## 2. Deadlines
 
-| Date | Deliverable |
-|---|---|
-| **25 Oct 2026** | Major implementation complete, experiments complete |
-| **15 Nov 2026** | Final paper, final code, final results, reproducibility docs |
-
-**Honest risk (not a plan change):** `PROJECT_REPORT.md` §11 sized the programme at ~18 weeks
-for three people; it is now one person on one laptop. All of it does not fit 25 Oct. What
-"experiments complete" means on 25 Oct is decision **D3** (§4); until it is decided, nothing
-is cut.
+**None (C31, 2026-10-06).** Avaneesh removed every deadline from the plan, including the
+25 Oct and 15 Nov dates that stood here. Work runs in the order of §3 and `docs/SCHEDULE.md`
+until it is done; nothing is cut to save time. Any date set outside this plan (university or
+supervisor) is not tracked here.
 
 ## 3. The work, in order (original phase numbers in brackets)
 
@@ -86,7 +81,7 @@ analysis), SWE-bench Multimodal (diagram track) — used as the spec describes, 
 
 | # | Decision | Recommendation |
 |---|---|---|
-| D3 | What "experiments complete" means on 25 Oct (supervisor) | Steps 4–10 by 25 Oct; the rest with fixed November dates |
+| D3 | **Closed (C31): no deadlines.** What "experiments complete" meant on 25 Oct | — |
 | D4 | **Decided 2026-10-06 (C28).** Large-AI-model baseline (spec §7.3) | The 7B at the largest context that fits (16K measured) + cited published figures |
 | D6 | **Decided 2026-10-06 (C28).** Mode P scope (one person now) | Defects4J first; the rest in the order of step 19 as time allows |
 | D9 | **Done (Qdrant 1.15.1 running).** This laptop's Qdrant is v1.13.2; `docker-compose.yml` pins v1.15.1 | Snapshot, then upgrade (needs OK: recreates the container) |
@@ -132,6 +127,7 @@ analysis), SWE-bench Multimodal (diagram track) — used as the spec describes, 
 | C28 | 2026-10-06 | Decisions: D4 large-LLM baseline = the 7B at full context, plus published figures labelled "not measured here" and never compared as if run locally; D6 Mode P = Claude builds the harness, Avaneesh decides, Defects4J stratified subset by 20 Oct, rest after; D14 completeness reported as "completeness (proxy)" = evidence coverage; RQ6 repositories = google/gson (Java) + expressjs/express (JavaScript) from the registry; new EIH-SWE tasks get a fixed stratified 40/20/40 split (seed 42) assigned at approval (S1); sets locked by hash on 12 Oct, later approvals form new held-out sets never merged into the paper's test set | Avaneesh | Step 3 go |
 | C29 | 2026-10-06 | Correctness yardstick (M1) to be replaced by the measure that agrees best with 30-50 blind human ratings, chosen before any system comparison; threshold set on dev/val from the ratings; token F1 reported alongside. Applied in ONE change set with the verified audit fixes and label changes, then one dev/val rerun and re-freeze | Avaneesh | 0/648 trials passed the F1 threshold |
 | C30 | 2026-10-06 | The 12 Oct hash lock is removed (supersedes the lock part of C28 and the master prompt's "lock sets by hash on 12 Oct"). No lock file and no set fingerprints; `lock_sets` and `draft_tasks.py lock` are deleted. Tasks approved at any time before a set's final run join their split (all in set `eih-swe-v2`); there is no post-lock held-out set. Unchanged: the 40/20/40 split is still assigned by seed at approval, the test split, EIH-Fresh and external sets are still never used for tuning and each is run exactly once. Cost to validity, disclosed in the paper: there is no hash record showing the test set was fixed before its results existed | Avaneesh | Decided after Claude explained the trade-off (recommended moving the lock to ~16 Oct instead) |
+| C31 | 2026-10-06 | Every deadline removed from the plan: the 20 Oct target, 21-25 Oct buffer, 25 Oct experiments/paper, 15 Nov final, 9 Oct freeze date and 12 Oct reviewer date. Work runs in step order until done. G1 (GPU shortfall to 20 Oct) and D3 (meaning of 25 Oct) closed; every run keeps its full trials. Decisions whose reason was a date (C27 Fresh = 50; D6 Defects4J subset first) are unchanged until Avaneesh reopens them (ASK_ME F2, P2) | Avaneesh | Instruction of 2026-10-06 |
 
 ## 6. Routine
 

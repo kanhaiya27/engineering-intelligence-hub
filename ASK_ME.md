@@ -6,29 +6,16 @@ until you answer. To answer, reply with the item ID and your choice. Answered it
 
 ## Capacity (from `docs/SCHEDULE.md`)
 
-- [ ] **G1: GPU shortfall.** The full Mode R/Q scope needs ≈ 550 GPU-hours. About 300 are available
-  to 20 Oct, and Mode P needs ~1,300 more (unmeasured guess). Which fix?
-  (a) External Mode Q sets (CodeRepoQA, StackRepoQA, Big-Vul/PrimeVul) at **1 trial** instead of 3.
-      Run-to-run variance is measured on EIH-SWE, which keeps 3 dev/val trials and N = 5 on test.
-      This saves ≈ 265 h and makes R/Q fit with almost no slack.
-  (b) Add a second GPU machine for external runs only, with the same config and manifest hash.
-  (c) Keep full trials and let the external runs finish after 20 Oct, inside the 21–25 Oct buffer and then November.
-  **Recommended: (a) + (c) for whatever is left.** Mode P: see D6.
+- [x] **G1: GPU shortfall. Closed by C31 (no deadlines):** every run keeps its full trials and runs
+  until done (`docs/SCHEDULE.md` §3 gives the expected GPU hours).
 - [ ] **G2: Skip Mode Q on the ~234 newly approved dev/val tasks (35 GPU-h)?** No claim uses
   dev results; calibration uses val. **Recommended: skip; run only if the GPU is idle.**
-- [ ] **R1: Review shortfall (updated after Step 3).** Queue today: 160 items (10 calibration,
+- [ ] **R1: Review pace (updated after C31: no deadlines).** Queue today: 160 items (10 calibration,
   36 labels, 20 audit fixes, 24 test tasks needing 2 reviews each, 70 drafts), plus 40 blind ratings
-  × 2. At 4 reviewers × ~25 reviews/day for 6–11 Oct (~600 reviews), and after the priority work, about
-  325 drafts can be reviewed: **~245 approved new tasks (75% approval) + 60 pilot ≈ 305, not ~450** by
-  12 Oct. (The lock is removed, C30: tasks approved later still count if they are approved before
-  their set's final run.)
-  Options:
-  (a) more reviewer hours (Avaneesh +6 h/day ≈ +210 reviews ≈ +150 tasks);
-  (b) accept ~300 tasks;
-  (c) keep reviewing past 12 Oct. Each extra day of review shortens the time left for the final runs.
-
-  **Recommended: (a)**, and report the real approved count at the final run. Claude drafts ~80–90 tasks/day so drafting
-  never limits.
+  × 2. At 4 reviewers × ~25 reviews/day, reaching ~450 tasks takes about 10 working days of review.
+  There is no date to hit, but final runs on a set cannot start until its review is finished.
+  **Recommended:** review in queue order (ratings and test-task pass first), and add reviewer hours
+  if you want the final runs sooner. Claude drafts ~80–90 tasks/day so drafting never limits.
 - [ ] **R3: Reviewer full names.** These are recorded in `human_approved_by` and in the paper.
   `benchmark/data/review/reviewers.yaml` has "Sanvi", "Aayan", "Radhesh". Please give full names.
 - [ ] **R5: Who is "lead_researcher"?** 44 pilot tasks carry `human_approved_by:
@@ -44,8 +31,14 @@ until you answer. To answer, reply with the item ID and your choice. Answered it
   approve/fix/reject outcomes as written. **Recommended: confirm.**
 ## Plan decisions still open (WORK_PLAN §4)
 
-- [ ] **D3: What "experiments complete" means on 25 Oct** (supervisor). The schedule now targets
-  20 Oct for everything; G1 and D6 decide what is realistic.
+- [x] **D3: Closed by C31** (no deadlines).
+- [ ] **F2: EIH-Fresh back to ~150 tasks?** C27 cut it to 50 only because review hours to 12 Oct
+  did not fit 150. With no deadline that reason is gone. 150 tasks need ~300 reviews (2 each).
+  **Recommended: yes, ~150**, as the dataset spec says; more tasks give RQ7 real power.
+- [ ] **P2: Mode P scope.** D6 chose "Defects4J subset first, rest after" because of 20 Oct. Without
+  a deadline: run all eight Mode P sets in the planned order? They are a guessed ~1,300 GPU-h
+  (weeks of GPU time). **Recommended: Defects4J in full first, measure the real time per attempt,
+  then decide on the rest.**
 - [ ] **D10: Delete old merged branches.** Needs your OK.
 - [ ] **D13: Count mismatches in the original documents** (300–450 vs 400–500 tasks; 28 vs 26
   repos; 21 vs 22 task types). **Recommended:** the spec's locked 400–500 is binding; correct the

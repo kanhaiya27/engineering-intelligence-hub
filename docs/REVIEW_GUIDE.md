@@ -1,6 +1,6 @@
 # Reviewer guide: checking benchmark tasks
 
-For: Avaneesh, Sanvi, Aayan, Radhesh. About 3 hours a day until 12 Oct.
+For: Avaneesh, Sanvi, Aayan, Radhesh. About 3 hours a day.
 
 Each benchmark task is a question about a real open-source project (Flask, FastAPI, Requests,
 Pytest, Sphinx, Pylint) at one fixed version, with an answer and the exact lines of code or docs

@@ -170,8 +170,8 @@ tasks).
 
 **Design valid.** Partially. The method is ready (mixed model, stratified Holm).
 
-**Sample size.** 4 per stage on test now. The realistic test size by 12 Oct is 84–144, i.e.
-14–24 per stage (see the review projection in the Step 3 report).
+**Sample size.** 4 per stage on test now. The test split grows with review: 84 / 144 / 180 at
+150 / 300 / 390 new approved tasks, i.e. 14–30 per stage (no deadline: C31).
 
 **Power** (Step 3d):
 - Per-stage binary comparisons are not detectable at any reachable size.

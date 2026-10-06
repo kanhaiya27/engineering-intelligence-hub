@@ -1,48 +1,29 @@
-# EIH schedule to 20 October 2026
+# EIH work order and budgets
 
-Written 5 Oct 2026 (master prompt of 5 Oct). Target: everything done by **Tue 20 Oct**;
-21–25 Oct is buffer only. Paper due Sun 25 Oct; whole project due 15 Nov. Full scope stays
-(RQ1–RQ8, Systems A–E + routing, Modes R/Q/P, large-LLM baseline, EIH-SWE ~450, RQ6, EIH-Fresh,
-external datasets, paper, report).
+**No deadlines (C31, 2026-10-06).** Avaneesh removed every date from the plan (the 20 Oct target,
+the 21-25 Oct buffer, the 25 Oct paper and 15 Nov project dates, the 9 Oct freeze and 12 Oct
+reviewer dates). Work runs in the order below until it is done. Full scope stays (RQ1-RQ8,
+Systems A-E + routing, Modes R/Q/P, large-LLM baseline, EIH-SWE ~450, RQ6, EIH-Fresh, external
+datasets, paper, report). Nothing is cut to save time.
 
-**Bottom line: the full scope does not fit by 20 Oct on one laptop GPU.** The shortfall is
-in §3 (GPU) and §4 (review hours). The smallest honest fixes are decisions for Avaneesh, listed
-in `ASK_ME.md`. Nothing is cut until he decides.
+## 1. Order of work
 
-## 1. Fixed dates
+Steps are done one at a time with a stop and a "go" after each (master prompt rule 8).
 
-| Date | Event |
-|---|---|
-| Mon 5 Oct | Steps 0–1 (schedule, review tool, measurement validity) |
-| Tue 6 Oct | Day-one reviewer calibration (`calibration-01`, 10 tasks × 4 reviewers, Cohen's kappa) |
-| Tue 6 – Wed 7 Oct | Correctness pass on the 24 existing test tasks (2 reviewers each), **before any tuning** (3b) |
-| Fri 9 Oct | Config freeze: one config for A–E and every routing tier, hashes recorded (Step 2e) |
-| Mon 12 Oct | Reviewer target date. No hash lock (C30): a task approved before its set's final run joins that set |
-| Mon 12 – Mon 19 Oct | Final runs, unattended 24 h/day with resume (job queue) |
-| Tue 20 Oct | Final statistics, figures, paper + report drafts complete |
-| 21–25 Oct | Buffer only |
+| Step | Work | Status |
+|---|---|---|
+| 0-1 | Schedule, review tool, measurement validity | Done |
+| 2 | Design fixes and calibration on dev/val; config frozen (manifest `95e5a587c9d60e7a`) | Done |
+| 3 | Benchmark: drafting tool, review queue, blind M1 ratings, power check | Tools done; review not started |
+| - | M1 change set (new correctness measure + verified audit/label fixes), one dev/val rerun, re-freeze | Waits on ratings and reviews |
+| 4 | RQ6: Java (gson) + JavaScript (express) ingestion, graph, ~60 reviewed tasks | Not started |
+| 5 | EIH-Fresh collection and review | Not started |
+| 6 | External datasets (licence audit, then Mode R/Q) and Mode P harness | Not started |
+| 7 | Final runs on held-out sets, each exactly once, on the frozen config | Not started |
+| 8 | Statistics, figures, paper, project report | Not started |
 
-## 2. Day by day (three tracks)
-
-Track 1 = code and runs. Track 2 = data and review. Track 3 = writing. "GPU night" = the
-job queue runs unattended overnight.
-
-| Day | Track 1 (code/runs) | Track 2 (data/review) | Track 3 (writing) | GPU |
-|---|---|---|---|---|
-| Mon 5 | Step 0; Step 1 (metrics, stats, manifest, energy) | Review tool; calibration batch queued | — | Mode R dev/val; retrieval-energy batches |
-| Tue 6 | Step 2a classifier accuracy; 2b threshold calibration on dev/val | **Calibration 10 tasks × 4**; kappa; test correctness pass starts (24 × 2) | — | Calibration candidates (val), 3 trials |
-| Wed 7 | Step 2c variance (3+ trials); Step 3a drafting tool; Step 6 licence audit | Test pass done; first drafted batches (25 each) | — | Variance study; ingest RQ6 repos |
-| Thu 8 | Step 2d dev/val audit (`BENCHMARK_AUDIT.md`); Step 4 tree-sitter (Java, JS) | Batches; reject-rate check | Method, benchmark, metrics | Mode Q dev/val (A–E + routing × 3) |
-| Fri 9 | **Freeze config (2e)**; Step 4 graph build for RQ6 repos | Batches; RQ6 task drafts | Statistics, threats to validity | Ingest external corpora (passed licences) |
-| Sat 10 | Step 5 EIH-Fresh collection (post-cutoff repos); Mode P harness (D6) | Batches; Fresh drafts (2 reviewers each) | Related work, citations [2]/[9]/[10] | External Mode R (RepoBench, CrossCodeEval) |
-| Sun 11 | Large-LLM baseline setup (D4); power check (3d) | Batches; Fresh review | Limitations, non-claims | Big-Vul/PrimeVul slice (after freeze) |
-| Mon 12 | **Lock all sets by hash (3e)**; start final test queue | Last review day; final counts | — | **EIH-SWE test, N = 5** |
-| Tue 13 – Thu 15 | Monitor queue, thermal rule, resume | — | Results tables fill as runs finish | Test split → RQ6 → EIH-Fresh |
-| Fri 16 – Mon 19 | External Mode Q, large-LLM baseline, Mode P | — | Results, discussion | CodeRepoQA, StackRepoQA, Mode P |
-| Tue 20 | Step 7e: statistics, RQ5–7 analysis, figures | — | **Paper + report complete** | — |
-
-Steps are still done one at a time with a stop and a "go" after each (master prompt rule 8). The
-table shows when each must start for the date to hold.
+A held-out set (EIH-SWE test, RQ6, Fresh, external slices) is run once its review is finished
+and the config is frozen; there is no lock date (C30).
 
 ## 3. GPU-hour budget
 
@@ -84,21 +65,14 @@ final held-out test** (plan Phase 10).
 | **Subtotal (Mode R/Q, classification)** | | | | | **≈ 550** |
 | Mode P: Defects4J 835, BugsInPy 493, CodeFlaws 500, SWE-bench Lite 300, Pro 731, SWE-rebench 500, Multi-SWE-bench flash 300, SWE-bench Multilingual 300 | 3,959 | ≥ 2 | 1 | ~7,900 | **unmeasured; ~1,300 at a guessed 10 min per attempt** |
 
-**Available:** 6–20 Oct ≈ 14.5 days × 24 h × ~0.85 usable (cooling, restarts, ingestion
-contention) ≈ **300 GPU-hours**.
-
-Only runs on the frozen config count as final. Those can start on 9 Oct (external sets,
-after the freeze) or about 12 Oct (EIH-SWE test, RQ6, Fresh, once review of each set is finished; no hash lock, C30). That leaves ≈ 230 GPU-h
-for them.
-
-**Shortfall:** about 250 GPU-h for Modes R/Q and classification, plus all of Mode P. The options
-are in `ASK_ME.md` (G1). The schedule will not quietly drop runs.
+**Duration, not a deadline:** the R/Q subtotal is ≈ 550 GPU-h at the 30 s planning rate. The
+measured rate in Step 2c was ~15 s per unit, so it is likely nearer 300 GPU-h, i.e. roughly two
+to three weeks of the GPU running around the clock with cooling. Mode P comes on top. Without a
+deadline every run keeps its full trials.
 
 ## 4. Review budget and quotas
 
-**Available:**
-- 4 reviewers × ~3 h × 7 days (6–12 Oct) = **84 h**
-- plus whatever extra hours the lead researcher gives
+**Pace:** 4 reviewers × ~3 h a day, plus any extra hours the lead researcher gives.
 
 **Needed (planning figure ~8 min per review; replaced by the day-one measured mean):**
 
@@ -111,7 +85,7 @@ are in `ASK_ME.md` (G1). The schedule will not quietly drop runs.
 | EIH-Fresh (50, all held out, two reviews) | 100 (300 at ~150 tasks) |
 | **Total** | **~1,000 reviews ≈ 135 h** |
 
-**Shortfall:** about 50 h (more if Fresh is ~150). Options are in `ASK_ME.md` (R1).
+At ~100 reviews a day this is about 10 working days of review (more if Fresh is ~150).
 
 **Daily quota per reviewer:** one batch of 25 (≈ 3 h at 7–8 min). With four reviewers that is
 100 reviews a day. It is re-set after day one from the measured minutes per review
@@ -129,5 +103,5 @@ Produced by `python scripts/review.py report --day YYYY-MM-DD` plus the job-queu
 2. Decisions per reviewer, minutes per reviewer, mean minutes per review.
 3. Reject rate. **Alert above 30%**: fix the drafting prompt; never loosen approval.
 4. GPU hours used that day (sum of trial wall times in `experiments/results/queue/*/*/results.jsonl`)
-   against the §3 budget.
+   (§3 shows the expected total).
 5. Blockers: every open `- [ ]` item in `ASK_ME.md`.

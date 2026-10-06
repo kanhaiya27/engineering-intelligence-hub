@@ -124,14 +124,16 @@ Methodology and measured status: [docs/PROJECT_REPORT.md](docs/PROJECT_REPORT.md
 
 ---
 
-## Six-Month Deadlines
+## Milestones
 
-| Date | Deliverable |
+| Deliverable | Status |
 |---|---|
-| **25 August 2026** | Research PPT (title, literature review, novelty, architecture, expected output type) |
-| **15 September 2026** | Research paper draft, baseline system working, initial benchmark, evaluation framework |
-| **25 October 2026** | Major implementation complete, experiments complete, updated research |
-| **15 November 2026** | Final paper, final code, final experiments, final results, reproducibility docs |
+| Research PPT (title, literature review, novelty, architecture, expected output type) | Done |
+| Research paper draft, baseline system working, initial benchmark, evaluation framework | Done |
+| Major implementation complete, experiments complete, updated research | In progress |
+| Final paper, final code, final experiments, final results, reproducibility docs | Not started |
+
+No deadlines are tracked in this repository (WORK_PLAN C31).
 
 ---
 
