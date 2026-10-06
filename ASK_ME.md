@@ -20,14 +20,14 @@ until you answer. To answer, reply with the item ID and your choice. Answered it
   36 labels, 20 audit fixes, 24 test tasks needing 2 reviews each, 70 drafts), plus 40 blind ratings
   × 2. At 4 reviewers × ~25 reviews/day for 6–11 Oct (~600 reviews), and after the priority work, about
   325 drafts can be reviewed: **~245 approved new tasks (75% approval) + 60 pilot ≈ 305, not ~450** by
-  the 12 Oct lock.
+  12 Oct. (The lock is removed, C30: tasks approved later still count if they are approved before
+  their set's final run.)
   Options:
   (a) more reviewer hours (Avaneesh +6 h/day ≈ +210 reviews ≈ +150 tasks);
-  (b) accept ~300 tasks for the paper's locked set; later approvals form the post-lock held-out set
-      (decided rule);
-  (c) move the lock later. Not recommended: the final runs need the time.
+  (b) accept ~300 tasks;
+  (c) keep reviewing past 12 Oct. Each extra day of review shortens the time left for the final runs.
 
-  **Recommended: (a)**, and report the real locked count. Claude drafts ~80–90 tasks/day so drafting
+  **Recommended: (a)**, and report the real approved count at the final run. Claude drafts ~80–90 tasks/day so drafting
   never limits.
 - [ ] **R3: Reviewer full names.** These are recorded in `human_approved_by` and in the paper.
   `benchmark/data/review/reviewers.yaml` has "Sanvi", "Aayan", "Radhesh". Please give full names.
@@ -58,8 +58,8 @@ until you answer. To answer, reply with the item ID and your choice. Answered it
   replacement will be invented.
 ## For information (no answer needed)
 
-- The 12 Oct lock also fingerprints the pilot task and split files. **Test-task corrections from the
-  two-reviewer pass must therefore be applied before 12 Oct**, or they stay out of the paper's test set.
+- No hash lock (C30). **Test-task corrections from the two-reviewer pass must still be applied before
+  the test split's final run**, which happens exactly once.
 
 - Output limit: the master prompt lists 1,024 tokens as provisional. The logs show that 1,024
   cut off a real answer (System A, task req-010: stopped at exactly 1,024; it completed at 1,134).

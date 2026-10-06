@@ -15,8 +15,8 @@ Pipeline:
      gets an approval. Within each stratum (repository x stage), the k-th approved task takes slot k
      of a seeded permutation of [dev, dev, val, test, test], repeated. Nobody chooses where a task
      lands. A test slot needs a second, different reviewer before the task counts.
-  6. Lock (Step 3e): lock_sets() fingerprints the approved sets on 12 Oct. Tasks approved later
-     go to a NEW held-out set and are never merged into the paper's test set.
+  6. No date lock (decision C30, 2026-10-06): tasks approved at any time before the final run join
+     their split. The test split is still run exactly once and never used for tuning.
 """
 
 from __future__ import annotations
@@ -40,7 +40,6 @@ DATA_DIR = REPO_ROOT / "benchmark" / "data"
 SPANS_DIR = DATA_DIR / "drafting" / "spans"
 DRAFTS_DIR = DATA_DIR / "drafting" / "drafts"
 SPLIT_ASSIGNMENTS = DATA_DIR / "review" / "split_assignments.json"
-LOCKS_DIR = DATA_DIR / "locks"
 EIH_SWE_TASKS = DATA_DIR / "eih_swe_tasks.json"
 SEED = 42
 DRAFTER = "Claude Opus 5.5 (EIH drafting tool)"
@@ -347,52 +346,20 @@ def assign_split(item: ReviewItem, path: Path = SPLIT_ASSIGNMENTS, now: Optional
     stratum = f"{item.repository}|{item.sdlc_stage}"
     k = sum(1 for a in assignments.values() if a["stratum"] == stratum)
     split = _slot_order(stratum)[k % len(SLOT_BLOCK)]
-    lock = current_lock()
     rec = {"split": split, "stratum": stratum, "slot": k, "assigned_at": (now or datetime.now(timezone.utc)).isoformat(),
-           "set": lock["next_set"] if lock else "eih-swe-v2"}
+           "set": "eih-swe-v2"}
     assignments[item.item_id] = rec
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(assignments, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     return rec
 
 
-# ---------------------------------------------------------------------------------- lock (3e)
-
-
-def current_lock() -> Optional[dict]:
-    if not LOCKS_DIR.exists():
-        return None
-    locks = sorted(LOCKS_DIR.glob("lock_*.json"))
-    return json.loads(locks[-1].read_text(encoding="utf-8")) if locks else None
+# ---------------------------------------------------------------------------------- fingerprint
 
 
 def task_fingerprint(query: str, repository: str, commit: str, answer: str) -> str:
     """Spec §6.2: sha256(query || repository || base_commit || ground_truth_answer)."""
     return "sha256:" + hashlib.sha256("‖".join([query, repository, commit, answer]).encode("utf-8")).hexdigest()
-
-
-def lock_sets(approved: Sequence[dict], lock_date: str, dry_run: bool = True) -> dict:
-    """Fingerprint every split of the approved tasks. After the lock, new approvals go to a new set."""
-    by_split: Dict[str, List[str]] = {}
-    for t in approved:
-        by_split.setdefault(t["split"], []).append(t["fingerprint"])
-    sets = {s: {"tasks": len(v), "sha256": "sha256:" + hashlib.sha256("\n".join(sorted(v)).encode()).hexdigest()}
-            for s, v in sorted(by_split.items())}
-    pilot = {name: "sha256:" + hashlib.sha256((DATA_DIR / name).read_bytes()).hexdigest()
-             for name in ("meib_phase1_tasks.json", "splits_v1.0.json") if (DATA_DIR / name).exists()}
-    lock = {"lock_date": lock_date, "created_utc": datetime.now(timezone.utc).isoformat(), "sets": sets,
-            "pilot_files": pilot,
-            "paper_test_set": "pilot test split (splits_v1.0.json) + new tasks with split 'test' in the locked set",
-            "locked_set": "eih-swe-v2", "next_set": f"eih-swe-post-lock-{lock_date}",
-            "rule": "Tasks approved after this lock form a new held-out set and are never merged into "
-                    "the paper's test set."}
-    if not dry_run:
-        LOCKS_DIR.mkdir(parents=True, exist_ok=True)
-        path = LOCKS_DIR / f"lock_{lock_date}.json"
-        if path.exists():
-            raise ReviewError(f"{path} already exists; a lock is never rewritten")
-        path.write_text(json.dumps(lock, indent=2) + "\n", encoding="utf-8")
-    return lock
 
 
 # ---------------------------------------------------------------------------------- approved -> tasks

@@ -17,7 +17,7 @@ in `ASK_ME.md`. Nothing is cut until he decides.
 | Tue 6 Oct | Day-one reviewer calibration (`calibration-01`, 10 tasks × 4 reviewers, Cohen's kappa) |
 | Tue 6 – Wed 7 Oct | Correctness pass on the 24 existing test tasks (2 reviewers each), **before any tuning** (3b) |
 | Fri 9 Oct | Config freeze: one config for A–E and every routing tier, hashes recorded (Step 2e) |
-| Mon 12 Oct | Reviewers' last day; **all sets locked by hash** (EIH-SWE splits, EIH-Fresh, RQ6 tasks, external slices) |
+| Mon 12 Oct | Reviewer target date. No hash lock (C30): a task approved before its set's final run joins that set |
 | Mon 12 – Mon 19 Oct | Final runs, unattended 24 h/day with resume (job queue) |
 | Tue 20 Oct | Final statistics, figures, paper + report drafts complete |
 | 21–25 Oct | Buffer only |
@@ -87,8 +87,8 @@ final held-out test** (plan Phase 10).
 **Available:** 6–20 Oct ≈ 14.5 days × 24 h × ~0.85 usable (cooling, restarts, ingestion
 contention) ≈ **300 GPU-hours**.
 
-Only runs on frozen, locked sets count as final. Those can start on 9 Oct (external sets,
-after the freeze) or 12 Oct (EIH-SWE test, RQ6, Fresh, after the lock). That leaves ≈ 230 GPU-h
+Only runs on the frozen config count as final. Those can start on 9 Oct (external sets,
+after the freeze) or about 12 Oct (EIH-SWE test, RQ6, Fresh, once review of each set is finished; no hash lock, C30). That leaves ≈ 230 GPU-h
 for them.
 
 **Shortfall:** about 250 GPU-h for Modes R/Q and classification, plus all of Mode P. The options

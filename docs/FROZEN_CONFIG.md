@@ -94,4 +94,4 @@ the measured 15 s per unit):
 - the benchmark fixes in `docs/BENCHMARK_AUDIT.md`;
 - the label verification (L1).
 
-The test split is run only after the final freeze and the 12 Oct lock.
+The test split is run only after the final freeze, exactly once (no hash lock: C30).

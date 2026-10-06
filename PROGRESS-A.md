@@ -15,7 +15,7 @@ Decisions recorded (ASK_ME Decided; WORK_PLAN C27–C29).
 **3a: drafting tool** (`benchmark/drafting.py`, `scripts/draft_tasks.py`)
 - Seeded span sampling; drafts FAIL on missing or out-of-file lines; batches with a rotating requester.
 - 40/20/40 split assigned at first approval (a test slot needs a second reviewer).
-- Fingerprints; `lock_sets`.
+- Task fingerprints. (`lock_sets` was removed afterwards: C30, no hash lock.)
 - Round 1: 70 drafts (6 repos × 6 stages, every claim checked in code, 0 validation failures; 2 spans
   skipped with reasons). Two drafts expose real pinned-code defects: Requests `multiple_domains`, and
   Pylint `visit_try` missing `no-else-raise`.

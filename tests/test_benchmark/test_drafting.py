@@ -107,7 +107,6 @@ def _item(i, stage="testing", repo_="pallets/flask"):
 
 
 def test_stratified_40_20_40_and_deterministic(tmp_path, monkeypatch):
-    monkeypatch.setattr(dr, "LOCKS_DIR", tmp_path / "locks")
     path = tmp_path / "assign.json"
     got = [dr.assign_split(_item(i), path=path, now=T0)["split"] for i in range(10)]
     assert Counter(got) == {"dev": 4, "val": 2, "test": 4}
@@ -116,7 +115,6 @@ def test_stratified_40_20_40_and_deterministic(tmp_path, monkeypatch):
 
 
 def test_test_slot_needs_a_second_independent_reviewer(store, monkeypatch, tmp_path):
-    monkeypatch.setattr(dr, "LOCKS_DIR", tmp_path / "locks")
     order = dr._slot_order("pallets/flask|testing")
     k = order.index("test")
     items = [_item(i) for i in range(k + 1)]
@@ -133,19 +131,13 @@ def test_test_slot_needs_a_second_independent_reviewer(store, monkeypatch, tmp_p
     assert t["split"] == "test" and t["human_approved_by"] == "Aayan; Sanvi" and t["fingerprint"].startswith("sha256:")
 
 
-# --- lock (3e) ---------------------------------------------------------------------------------
+# --- no date lock (C30) -------------------------------------------------------------------------
 
 
-def test_lock_dry_run_commit_and_post_lock_set(tmp_path, monkeypatch):
-    monkeypatch.setattr(dr, "LOCKS_DIR", tmp_path / "locks")
-    approved = [{"split": "test", "fingerprint": "sha256:a"}, {"split": "dev", "fingerprint": "sha256:b"}]
-    dry = dr.lock_sets(approved, "2026-10-12")
-    assert not (tmp_path / "locks").exists() and dry["sets"]["test"]["tasks"] == 1
-    dr.lock_sets(approved, "2026-10-12", dry_run=False)
-    with pytest.raises(ReviewError, match="never rewritten"):
-        dr.lock_sets(approved, "2026-10-12", dry_run=False)
+def test_every_approval_joins_the_main_set(tmp_path):
     rec = dr.assign_split(_item(99), path=tmp_path / "a.json", now=T0)
-    assert rec["set"] == "eih-swe-post-lock-2026-10-12"
+    assert rec["set"] == "eih-swe-v2"
+    assert not hasattr(dr, "lock_sets")
 
 
 def test_fingerprint_matches_spec_fields():
