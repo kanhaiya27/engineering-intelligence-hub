@@ -94,6 +94,9 @@ def main(argv=None) -> int:
     imp.add_argument("--assign", default="", help="comma list of reviewers, or 'all'")
     args = p.parse_args(argv)
 
+    for stream in (sys.stdout, sys.stderr):   # Windows consoles default to cp1252
+        if hasattr(stream, "reconfigure"):
+            stream.reconfigure(encoding="utf-8", errors="replace")
     store = ReviewStore(Path(args.root)) if args.root else ReviewStore()
     try:
         if args.cmd == "next":

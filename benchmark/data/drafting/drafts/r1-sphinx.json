@@ -1,0 +1,262 @@
+[
+ {
+  "span_id": "span-f3eca92a39d9",
+  "repository": "sphinx-doc/sphinx",
+  "sdlc_stage": "requirements",
+  "task_type": "requirement_retrieval",
+  "complexity": "low",
+  "criticality": "low",
+  "query": "Which system packages does Sphinx's installation guide name for installing Sphinx on Debian/Ubuntu, RHEL/CentOS and other Linux distributions, and what naming confusion does it warn about?",
+  "answer": "Debian/Ubuntu: `apt-get install python3-sphinx`; RHEL/CentOS: `yum install python-sphinx` (both install Python if it is not present). Other distributions usually call the package `python3-sphinx`, `python-sphinx` or `sphinx`. It warns that at least two other packages have 'sphinx' in their name: the CMU Sphinx speech-recognition toolkit and the Sphinx search full-text search database.",
+  "acceptable_alternatives": [
+   "python3-sphinx (apt), python-sphinx (yum), else python3-sphinx/python-sphinx/sphinx; beware CMU Sphinx and Sphinx search."
+  ],
+  "evidence": [
+   {
+    "file": "doc/usage/installation.rst",
+    "start_line": 95,
+    "end_line": 127
+   }
+  ]
+ },
+ {
+  "span_id": "span-940d42c0f0c6",
+  "repository": "sphinx-doc/sphinx",
+  "sdlc_stage": "requirements",
+  "task_type": "requirement_understanding",
+  "complexity": "medium",
+  "criticality": "low",
+  "query": "In what order does Sphinx's `any` role look for a target, what happens when it finds none or several, and how does it interact with intersphinx?",
+  "answer": "First it tries the standard cross-reference targets that `doc`, `ref` or `option` would find (including custom objects added to the standard domain via `Sphinx.add_object_type`); then it looks for objects in all loaded domains, each domain deciding how specific a match must be. If no target or several targets are found, a warning is emitted (for several, you can switch to a specific role). With `sphinx.ext.intersphinx`, if no local target is found, all object types of the intersphinx inventories are also searched. It was added in 1.3 and is a good candidate for `default_role`.",
+  "acceptable_alternatives": [
+   "Standard-domain targets first, then every loaded domain; warns on zero or multiple matches; falls back to intersphinx inventories."
+  ],
+  "evidence": [
+   {
+    "file": "doc/usage/referencing.rst",
+    "start_line": 33,
+    "end_line": 72
+   }
+  ]
+ },
+ {
+  "span_id": "span-c6778c060ce1",
+  "repository": "sphinx-doc/sphinx",
+  "sdlc_stage": "architecture",
+  "task_type": "architecture_qa",
+  "complexity": "medium",
+  "criticality": "low",
+  "query": "How does `sphinx.ext.todo`'s `TodoListProcessor` turn each `todolist` node into the list of todos, and what changes when `todo_include_todos` or `todo_link_only` is set?",
+  "answer": "It gathers all todos from the `todo` domain and, for every `todolist` node in the doctree: if `todo_include_todos` is false it simply removes the node. Otherwise it replaces the node with, for each todo, a deep copy with its ids cleared and its references resolved for the current document (by temporarily wrapping it in a document node), followed by a 'todo-source' paragraph linking to the original entry. With `todo_link_only` the paragraph is just '<<original entry>>'; otherwise it reads '(The <<original entry>> is located in <source>, line <n>.)'. If no URI can be computed (e.g. LaTeX), the link target is skipped.",
+  "acceptable_alternatives": [
+   "Each todolist becomes copies of all todos plus links to the originals; removed when todo_include_todos is false; todo_link_only shortens the link text."
+  ],
+  "evidence": [
+   {
+    "file": "sphinx/ext/todo.py",
+    "start_line": 123,
+    "end_line": 196
+   }
+  ]
+ },
+ {
+  "span_id": "span-f1818c2a6055",
+  "repository": "sphinx-doc/sphinx",
+  "sdlc_stage": "architecture",
+  "task_type": "code_explanation",
+  "complexity": "medium",
+  "criticality": "low",
+  "query": "What does Sphinx's `AutoNumbering` transform do, and which nodes does it act on?",
+  "answer": "It is a `SphinxTransform` (priority 210) that registers IDs for tables, figures and literal blocks so they can be numbered. For every element in the document, if the standard domain says the node is enumerable, the node has a numfig title, and it has no ids yet, it calls `document.note_implicit_target(node)` to give it an implicit target id.",
+  "acceptable_alternatives": [
+   "Gives enumerable nodes with a numfig title but no ids an implicit target so they can be numbered."
+  ],
+  "evidence": [
+   {
+    "file": "sphinx/transforms/__init__.py",
+    "start_line": 202,
+    "end_line": 216
+   }
+  ]
+ },
+ {
+  "span_id": "span-4b0acef32fbe",
+  "repository": "sphinx-doc/sphinx",
+  "sdlc_stage": "development",
+  "task_type": "code_explanation",
+  "complexity": "low",
+  "criticality": "low",
+  "query": "What does `sphinx.ext.inheritance_diagram`'s `setup()` register with Sphinx?",
+  "answer": "It sets up `sphinx.ext.graphviz`, adds the `inheritance_diagram` node with visitors for LaTeX, HTML and Texinfo (text and man output skip it), registers the `inheritance-diagram` directive, adds the config values `inheritance_graph_attrs`, `inheritance_node_attrs`, `inheritance_edge_attrs` and `inheritance_alias` (all default `{}`), and returns metadata with Sphinx's version and `parallel_read_safe: True`.",
+  "acceptable_alternatives": [
+   "graphviz extension, the node with latex/html/texinfo visitors, the inheritance-diagram directive, four config dicts, parallel_read_safe True."
+  ],
+  "evidence": [
+   {
+    "file": "sphinx/ext/inheritance_diagram.py",
+    "start_line": 480,
+    "end_line": 494
+   }
+  ]
+ },
+ {
+  "span_id": "span-1324230d3440",
+  "repository": "sphinx-doc/sphinx",
+  "sdlc_stage": "development",
+  "task_type": "code_explanation",
+  "complexity": "low",
+  "criticality": "low",
+  "query": "How does Sphinx's LaTeX writer render a `productionlist` node?",
+  "answer": "`visit_productionlist` appends a blank line and `\\begin{productionlist}`, then sets `in_production_list = 1`; `depart_productionlist` appends `\\end{productionlist}` followed by a blank line and resets `in_production_list = 0`.",
+  "acceptable_alternatives": [
+   "It wraps the node in a LaTeX productionlist environment and toggles in_production_list."
+  ],
+  "evidence": [
+   {
+    "file": "sphinx/writers/latex.py",
+    "start_line": 600,
+    "end_line": 607
+   }
+  ]
+ },
+ {
+  "span_id": "span-5d9759edbeed",
+  "repository": "sphinx-doc/sphinx",
+  "sdlc_stage": "testing",
+  "task_type": "test_explanation",
+  "complexity": "medium",
+  "criticality": "low",
+  "query": "What does Sphinx's `test_cpp_maximum_signature_line_length_overrides_global` verify?",
+  "answer": "With the global `maximum_signature_line_length` set to 1 and `cpp_maximum_signature_line_length` set to exactly the length of `str hello(str name)`, it parses `.. cpp:function:: str hello(str name)` and checks the doctree structure and that the parameter list has `multi_line_parameter_list=False`. So the C++-specific limit overrides the global one, and a signature exactly at the limit stays on a single line.",
+  "acceptable_alternatives": [
+   "The cpp-specific limit overrides the global limit of 1, so a signature of exactly that length is not split across lines."
+  ],
+  "evidence": [
+   {
+    "file": "tests/test_domains/test_domain_cpp.py",
+    "start_line": 1696,
+    "end_line": 1718
+   }
+  ]
+ },
+ {
+  "span_id": "span-cf74758e6937",
+  "repository": "sphinx-doc/sphinx",
+  "sdlc_stage": "testing",
+  "task_type": "test_explanation",
+  "complexity": "medium",
+  "criticality": "low",
+  "query": "What does Sphinx's `test_autodoc_process_signature_typehints` check about the `autodoc-process-signature` event?",
+  "answer": "It connects a handler that records its arguments, formats the signature of `func(x: int, y: int) -> int` with the function documenter, and asserts the event was called once with `(app, 'function', 'func', func, directive.genopt, '(x: int, y: int)', 'int')`: the app, object type, name, object, options, the signature with type hints, and the return annotation.",
+  "acceptable_alternatives": [
+   "The event receives app, 'function', name, object, options, '(x: int, y: int)' and return annotation 'int'."
+  ],
+  "evidence": [
+   {
+    "file": "tests/test_extensions/test_ext_autodoc.py",
+    "start_line": 294,
+    "end_line": 312
+   }
+  ]
+ },
+ {
+  "span_id": "span-5a137418bcec",
+  "repository": "sphinx-doc/sphinx",
+  "sdlc_stage": "code_review",
+  "task_type": "review_assistance",
+  "complexity": "medium",
+  "criticality": "low",
+  "query": "Review `MockFinder.invalidate_caches` in `sphinx/ext/autodoc/mock.py`: why does it remove modules from `sys.modules`, and when is it called?",
+  "answer": "While mocking is active, every module the finder mocks is recorded in `mocked_modules`. `invalidate_caches` pops each of those names from `sys.modules` (ignoring missing ones), so the mock modules do not stay cached and later imports can load the real modules (or fail normally). The `mock()` context manager calls it in its `finally` block after removing the finder from `sys.meta_path`.",
+  "acceptable_alternatives": [
+   "It deletes mocked module names from sys.modules when mock() exits, so mock objects do not linger as cached modules."
+  ],
+  "evidence": [
+   {
+    "file": "sphinx/ext/autodoc/mock.py",
+    "start_line": 111,
+    "end_line": 111
+   },
+   {
+    "file": "sphinx/ext/autodoc/mock.py",
+    "start_line": 136,
+    "end_line": 156
+   }
+  ]
+ },
+ {
+  "span_id": "span-bf0931f5b5b4",
+  "repository": "sphinx-doc/sphinx",
+  "sdlc_stage": "code_review",
+  "task_type": "review_assistance",
+  "complexity": "medium",
+  "criticality": "low",
+  "query": "Review `ReSTDirectiveOption.handle_signature` in `sphinx/domains/rst.py`: how does it parse a signature like `maxdepth: integer`, and how is the `:type:` option shown?",
+  "answer": "It splits the stripped signature on the first colon followed by whitespace (`re.split(r'\\s*:\\s+', ..., maxsplit=1)`); if there is no such separator, the whole signature is the name and there is no argument. It renders the name as `:name:` (`desc_name`), stores the stripped name as `fullname`, adds the argument (if any) as an annotation, adds ` (<type>)` when the directive's `type` option is set, and returns the name. So `maxdepth: integer` gives name `maxdepth` and argument `integer`.",
+  "acceptable_alternatives": [
+   "Split on the first ': ' into name and argument (else name only); render :name:, the argument and ' (type)' as annotations."
+  ],
+  "evidence": [
+   {
+    "file": "sphinx/domains/rst.py",
+    "start_line": 150,
+    "end_line": 164
+   }
+  ]
+ },
+ {
+  "span_id": "span-63ba3da68d53",
+  "repository": "sphinx-doc/sphinx",
+  "sdlc_stage": "maintenance",
+  "task_type": "error_analysis",
+  "complexity": "low",
+  "criticality": "low",
+  "query": "Diagnose a Sphinx build that fails at startup with `ExtensionError: math renderer mathjax is already registered`.",
+  "answer": "`SphinxComponentRegistry.add_html_math_renderer` refuses a name that is already in `html_inline_math_renderers` and raises `ExtensionError('math renderer %s is already registered')`. Two extensions (or one loaded twice) are registering an HTML math renderer under the same name, here `mathjax`. Remove the duplicate extension or register the renderer under a different name.",
+  "acceptable_alternatives": [
+   "Two extensions register an HTML math renderer named mathjax; add_html_math_renderer rejects duplicate names."
+  ],
+  "evidence": [
+   {
+    "file": "sphinx/registry.py",
+    "start_line": 420,
+    "end_line": 434
+   }
+  ]
+ },
+ {
+  "span_id": "span-6ad345e680f0",
+  "repository": "sphinx-doc/sphinx",
+  "sdlc_stage": "maintenance",
+  "task_type": "error_analysis",
+  "complexity": "medium",
+  "criticality": "low",
+  "query": "Japanese HTML search with `html_search_options = {'type': 'mecab'}` fails with `RuntimeError: MeCab dynamic library is not available`. Why, and how can it be fixed?",
+  "answer": "The MeCab splitter falls back to `ctypes` when the `mecab` Python binding is not installed (`init_ctypes`). It locates the library from the `lib` option: with no `lib` it searches for `libmecab.dll` (Windows) or `mecab`; a bare name is looked up with `ctypes.util.find_library`; a path is used only if it exists. If nothing is found, it raises this `RuntimeError`. Install the mecab Python binding or the MeCab library, or set `'lib': '/path/to/libmecab.so'` in `html_search_options`.",
+  "acceptable_alternatives": [
+   "Without the mecab binding, the ctypes fallback cannot find libmecab; install MeCab or give its path via the lib option."
+  ],
+  "evidence": [
+   {
+    "file": "sphinx/search/ja.py",
+    "start_line": 18,
+    "end_line": 22
+   },
+   {
+    "file": "sphinx/search/ja.py",
+    "start_line": 48,
+    "end_line": 56
+   },
+   {
+    "file": "sphinx/search/ja.py",
+    "start_line": 74,
+    "end_line": 92
+   },
+   {
+    "file": "doc/usage/configuration.rst",
+    "start_line": 2041,
+    "end_line": 2059
+   }
+  ]
+ }
+]

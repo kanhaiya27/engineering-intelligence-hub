@@ -1,0 +1,18 @@
+[
+  {
+    "span_id": "span-e117e7365ec2",
+    "repository": "fastapi/fastapi",
+    "stage": "requirements",
+    "file": "docs/en/docs/release-notes.md",
+    "lines": "1154-1162",
+    "reason": "A list of documentation pull requests in the release notes: no requirement content to ask about."
+  },
+  {
+    "span_id": "span-740e9a42c5b3",
+    "repository": "pytest-dev/pytest",
+    "stage": "requirements",
+    "file": "doc/en/changelog.rst",
+    "lines": "6157-6164",
+    "reason": "'Trivial/Internal Changes' changelog entries (type comments, a doc reference): no requirement content."
+  }
+]

@@ -1,0 +1,636 @@
+{
+  "batch_id": "draft-r1-03",
+  "created_at": "2026-10-06T01:36:54.506904+00:00",
+  "purpose": "review",
+  "assigned_to": [
+    "Avaneesh Kumar Verma",
+    "Sanvi",
+    "Radhesh"
+  ],
+  "priority": 50,
+  "items": [
+    {
+      "item_id": "eih-swe-0a72dc2d68",
+      "kind": "new_task",
+      "split": "unassigned",
+      "repository": "sphinx-doc/sphinx",
+      "commit_sha": "0d912c85fd3ec385432fe707f6a0678425d1e841",
+      "sdlc_stage": "development",
+      "task_type": "code_explanation",
+      "complexity": "low",
+      "criticality": "low",
+      "query": "What does `sphinx.ext.inheritance_diagram`'s `setup()` register with Sphinx?",
+      "proposed_answer": "It sets up `sphinx.ext.graphviz`, adds the `inheritance_diagram` node with visitors for LaTeX, HTML and Texinfo (text and man output skip it), registers the `inheritance-diagram` directive, adds the config values `inheritance_graph_attrs`, `inheritance_node_attrs`, `inheritance_edge_attrs` and `inheritance_alias` (all default `{}`), and returns metadata with Sphinx's version and `parallel_read_safe: True`.",
+      "acceptable_alternatives": [
+        "graphviz extension, the node with latex/html/texinfo visitors, the inheritance-diagram directive, four config dicts, parallel_read_safe True."
+      ],
+      "evidence": [
+        {
+          "file": "sphinx/ext/inheritance_diagram.py",
+          "start_line": 480,
+          "end_line": 494,
+          "text": "def setup(app: Sphinx) -> ExtensionMetadata:\n    app.setup_extension('sphinx.ext.graphviz')\n    app.add_node(\n        inheritance_diagram,\n        latex=(latex_visit_inheritance_diagram, None),\n        html=(html_visit_inheritance_diagram, None),\n        text=(skip, None),\n        man=(skip, None),\n        texinfo=(texinfo_visit_inheritance_diagram, None))\n    app.add_directive('inheritance-diagram', InheritanceDiagram)\n    app.add_config_value('inheritance_graph_attrs', {}, '')\n    app.add_config_value('inheritance_node_attrs', {}, '')\n    app.add_config_value('inheritance_edge_attrs', {}, '')\n    app.add_config_value('inheritance_alias', {}, '')\n    return {'version': sphinx.__display_version__, 'parallel_read_safe': True}",
+          "span_sha256": "sha256:63a1a6855788cb3ba33d4189d50763fea2385b156e404da3ca404b1fd618c3cd"
+        }
+      ],
+      "drafted_by": "Claude Opus 5.5 (EIH drafting tool)",
+      "requested_by": "Aayan",
+      "status_note": "drafted (LLM draft, not verified); span span-4b0acef32fbe"
+    },
+    {
+      "item_id": "eih-swe-6cba57727d",
+      "kind": "new_task",
+      "split": "unassigned",
+      "repository": "sphinx-doc/sphinx",
+      "commit_sha": "0d912c85fd3ec385432fe707f6a0678425d1e841",
+      "sdlc_stage": "development",
+      "task_type": "code_explanation",
+      "complexity": "low",
+      "criticality": "low",
+      "query": "How does Sphinx's LaTeX writer render a `productionlist` node?",
+      "proposed_answer": "`visit_productionlist` appends a blank line and `\\begin{productionlist}`, then sets `in_production_list = 1`; `depart_productionlist` appends `\\end{productionlist}` followed by a blank line and resets `in_production_list = 0`.",
+      "acceptable_alternatives": [
+        "It wraps the node in a LaTeX productionlist environment and toggles in_production_list."
+      ],
+      "evidence": [
+        {
+          "file": "sphinx/writers/latex.py",
+          "start_line": 600,
+          "end_line": 607,
+          "text": "    def visit_productionlist(self, node: Element) -> None:\n        self.body.append(BLANKLINE)\n        self.body.append(r'\\begin{productionlist}' + CR)\n        self.in_production_list = 1\n\n    def depart_productionlist(self, node: Element) -> None:\n        self.body.append(r'\\end{productionlist}' + BLANKLINE)\n        self.in_production_list = 0",
+          "span_sha256": "sha256:261ad05a6c2e79821256812d0541b22f70603bfadeb97baa6d9f20ef675a7d7f"
+        }
+      ],
+      "drafted_by": "Claude Opus 5.5 (EIH drafting tool)",
+      "requested_by": "Aayan",
+      "status_note": "drafted (LLM draft, not verified); span span-1324230d3440"
+    },
+    {
+      "item_id": "eih-swe-b02e9ec3dc",
+      "kind": "new_task",
+      "split": "unassigned",
+      "repository": "sphinx-doc/sphinx",
+      "commit_sha": "0d912c85fd3ec385432fe707f6a0678425d1e841",
+      "sdlc_stage": "testing",
+      "task_type": "test_explanation",
+      "complexity": "medium",
+      "criticality": "low",
+      "query": "What does Sphinx's `test_cpp_maximum_signature_line_length_overrides_global` verify?",
+      "proposed_answer": "With the global `maximum_signature_line_length` set to 1 and `cpp_maximum_signature_line_length` set to exactly the length of `str hello(str name)`, it parses `.. cpp:function:: str hello(str name)` and checks the doctree structure and that the parameter list has `multi_line_parameter_list=False`. So the C++-specific limit overrides the global one, and a signature exactly at the limit stays on a single line.",
+      "acceptable_alternatives": [
+        "The cpp-specific limit overrides the global limit of 1, so a signature of exactly that length is not split across lines."
+      ],
+      "evidence": [
+        {
+          "file": "tests/test_domains/test_domain_cpp.py",
+          "start_line": 1696,
+          "end_line": 1718,
+          "text": "@pytest.mark.sphinx('html', confoverrides={\n    'cpp_maximum_signature_line_length': len('str hello(str name)'),\n    'maximum_signature_line_length': 1,\n})\ndef test_cpp_maximum_signature_line_length_overrides_global(app):\n    text = '.. cpp:function:: str hello(str name)'\n    doctree = restructuredtext.parse(app, text)\n    assert_node(doctree, (\n        addnodes.index,\n        [desc, ([desc_signature, ([desc_signature_line, (pending_xref,\n                                                         desc_sig_space,\n                                                         [desc_name, [desc_sig_name, \"hello\"]],\n                                                         desc_parameterlist)])],\n                desc_content)],\n    ))\n    assert_node(doctree[1], addnodes.desc, desctype='function',\n                domain='cpp', objtype='function', no_index=False)\n    assert_node(doctree[1][0][0][3], [desc_parameterlist, desc_parameter, (\n        [pending_xref, [desc_sig_name, 'str']],\n        desc_sig_space,\n        [desc_sig_name, 'name'],\n    )])\n    assert_node(doctree[1][0][0][3], desc_parameterlist, multi_line_parameter_list=False)",
+          "span_sha256": "sha256:dea8e436ff0f360f0441c7cd268f510f016a95cb9eabcead1cd5ce32f0ba0d36"
+        }
+      ],
+      "drafted_by": "Claude Opus 5.5 (EIH drafting tool)",
+      "requested_by": "Aayan",
+      "status_note": "drafted (LLM draft, not verified); span span-5d9759edbeed"
+    },
+    {
+      "item_id": "eih-swe-b3d62cf058",
+      "kind": "new_task",
+      "split": "unassigned",
+      "repository": "sphinx-doc/sphinx",
+      "commit_sha": "0d912c85fd3ec385432fe707f6a0678425d1e841",
+      "sdlc_stage": "testing",
+      "task_type": "test_explanation",
+      "complexity": "medium",
+      "criticality": "low",
+      "query": "What does Sphinx's `test_autodoc_process_signature_typehints` check about the `autodoc-process-signature` event?",
+      "proposed_answer": "It connects a handler that records its arguments, formats the signature of `func(x: int, y: int) -> int` with the function documenter, and asserts the event was called once with `(app, 'function', 'func', func, directive.genopt, '(x: int, y: int)', 'int')`: the app, object type, name, object, options, the signature with type hints, and the return annotation.",
+      "acceptable_alternatives": [
+        "The event receives app, 'function', name, object, options, '(x: int, y: int)' and return annotation 'int'."
+      ],
+      "evidence": [
+        {
+          "file": "tests/test_extensions/test_ext_autodoc.py",
+          "start_line": 294,
+          "end_line": 312,
+          "text": "def test_autodoc_process_signature_typehints(app):\n    captured = []\n\n    def process_signature(*args):\n        captured.append(args)\n\n    app.connect('autodoc-process-signature', process_signature)\n\n    def func(x: int, y: int) -> int:\n        pass\n\n    directive = make_directive_bridge(app.env)\n    inst = app.registry.documenters['function'](directive, 'func')\n    inst.fullname = 'func'\n    inst.object = func\n    inst.objpath = ['func']\n    inst.format_signature()\n    assert captured == [(app, 'function', 'func', func,\n                         directive.genopt, '(x: int, y: int)', 'int')]",
+          "span_sha256": "sha256:4e0bce4360e12459cbed8bebf216d61c22aba7df761475113d47f95d8f5ad7bc"
+        }
+      ],
+      "drafted_by": "Claude Opus 5.5 (EIH drafting tool)",
+      "requested_by": "Aayan",
+      "status_note": "drafted (LLM draft, not verified); span span-cf74758e6937"
+    },
+    {
+      "item_id": "eih-swe-c47821a75f",
+      "kind": "new_task",
+      "split": "unassigned",
+      "repository": "sphinx-doc/sphinx",
+      "commit_sha": "0d912c85fd3ec385432fe707f6a0678425d1e841",
+      "sdlc_stage": "code_review",
+      "task_type": "review_assistance",
+      "complexity": "medium",
+      "criticality": "low",
+      "query": "Review `MockFinder.invalidate_caches` in `sphinx/ext/autodoc/mock.py`: why does it remove modules from `sys.modules`, and when is it called?",
+      "proposed_answer": "While mocking is active, every module the finder mocks is recorded in `mocked_modules`. `invalidate_caches` pops each of those names from `sys.modules` (ignoring missing ones), so the mock modules do not stay cached and later imports can load the real modules (or fail normally). The `mock()` context manager calls it in its `finally` block after removing the finder from `sys.meta_path`.",
+      "acceptable_alternatives": [
+        "It deletes mocked module names from sys.modules when mock() exits, so mock objects do not linger as cached modules."
+      ],
+      "evidence": [
+        {
+          "file": "sphinx/ext/autodoc/mock.py",
+          "start_line": 111,
+          "end_line": 111,
+          "text": "        self.finder.mocked_modules.append(spec.name)",
+          "span_sha256": "sha256:70b1f64306ed42201dea9775c8cece385fa340dfe08ea7ef762feb70091e2cc8"
+        },
+        {
+          "file": "sphinx/ext/autodoc/mock.py",
+          "start_line": 136,
+          "end_line": 156,
+          "text": "    def invalidate_caches(self) -> None:\n        \"\"\"Invalidate mocked modules on sys.modules.\"\"\"\n        for modname in self.mocked_modules:\n            sys.modules.pop(modname, None)\n\n\n@contextlib.contextmanager\ndef mock(modnames: list[str]) -> Iterator[None]:\n    \"\"\"Insert mock modules during context::\n\n    with mock(['target.module.name']):\n        # mock modules are enabled here\n        ...\n    \"\"\"\n    finder = MockFinder(modnames)\n    try:\n        sys.meta_path.insert(0, finder)\n        yield\n    finally:\n        sys.meta_path.remove(finder)\n        finder.invalidate_caches()",
+          "span_sha256": "sha256:604b5a3c988fed5e5be432c22705d96cf0595f74a46c797c3a9dbe33c130b16c"
+        }
+      ],
+      "drafted_by": "Claude Opus 5.5 (EIH drafting tool)",
+      "requested_by": "Aayan",
+      "status_note": "drafted (LLM draft, not verified); span span-5a137418bcec"
+    },
+    {
+      "item_id": "eih-swe-ebd1f3bfbe",
+      "kind": "new_task",
+      "split": "unassigned",
+      "repository": "sphinx-doc/sphinx",
+      "commit_sha": "0d912c85fd3ec385432fe707f6a0678425d1e841",
+      "sdlc_stage": "code_review",
+      "task_type": "review_assistance",
+      "complexity": "medium",
+      "criticality": "low",
+      "query": "Review `ReSTDirectiveOption.handle_signature` in `sphinx/domains/rst.py`: how does it parse a signature like `maxdepth: integer`, and how is the `:type:` option shown?",
+      "proposed_answer": "It splits the stripped signature on the first colon followed by whitespace (`re.split(r'\\s*:\\s+', ..., maxsplit=1)`); if there is no such separator, the whole signature is the name and there is no argument. It renders the name as `:name:` (`desc_name`), stores the stripped name as `fullname`, adds the argument (if any) as an annotation, adds ` (<type>)` when the directive's `type` option is set, and returns the name. So `maxdepth: integer` gives name `maxdepth` and argument `integer`.",
+      "acceptable_alternatives": [
+        "Split on the first ': ' into name and argument (else name only); render :name:, the argument and ' (type)' as annotations."
+      ],
+      "evidence": [
+        {
+          "file": "sphinx/domains/rst.py",
+          "start_line": 150,
+          "end_line": 164,
+          "text": "    def handle_signature(self, sig: str, signode: desc_signature) -> str:\n        try:\n            name, argument = re.split(r'\\s*:\\s+', sig.strip(), maxsplit=1)\n        except ValueError:\n            name, argument = sig, None\n\n        desc_name = f':{name}:'\n        signode['fullname'] = name.strip()\n        signode += addnodes.desc_name(desc_name, desc_name)\n        if argument:\n            signode += addnodes.desc_annotation(' ' + argument, ' ' + argument)\n        if self.options.get('type'):\n            text = ' (%s)' % self.options['type']\n            signode += addnodes.desc_annotation(text, text)\n        return name",
+          "span_sha256": "sha256:4c182830c42de1f5a35d6b215b32c1e861cdd016e37d086bf5628ffa08c87b66"
+        }
+      ],
+      "drafted_by": "Claude Opus 5.5 (EIH drafting tool)",
+      "requested_by": "Aayan",
+      "status_note": "drafted (LLM draft, not verified); span span-bf0931f5b5b4"
+    },
+    {
+      "item_id": "eih-swe-ec2163320c",
+      "kind": "new_task",
+      "split": "unassigned",
+      "repository": "sphinx-doc/sphinx",
+      "commit_sha": "0d912c85fd3ec385432fe707f6a0678425d1e841",
+      "sdlc_stage": "maintenance",
+      "task_type": "error_analysis",
+      "complexity": "low",
+      "criticality": "low",
+      "query": "Diagnose a Sphinx build that fails at startup with `ExtensionError: math renderer mathjax is already registered`.",
+      "proposed_answer": "`SphinxComponentRegistry.add_html_math_renderer` refuses a name that is already in `html_inline_math_renderers` and raises `ExtensionError('math renderer %s is already registered')`. Two extensions (or one loaded twice) are registering an HTML math renderer under the same name, here `mathjax`. Remove the duplicate extension or register the renderer under a different name.",
+      "acceptable_alternatives": [
+        "Two extensions register an HTML math renderer named mathjax; add_html_math_renderer rejects duplicate names."
+      ],
+      "evidence": [
+        {
+          "file": "sphinx/registry.py",
+          "start_line": 420,
+          "end_line": 434,
+          "text": "    def add_html_math_renderer(\n        self,\n        name: str,\n        inline_renderers: tuple[Callable, Callable | None] | None,\n        block_renderers: tuple[Callable, Callable | None] | None,\n    ) -> None:\n        logger.debug('[app] adding html_math_renderer: %s, %r, %r',\n                     name, inline_renderers, block_renderers)\n        if name in self.html_inline_math_renderers:\n            raise ExtensionError(__('math renderer %s is already registered') % name)\n\n        if inline_renderers is not None:\n            self.html_inline_math_renderers[name] = inline_renderers\n        if block_renderers is not None:\n            self.html_block_math_renderers[name] = block_renderers",
+          "span_sha256": "sha256:2dbe0ba23e6a4dccf8d7618a85c4c9834f8991b18f609ebe33ecc1d7a6b5d54d"
+        }
+      ],
+      "drafted_by": "Claude Opus 5.5 (EIH drafting tool)",
+      "requested_by": "Aayan",
+      "status_note": "drafted (LLM draft, not verified); span span-63ba3da68d53"
+    },
+    {
+      "item_id": "eih-swe-25c886bcf6",
+      "kind": "new_task",
+      "split": "unassigned",
+      "repository": "sphinx-doc/sphinx",
+      "commit_sha": "0d912c85fd3ec385432fe707f6a0678425d1e841",
+      "sdlc_stage": "maintenance",
+      "task_type": "error_analysis",
+      "complexity": "medium",
+      "criticality": "low",
+      "query": "Japanese HTML search with `html_search_options = {'type': 'mecab'}` fails with `RuntimeError: MeCab dynamic library is not available`. Why, and how can it be fixed?",
+      "proposed_answer": "The MeCab splitter falls back to `ctypes` when the `mecab` Python binding is not installed (`init_ctypes`). It locates the library from the `lib` option: with no `lib` it searches for `libmecab.dll` (Windows) or `mecab`; a bare name is looked up with `ctypes.util.find_library`; a path is used only if it exists. If nothing is found, it raises this `RuntimeError`. Install the mecab Python binding or the MeCab library, or set `'lib': '/path/to/libmecab.so'` in `html_search_options`.",
+      "acceptable_alternatives": [
+        "Without the mecab binding, the ctypes fallback cannot find libmecab; install MeCab or give its path via the lib option."
+      ],
+      "evidence": [
+        {
+          "file": "sphinx/search/ja.py",
+          "start_line": 18,
+          "end_line": 22,
+          "text": "try:\n    import MeCab  # type: ignore[import-not-found]\n    native_module = True\nexcept ImportError:\n    native_module = False",
+          "span_sha256": "sha256:5a7911b351530f3124955bc9bb3c5eaac524dfbe9c1cfcef8ac655ea381c2aac"
+        },
+        {
+          "file": "sphinx/search/ja.py",
+          "start_line": 48,
+          "end_line": 56,
+          "text": "class MecabSplitter(BaseSplitter):\n    def __init__(self, options: dict[str, str]) -> None:\n        super().__init__(options)\n        self.ctypes_libmecab: Any = None\n        self.ctypes_mecab: Any = None\n        if not native_module:\n            self.init_ctypes(options)\n        else:\n            self.init_native(options)",
+          "span_sha256": "sha256:e41358a4076f2509f016386b925fee3e0c07d2589e239c86813b4934a47c287f"
+        },
+        {
+          "file": "sphinx/search/ja.py",
+          "start_line": 74,
+          "end_line": 92,
+          "text": "    def init_ctypes(self, options: dict[str, str]) -> None:\n        import ctypes.util\n\n        lib = options.get('lib')\n\n        if lib is None:\n            if sys.platform.startswith('win'):\n                libname = 'libmecab.dll'\n            else:\n                libname = 'mecab'\n            libpath = ctypes.util.find_library(libname)\n        elif os.path.basename(lib) == lib:\n            libpath = ctypes.util.find_library(lib)\n        else:\n            libpath = None\n            if os.path.exists(lib):\n                libpath = lib\n        if libpath is None:\n            raise RuntimeError('MeCab dynamic library is not available')",
+          "span_sha256": "sha256:3c2697b916069ebbd424bf22af00df93e50d8b68657a0298fc643929ac5f6cf6"
+        },
+        {
+          "file": "doc/usage/configuration.rst",
+          "start_line": 2041,
+          "end_line": 2059,
+          "text": "      Options for :code-py:`'mecab'`:\n         :dic_enc:\n            _`dic_enc option` is the encoding for the MeCab algorithm.\n         :dict:\n            _`dict option` is the dictionary to use for the MeCab algorithm.\n         :lib:\n            _`lib option` is the library name for finding the MeCab library\n            via ``ctypes`` if the Python binding is not installed.\n\n         For example:\n\n         .. code-block:: python\n\n             html_search_options = {\n                 'type': 'mecab',\n                 'dic_enc': 'utf-8',\n                 'dict': '/path/to/mecab .dic',\n                 'lib': '/path/to/libmecab.so',\n             }",
+          "span_sha256": "sha256:3b5de984e34cb189a92fb51e0bc4017da148459f6ef433d3b666e9d509f90595"
+        }
+      ],
+      "drafted_by": "Claude Opus 5.5 (EIH drafting tool)",
+      "requested_by": "Aayan",
+      "status_note": "drafted (LLM draft, not verified); span span-6ad345e680f0"
+    },
+    {
+      "item_id": "eih-swe-0d51b048e7",
+      "kind": "new_task",
+      "split": "unassigned",
+      "repository": "pylint-dev/pylint",
+      "commit_sha": "da1956664d6be3d008a90ad3f72bdd9d8a7ecfaa",
+      "sdlc_stage": "requirements",
+      "task_type": "requirement_retrieval",
+      "complexity": "low",
+      "criticality": "low",
+      "query": "Which new checks did Pylint 3.2 add according to its 'What's New' notes, and what conditions does the context-manager/generator check require before it reports anything?",
+      "proposed_answer": "Two new checks: `possibly-used-before-assignment`, for names used after an `if/else` where one branch failed to define the name, raise or return (closes #1727); and a check for generators that use context managers that do not handle cleanup properly when the generator is not fully exhausted (closes #2832). For the latter, the context manager must yield a non-constant value and not handle cleanup for `GeneratorExit`, and the generator must use the yielded value (`with x() as y`, not just `with x()`).",
+      "acceptable_alternatives": [
+        "possibly-used-before-assignment (#1727) and a generator/contextmanager cleanup check (#2832) that needs a non-constant yield, no GeneratorExit handling and 'with x() as y' usage."
+      ],
+      "evidence": [
+        {
+          "file": "doc/whatsnew/3/3.2/index.rst",
+          "start_line": 238,
+          "end_line": 251,
+          "text": "New Checks\n----------\n\n- Add check ``possibly-used-before-assignment`` when relying on names after an ``if/else``\n  switch when one branch failed to define the name, raise, or return.\n\n  Closes #1727 (`#1727 <https://github.com/pylint-dev/pylint/issues/1727>`_)\n\n- Checks for generators that use contextmanagers that don't handle cleanup properly.\n  Is meant to raise visibility on the case that a generator is not fully exhausted and the contextmanager is not cleaned up properly.\n  A contextmanager must yield a non-constant value and not handle cleanup for GeneratorExit.\n  The using generator must attempt to use the yielded context value `with x() as y` and not just `with x()`.\n\n  Closes #2832 (`#2832 <https://github.com/pylint-dev/pylint/issues/2832>`_)",
+          "span_sha256": "sha256:cb31fd8f6425ffabe0a8427b654ff45ff28336ca43fb5af4ad0de10c752501a4"
+        }
+      ],
+      "drafted_by": "Claude Opus 5.5 (EIH drafting tool)",
+      "requested_by": "Aayan",
+      "status_note": "drafted (LLM draft, not verified); span span-134e4f935ffd"
+    },
+    {
+      "item_id": "eih-swe-da3adda00f",
+      "kind": "new_task",
+      "split": "unassigned",
+      "repository": "pylint-dev/pylint",
+      "commit_sha": "da1956664d6be3d008a90ad3f72bdd9d8a7ecfaa",
+      "sdlc_stage": "requirements",
+      "task_type": "requirement_retrieval",
+      "complexity": "low",
+      "criticality": "low",
+      "query": "Which mailing list does Pylint's contact page point users to, where can you subscribe and read the archives, and what happened to archives from before April 2013?",
+      "proposed_answer": "The code-quality mailing list, shared with other Python code-quality tools. Subscribe at https://mail.python.org/mailman3/lists/code-quality.python.org/ and read the archives at https://mail.python.org/pipermail/code-quality/. Archives before April 2013 are no longer available; at https://mail.python.org/pipermail/ the list was under `python-projects`.",
+      "acceptable_alternatives": [
+        "code-quality@python.org (mailman3 subscribe page, pipermail archives); pre-April-2013 archives were under python-projects and are gone."
+      ],
+      "evidence": [
+        {
+          "file": "doc/contact.rst",
+          "start_line": 26,
+          "end_line": 41,
+          "text": "Mailing lists\n-------------\n\n.. _Mailing lists:\n\nThe code-quality mailing list is shared with other tools that aim\nat improving the quality of python code.\n\nYou can subscribe to this mailing list at\nhttps://mail.python.org/mailman3/lists/code-quality.python.org/\n\nArchives are available at\nhttps://mail.python.org/pipermail/code-quality/\n\nArchives before April 2013 are not available anymore. At\nhttps://mail.python.org/pipermail/ it was under ``python-projects``.",
+          "span_sha256": "sha256:7589828b33b52069e7574a6ac1ff277d68bc730463b3ae7bb5f916e1e1480740"
+        }
+      ],
+      "drafted_by": "Claude Opus 5.5 (EIH drafting tool)",
+      "requested_by": "Aayan",
+      "status_note": "drafted (LLM draft, not verified); span span-3b30c63b0be6"
+    },
+    {
+      "item_id": "eih-swe-205c53f8b1",
+      "kind": "new_task",
+      "split": "unassigned",
+      "repository": "pylint-dev/pylint",
+      "commit_sha": "da1956664d6be3d008a90ad3f72bdd9d8a7ecfaa",
+      "sdlc_stage": "architecture",
+      "task_type": "architecture_qa",
+      "complexity": "low",
+      "criticality": "low",
+      "query": "How is Pylint's optional `while_used` extension structured: which message does it define, when does it emit it, and how is it plugged into the linter?",
+      "proposed_answer": "`WhileChecker` is a `BaseChecker` named `while_used` defining message W0149 `while-used` ('Used `while` loop'; unbounded while loops can often be rewritten as bounded for loops, with exceptions such as event loops and listeners). Its `visit_while` method, decorated with `only_required_for_messages('while-used')`, emits the message for every `while` node. The module's `register(linter)` function calls `linter.register_checker(WhileChecker(linter))`.",
+      "acceptable_alternatives": [
+        "A BaseChecker with message W0149 while-used emitted in visit_while for every while loop, registered via register(linter)."
+      ],
+      "evidence": [
+        {
+          "file": "pylint/extensions/while_used.py",
+          "start_line": 20,
+          "end_line": 37,
+          "text": "class WhileChecker(BaseChecker):\n    name = \"while_used\"\n    msgs = {\n        \"W0149\": (\n            \"Used `while` loop\",\n            \"while-used\",\n            \"Unbounded `while` loops can often be rewritten as bounded `for` loops. \"\n            \"Exceptions can be made for cases such as event loops, listeners, etc.\",\n        )\n    }\n\n    @only_required_for_messages(\"while-used\")\n    def visit_while(self, node: nodes.While) -> None:\n        self.add_message(\"while-used\", node=node)\n\n\ndef register(linter: PyLinter) -> None:\n    linter.register_checker(WhileChecker(linter))",
+          "span_sha256": "sha256:1824de5f3b822c2883595aead0712b94ea02ef9a2dcd0762b754d46ee02cfad7"
+        }
+      ],
+      "drafted_by": "Claude Opus 5.5 (EIH drafting tool)",
+      "requested_by": "Aayan",
+      "status_note": "drafted (LLM draft, not verified); span span-0df912de02b8"
+    },
+    {
+      "item_id": "eih-swe-8c066991bd",
+      "kind": "new_task",
+      "split": "unassigned",
+      "repository": "pylint-dev/pylint",
+      "commit_sha": "da1956664d6be3d008a90ad3f72bdd9d8a7ecfaa",
+      "sdlc_stage": "architecture",
+      "task_type": "dependency_understanding",
+      "complexity": "high",
+      "criticality": "low",
+      "query": "How does pyreverse's `PackageDiagram` record module dependencies, and how does it resolve relative imports and imports made only under `TYPE_CHECKING`?",
+      "proposed_answer": "`add_from_depend` adds a from-imported module to the importing module's `depends` list, or, if the import is inside a `TYPE_CHECKING` block, to `type_depends` (skipping names already present). `extract_relationships` adds class-to-module 'ownership' relationships, sets each module's shape to 'package', and for every name in `depends` and `type_depends` looks the module up with `get_module`, adding 'depends' or 'type_depends' relationships (names that cannot be found are skipped). `get_module` matches the exact name, then `<package>.<name>`, then `<parent package>.<name>`, so relative imports resolve to their full module names.",
+      "acceptable_alternatives": [
+        "Imports go to depends or (under TYPE_CHECKING) type_depends; get_module tries the name, package.name and parent.name; edges are 'depends'/'type_depends'."
+      ],
+      "evidence": [
+        {
+          "file": "pylint/pyreverse/diagrams.py",
+          "start_line": 254,
+          "end_line": 331,
+          "text": "class PackageDiagram(ClassDiagram):\n    \"\"\"Package diagram handling.\"\"\"\n\n    TYPE = \"package\"\n\n    def modules(self) -> list[PackageEntity]:\n        \"\"\"Return all module nodes in the diagram.\"\"\"\n        return [o for o in self.objects if isinstance(o, PackageEntity)]\n\n    def module(self, name: str) -> PackageEntity:\n        \"\"\"Return a module by its name, raise KeyError if not found.\"\"\"\n        for mod in self.modules():\n            if mod.node.name == name:\n                return mod\n        raise KeyError(name)\n\n    def add_object(self, title: str, node: nodes.Module) -> None:\n        \"\"\"Create a diagram object.\"\"\"\n        assert node not in self._nodes\n        ent = PackageEntity(title, node)\n        self._nodes[node] = ent\n        self.objects.append(ent)\n\n    def get_module(self, name: str, node: nodes.Module) -> PackageEntity:\n        \"\"\"Return a module by its name, looking also for relative imports;\n        raise KeyError if not found.\n        \"\"\"\n        for mod in self.modules():\n            mod_name = mod.node.name\n            if mod_name == name:\n                return mod\n            # search for fullname of relative import modules\n            package = node.root().name\n            if mod_name == f\"{package}.{name}\":\n                return mod\n            if mod_name == f\"{package.rsplit('.', 1)[0]}.{name}\":\n                return mod\n        raise KeyError(name)\n\n    def add_from_depend(self, node: nodes.ImportFrom, from_module: str) -> None:\n        \"\"\"Add dependencies created by from-imports.\"\"\"\n        mod_name = node.root().name\n        package = self.module(mod_name).node\n\n        if from_module in package.depends:\n            return\n\n        if not in_type_checking_block(node):\n            package.depends.append(from_module)\n        elif from_module not in package.type_depends:\n            package.type_depends.append(from_module)\n\n    def extract_relationships(self) -> None:\n        \"\"\"Extract relationships between nodes in the diagram.\"\"\"\n        super().extract_relationships()\n        for class_obj in self.classes():\n            # ownership\n            try:\n                mod = self.object_from_node(class_obj.node.root())\n                self.add_relationship(class_obj, mod, \"ownership\")\n            except KeyError:\n                continue\n        for package_obj in self.modules():\n            package_obj.shape = \"package\"\n            # dependencies\n            for dep_name in package_obj.node.depends:\n                try:\n                    dep = self.get_module(dep_name, package_obj.node)\n                except KeyError:\n                    continue\n                self.add_relationship(package_obj, dep, \"depends\")\n\n            for dep_name in package_obj.node.type_depends:\n                try:\n                    dep = self.get_module(dep_name, package_obj.node)\n                except KeyError:  # pragma: no cover\n                    continue\n                self.add_relationship(package_obj, dep, \"type_depends\")",
+          "span_sha256": "sha256:0fb5edfaf6337c519b5b68cee113b16011c79f4f56ce819dd086feb003f56ca7"
+        }
+      ],
+      "drafted_by": "Claude Opus 5.5 (EIH drafting tool)",
+      "requested_by": "Aayan",
+      "status_note": "drafted (LLM draft, not verified); span span-b38c1bbe3d53"
+    },
+    {
+      "item_id": "eih-swe-45e894edb1",
+      "kind": "new_task",
+      "split": "unassigned",
+      "repository": "pylint-dev/pylint",
+      "commit_sha": "da1956664d6be3d008a90ad3f72bdd9d8a7ecfaa",
+      "sdlc_stage": "development",
+      "task_type": "code_explanation",
+      "complexity": "medium",
+      "criticality": "low",
+      "query": "How do the visitors in Pylint's exceptions checker dispatch on the inferred value of a `raise`, and what happens for a node type with no specific `visit_*` method?",
+      "proposed_answer": "`BaseVisitor.visit` takes the node's class name in lower case, looks up a method `visit_<name>` on the visitor, and calls it if present; otherwise it calls `visit_default`. In `BaseVisitor` `visit_default` does nothing. `ExceptionRaiseLeafVisitor` overrides it to report `raising-bad-type` for leaf values it has no specific handler for.",
+      "acceptable_alternatives": [
+        "Dispatch to visit_<lowercase class name>, else visit_default (a no-op in BaseVisitor; raising-bad-type in the leaf visitor)."
+      ],
+      "evidence": [
+        {
+          "file": "pylint/checkers/exceptions.py",
+          "start_line": 184,
+          "end_line": 200,
+          "text": "class BaseVisitor:\n    \"\"\"Base class for visitors defined in this module.\"\"\"\n\n    def __init__(self, checker: ExceptionsChecker, node: nodes.Raise) -> None:\n        self._checker = checker\n        self._node = node\n\n    def visit(self, node: SuccessfulInferenceResult) -> None:\n        name = node.__class__.__name__.lower()\n        dispatch_meth = getattr(self, \"visit_\" + name, None)\n        if dispatch_meth:\n            dispatch_meth(node)\n        else:\n            self.visit_default(node)\n\n    def visit_default(self, _: nodes.NodeNG) -> None:\n        \"\"\"Default implementation for all the nodes.\"\"\"",
+          "span_sha256": "sha256:2c9ebc889ba0d7b0c70c6b0683f0c20d845602945220bef56feb45096e5bf00a"
+        },
+        {
+          "file": "pylint/checkers/exceptions.py",
+          "start_line": 280,
+          "end_line": 283,
+          "text": "    def visit_default(self, node: nodes.NodeNG) -> None:\n        name = getattr(node, \"name\", node.__class__.__name__)\n        self._checker.add_message(\n            \"raising-bad-type\",",
+          "span_sha256": "sha256:5b3300e59082c6d8932abc0ee3d19b3bd23645a7220d43fddd73a1d938fd75a6"
+        }
+      ],
+      "drafted_by": "Claude Opus 5.5 (EIH drafting tool)",
+      "requested_by": "Aayan",
+      "status_note": "drafted (LLM draft, not verified); span span-590b054c2504"
+    },
+    {
+      "item_id": "eih-swe-5c49ce024b",
+      "kind": "new_task",
+      "split": "unassigned",
+      "repository": "pylint-dev/pylint",
+      "commit_sha": "da1956664d6be3d008a90ad3f72bdd9d8a7ecfaa",
+      "sdlc_stage": "development",
+      "task_type": "code_explanation",
+      "complexity": "medium",
+      "criticality": "low",
+      "query": "What is `ConsiderUsingWithStack` in Pylint's refactoring checker, what does `clear_all` clear, and when is it called?",
+      "proposed_answer": "It is a `NamedTuple` holding three dicts (`module_scope`, `class_scope`, `function_scope`) of objects that may trigger R1732 (consider-using-with) if not later used in a `with` block. Iterating over it yields the function, class and module dicts, in that order; `get_stack_for_frame` picks one by frame type. `clear_all` iterates over the three dicts and clears each. `RefactoringChecker._init()` calls it, so the stacks are reset when the checker's state is (re)initialised.",
+      "acceptable_alternatives": [
+        "A NamedTuple of function/class/module dicts for R1732 candidates; clear_all empties all three and is called from _init()."
+      ],
+      "evidence": [
+        {
+          "file": "pylint/checkers/refactoring/refactoring_checker.py",
+          "start_line": 197,
+          "end_line": 222,
+          "text": "class ConsiderUsingWithStack(NamedTuple):\n    \"\"\"Stack for objects that may potentially trigger a R1732 message\n    if they are not used in a ``with`` block later on.\n    \"\"\"\n\n    module_scope: dict[str, nodes.NodeNG] = {}\n    class_scope: dict[str, nodes.NodeNG] = {}\n    function_scope: dict[str, nodes.NodeNG] = {}\n\n    def __iter__(self) -> Iterator[dict[str, nodes.NodeNG]]:\n        yield from (self.function_scope, self.class_scope, self.module_scope)\n\n    def get_stack_for_frame(\n        self, frame: nodes.FunctionDef | nodes.ClassDef | nodes.Module\n    ) -> dict[str, nodes.NodeNG]:\n        \"\"\"Get the stack corresponding to the scope of the given frame.\"\"\"\n        if isinstance(frame, nodes.FunctionDef):\n            return self.function_scope\n        if isinstance(frame, nodes.ClassDef):\n            return self.class_scope\n        return self.module_scope\n\n    def clear_all(self) -> None:\n        \"\"\"Convenience method to clear all stacks.\"\"\"\n        for stack in self:\n            stack.clear()",
+          "span_sha256": "sha256:86a54a6ec70aeaf6e4664de69199b8fbdde8449c12fee3b0ea6cdf30a6005a84"
+        },
+        {
+          "file": "pylint/checkers/refactoring/refactoring_checker.py",
+          "start_line": 538,
+          "end_line": 543,
+          "text": "    def _init(self) -> None:\n        self._nested_blocks: list[NodesWithNestedBlocks] = []\n        self._elifs: list[tuple[int, int]] = []\n        self._reported_swap_nodes: set[nodes.NodeNG] = set()\n        self._can_simplify_bool_op: bool = False\n        self._consider_using_with_stack.clear_all()",
+          "span_sha256": "sha256:a949657b34809d0996eb6c13c9541d85935b32fcb9e5bb12b789ccc6decaeaf6"
+        }
+      ],
+      "drafted_by": "Claude Opus 5.5 (EIH drafting tool)",
+      "requested_by": "Aayan",
+      "status_note": "drafted (LLM draft, not verified); span span-0d471dc3861b"
+    },
+    {
+      "item_id": "eih-swe-2adcbdaa90",
+      "kind": "new_task",
+      "split": "unassigned",
+      "repository": "pylint-dev/pylint",
+      "commit_sha": "da1956664d6be3d008a90ad3f72bdd9d8a7ecfaa",
+      "sdlc_stage": "testing",
+      "task_type": "test_explanation",
+      "complexity": "medium",
+      "criticality": "medium",
+      "query": "What does Pylint's `test_primer_stdlib_no_crash` assert about running Pylint on standard-library modules, and how does it interpret the exit code?",
+      "proposed_answer": "For each stdlib module it runs Pylint with every extension and message enabled (`--enable-all-extensions --enable=all`), but `duplicate-code` disabled and `test` directories ignored, with stdout patched and `UserWarning`s ignored. On `SystemExit` it asserts nothing was written to stdout or stderr, that the exit code is not 32 (a crash), and that the code is even (an odd code would mean a message of category 'fatal').",
+      "acceptable_alternatives": [
+        "No output, exit code != 32 (crash) and even (no fatal message) when linting stdlib modules with everything enabled except duplicate-code."
+      ],
+      "evidence": [
+        {
+          "file": "tests/primer/test_primer_stdlib.py",
+          "start_line": 47,
+          "end_line": 73,
+          "text": "@pytest.mark.primer_stdlib\n@pytest.mark.parametrize(\n    (\"test_module_location\", \"test_module_name\"), MODULES_TO_CHECK, ids=MODULES_NAMES\n)\ndef test_primer_stdlib_no_crash(\n    test_module_location: str, test_module_name: str, capsys: CaptureFixture\n) -> None:\n    \"\"\"Test that pylint does not produce any crashes or fatal errors on stdlib modules.\"\"\"\n    __tracebackhide__ = True  # pylint: disable=unused-variable\n    os.chdir(test_module_location)\n    with _patch_stdout(io.StringIO()):\n        try:\n            # We want to test all the code we can\n            enables = [\"--enable-all-extensions\", \"--enable=all\"]\n            # Duplicate code takes too long and is relatively safe\n            # We don't want to lint the test directory which are repetitive\n            disables = [\"--disable=duplicate-code\", \"--ignore=test\"]\n            with warnings.catch_warnings():\n                warnings.simplefilter(\"ignore\", category=UserWarning)\n                Run([test_module_name, *enables, *disables])\n        except SystemExit as ex:\n            out, err = capsys.readouterr()\n            assert not err, err\n            assert not out\n            msg = f\"Encountered {{}} during primer stlib test for {test_module_name}\"\n            assert ex.code != 32, msg.format(\"a crash\")\n            assert ex.code % 2 == 0, msg.format(\"a message of category 'fatal'\")  # type: ignore[operator]",
+          "span_sha256": "sha256:8d8cfd81ba010815d40dedcda73de465fa3c2631522b058269765b7f072253ad"
+        }
+      ],
+      "drafted_by": "Claude Opus 5.5 (EIH drafting tool)",
+      "requested_by": "Aayan",
+      "status_note": "drafted (LLM draft, not verified); span span-7e9570cbc511"
+    },
+    {
+      "item_id": "eih-swe-79717a565e",
+      "kind": "new_task",
+      "split": "unassigned",
+      "repository": "pylint-dev/pylint",
+      "commit_sha": "da1956664d6be3d008a90ad3f72bdd9d8a7ecfaa",
+      "sdlc_stage": "testing",
+      "task_type": "test_explanation",
+      "complexity": "medium",
+      "criticality": "low",
+      "query": "What does Pylint's `test_directories` actually verify about the functional test suite?",
+      "proposed_answer": "It calls `get_functional_test_files_from_directory` on `tests/functional`. That function first runs `_check_functional_tests_structure`, which checks that the directory layout follows the expected file/folder structure (including a maximum number of files per directory, ignoring underscored entries), and then collects every `.py` file except `__init__.py`, skipping `__pycache__`. The test passes if the structure check raises nothing.",
+      "acceptable_alternatives": [
+        "It checks the functional test directory structure via _check_functional_tests_structure (files per directory etc.) while collecting the tests."
+      ],
+      "evidence": [
+        {
+          "file": "tests/test_functional_directories.py",
+          "start_line": 13,
+          "end_line": 16,
+          "text": "def test_directories() -> None:\n    \"\"\"Test that the directory structure of the functional tests is correct.\"\"\"\n    functional_dir = Path(__file__).parent / \"functional\"\n    get_functional_test_files_from_directory(functional_dir)",
+          "span_sha256": "sha256:c274a428cb39b25ba8da873b03094f645ecdf3ee7fa3b1603a0198606e3bd2cb"
+        },
+        {
+          "file": "pylint/testutils/functional/find_functional_tests.py",
+          "start_line": 35,
+          "end_line": 60,
+          "text": "def get_functional_test_files_from_directory(\n    input_dir: Path | str,\n    max_file_per_directory: int = REASONABLY_DISPLAYABLE_VERTICALLY,\n) -> list[FunctionalTestFile]:\n    \"\"\"Get all functional tests in the input_dir.\"\"\"\n    suite = []\n\n    _check_functional_tests_structure(Path(input_dir), max_file_per_directory)\n\n    for dirpath, dirnames, filenames in os.walk(input_dir):\n        if dirpath.endswith(\"__pycache__\"):\n            continue\n        dirnames.sort()\n        filenames.sort()\n        for filename in filenames:\n            if filename != \"__init__.py\" and filename.endswith(\".py\"):\n                suite.append(FunctionalTestFile(dirpath, filename))\n    return suite\n\n\ndef _check_functional_tests_structure(\n    directory: Path, max_file_per_directory: int\n) -> None:\n    \"\"\"Check if test directories follow correct file/folder structure.\n\n    Ignore underscored directories or files.",
+          "span_sha256": "sha256:12dff55dee7b5fbdbeb1ae2098c9818f211ea049af4765a3dfff068cfc06a790"
+        }
+      ],
+      "drafted_by": "Claude Opus 5.5 (EIH drafting tool)",
+      "requested_by": "Aayan",
+      "status_note": "drafted (LLM draft, not verified); span span-cacc9114bae3"
+    },
+    {
+      "item_id": "eih-swe-f928ad9d62",
+      "kind": "new_task",
+      "split": "unassigned",
+      "repository": "pylint-dev/pylint",
+      "commit_sha": "da1956664d6be3d008a90ad3f72bdd9d8a7ecfaa",
+      "sdlc_stage": "code_review",
+      "task_type": "defect_detection",
+      "complexity": "high",
+      "criticality": "medium",
+      "query": "Review `RefactoringChecker.visit_try`: it is decorated with `only_required_for_messages(\"too-many-nested-blocks\", \"no-else-return\")` but also calls `_check_superfluous_else_raise`. What goes wrong if a project disables everything except `no-else-raise`?",
+      "proposed_answer": "The decorator tells the AST walker to skip the method when none of the listed messages is enabled. `no-else-raise` is not in the list, so with only `no-else-raise` enabled `visit_try` is never called and `try/except/else` blocks whose except branches always raise are not reported (a false negative). `visit_if` does list `no-else-raise`, so `if` statements are still checked. Fix: add `no-else-raise` to `visit_try`'s decorator.",
+      "acceptable_alternatives": [
+        "no-else-raise is missing from the decorator, so the walker skips visit_try when it is the only enabled message: false negatives for try/else; add it to the list."
+      ],
+      "evidence": [
+        {
+          "file": "pylint/checkers/refactoring/refactoring_checker.py",
+          "start_line": 706,
+          "end_line": 711,
+          "text": "    @utils.only_required_for_messages(\"too-many-nested-blocks\", \"no-else-return\")\n    def visit_try(self, node: nodes.Try) -> None:\n        self._check_nested_blocks(node)\n\n        self._check_superfluous_else_return(node)\n        self._check_superfluous_else_raise(node)",
+          "span_sha256": "sha256:3c7cc4e2cd2b49c5dc2e57754426b093c54823555776ea3119451b95ef213c25"
+        },
+        {
+          "file": "pylint/checkers/utils.py",
+          "start_line": 473,
+          "end_line": 494,
+          "text": "def only_required_for_messages(\n    *messages: str,\n) -> Callable[\n    [AstCallbackMethod[_CheckerT, _NodeT]], AstCallbackMethod[_CheckerT, _NodeT]\n]:\n    \"\"\"Decorator to store messages that are handled by a checker method as an\n    attribute of the function object.\n\n    This information is used by ``ASTWalker`` to decide whether to call the decorated\n    method or not. If none of the messages is enabled, the method will be skipped.\n    Therefore, the list of messages must be well maintained at all times!\n    This decorator only has an effect on ``visit_*`` and ``leave_*`` methods\n    of a class inheriting from ``BaseChecker``.\n    \"\"\"\n\n    def store_messages(\n        func: AstCallbackMethod[_CheckerT, _NodeT]\n    ) -> AstCallbackMethod[_CheckerT, _NodeT]:\n        func.checks_msgs = messages  # type: ignore[attr-defined]\n        return func\n\n    return store_messages",
+          "span_sha256": "sha256:c5cd4a362b6c4aa4b05606a2497e2d9bf403fd9d96583eb6517ca07e4ba9fa1c"
+        },
+        {
+          "file": "pylint/checkers/refactoring/refactoring_checker.py",
+          "start_line": 883,
+          "end_line": 892,
+          "text": "    @utils.only_required_for_messages(\n        \"too-many-nested-blocks\",\n        \"simplifiable-if-statement\",\n        \"no-else-return\",\n        \"no-else-raise\",\n        \"no-else-break\",\n        \"no-else-continue\",\n        \"consider-using-get\",\n        \"consider-using-min-builtin\",\n        \"consider-using-max-builtin\",",
+          "span_sha256": "sha256:6b51eeea00b21363ea7095b495681bc7fe4f3d9398b68ffa65602dbcbd74bbb3"
+        }
+      ],
+      "drafted_by": "Claude Opus 5.5 (EIH drafting tool)",
+      "requested_by": "Aayan",
+      "status_note": "drafted (LLM draft, not verified); span span-99e6c48fc3ea"
+    },
+    {
+      "item_id": "eih-swe-97c6e8984c",
+      "kind": "new_task",
+      "split": "unassigned",
+      "repository": "pylint-dev/pylint",
+      "commit_sha": "da1956664d6be3d008a90ad3f72bdd9d8a7ecfaa",
+      "sdlc_stage": "code_review",
+      "task_type": "review_assistance",
+      "complexity": "medium",
+      "criticality": "low",
+      "query": "Review `visit_assign` in Pylint's `redefined_variable_type` extension: which assignments does it ignore, and what does it record for the others?",
+      "proposed_answer": "It ignores assignments whose first target is a tuple (multiple assignment) or a subscript (slice/item assignment), and assignments of `None`. For the others, if `node_type(node.value)` infers a single type, it appends `(node, type.pytype())` to the list for the target's source text in the current scope's dict (`self._assigns[-1]`), so later code can detect the same name being assigned different types.",
+      "acceptable_alternatives": [
+        "Skips tuple/subscript targets and None; records (node, pytype) per target name in the current scope."
+      ],
+      "evidence": [
+        {
+          "file": "pylint/extensions/redefined_variable_type.py",
+          "start_line": 92,
+          "end_line": 104,
+          "text": "    def visit_assign(self, node: nodes.Assign) -> None:\n        # we don't handle multiple assignment nor slice assignment\n        target = node.targets[0]\n        if isinstance(target, (nodes.Tuple, nodes.Subscript)):\n            return\n        # ignore NoneType\n        if is_none(node):\n            return\n        _type = node_type(node.value)\n        if _type:\n            self._assigns[-1].setdefault(target.as_string(), []).append(\n                (node, _type.pytype())\n            )",
+          "span_sha256": "sha256:696c3d52ad80a17572f50a09fc02d279cdfdea8b008452438bd00238c6aa9497"
+        }
+      ],
+      "drafted_by": "Claude Opus 5.5 (EIH drafting tool)",
+      "requested_by": "Aayan",
+      "status_note": "drafted (LLM draft, not verified); span span-f191986d5777"
+    },
+    {
+      "item_id": "eih-swe-ffd40ecf64",
+      "kind": "new_task",
+      "split": "unassigned",
+      "repository": "pylint-dev/pylint",
+      "commit_sha": "da1956664d6be3d008a90ad3f72bdd9d8a7ecfaa",
+      "sdlc_stage": "maintenance",
+      "task_type": "change_understanding",
+      "complexity": "low",
+      "criticality": "low",
+      "query": "According to Pylint 3.2's release notes, what was fixed for `symilar`'s short options, and which form is still not supported?",
+      "proposed_answer": "A crash in `symilar` when the `-d` or `-i` short options were not properly recognized was fixed (closes #9343). It is still impossible to write `-d=1`; you must write `-d 1`.",
+      "acceptable_alternatives": [
+        "symilar no longer crashes on -d/-i (#9343), but -d=1 still does not work; use -d 1."
+      ],
+      "evidence": [
+        {
+          "file": "doc/whatsnew/3/3.2/index.rst",
+          "start_line": 105,
+          "end_line": 108,
+          "text": "- Fixed a crash in ``symilar`` when the ``-d`` or ``-i`` short option were not properly recognized.\n  It's still impossible to do ``-d=1`` (you must do ``-d 1``).\n\n  Closes #9343 (`#9343 <https://github.com/pylint-dev/pylint/issues/9343>`_)",
+          "span_sha256": "sha256:609580718c1f030819aaf5c7db5c487ec05174c2facbd064b8e57687a70e6305"
+        }
+      ],
+      "drafted_by": "Claude Opus 5.5 (EIH drafting tool)",
+      "requested_by": "Aayan",
+      "status_note": "drafted (LLM draft, not verified); span span-282c2e2e13ed"
+    },
+    {
+      "item_id": "eih-swe-cda00edf3e",
+      "kind": "new_task",
+      "split": "unassigned",
+      "repository": "pylint-dev/pylint",
+      "commit_sha": "da1956664d6be3d008a90ad3f72bdd9d8a7ecfaa",
+      "sdlc_stage": "maintenance",
+      "task_type": "change_understanding",
+      "complexity": "low",
+      "criticality": "low",
+      "query": "After upgrading to Pylint 3.0, `x = my_list.sort()` reports a different message than before. Which one, and why according to the 3.0 release notes?",
+      "proposed_answer": "Pylint 3.0 emits `assignment-from-no-return` for calls to builtin methods such as `dict.update()`. For consistency, `list.sort()` now raises `assignment-from-no-return` rather than `assignment-from-none` (closes #8714 and #8810).",
+      "acceptable_alternatives": [
+        "assignment-from-no-return instead of assignment-from-none, for consistency with builtin methods like dict.update()."
+      ],
+      "evidence": [
+        {
+          "file": "doc/whatsnew/3/3.0/index.rst",
+          "start_line": 536,
+          "end_line": 541,
+          "text": "- Emit ``assignment-from-no-return`` for calls to builtin methods like ``dict.update()``.\n  Calls to ``list.sort()`` now raise ``assignment-from-no-return``\n  rather than ``assignment-from-none`` for consistency.\n\n  Closes #8714\n  Closes #8810 (`#8714 <https://github.com/pylint-dev/pylint/issues/8714>`_)",
+          "span_sha256": "sha256:9ce80ac111a69dcdc48bc4a3abf28933677efffc3f496b0aa5bccf79377d4955"
+        }
+      ],
+      "drafted_by": "Claude Opus 5.5 (EIH drafting tool)",
+      "requested_by": "Aayan",
+      "status_note": "drafted (LLM draft, not verified); span span-3d9a868baab1"
+    }
+  ]
+}

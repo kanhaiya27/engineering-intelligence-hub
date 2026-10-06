@@ -410,9 +410,9 @@ def progress_report(store: ReviewStore, day: Optional[str] = None,
     for ledger in gpu_ledgers:
         for line in Path(ledger).read_text(encoding="utf-8").splitlines():
             rec = json.loads(line) if line.strip() else {}
-            trial = rec.get("trial") or rec.get("result") or {}
-            if (day is None or str(rec.get("finished_utc", rec.get("timestamp", ""))).startswith(day)) and "latency_ms" in trial:
-                gpu_s += trial["latency_ms"] / 1000.0
+            # job-queue ledger: started_utc + wall_s per unit (UTC dates)
+            if rec.get("status") == "ok" and (day is None or str(rec.get("started_utc", "")).startswith(day)):
+                gpu_s += float(rec.get("wall_s") or 0.0)
     blockers = []
     if ask_me and Path(ask_me).exists():
         blockers = [l.strip()[6:] for l in Path(ask_me).read_text(encoding="utf-8").splitlines()

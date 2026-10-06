@@ -179,7 +179,13 @@ def _doc_sections(repository: str, roots: Sequence[str]) -> List[Tuple[str, int,
 def candidates(repository: str, stage: str) -> List[Tuple[str, int, int, str, str]]:
     lay = LAYOUT[repository]
     if stage == "requirements":
-        return _doc_sections(repository, lay["docs"])
+        # Changelogs are maintenance material (fix after round 1: two pytest changelog sections
+        # were sampled as requirements spans and had to be skipped).
+        changes = {c for c in lay["changes"]}
+        return [c for c in _doc_sections(repository, lay["docs"])
+                if not any(c[0] == ch or c[0].startswith(ch.rstrip("/") + "/") for ch in changes)
+                and "changelog" not in c[0].lower() and "release-notes" not in c[0].lower()
+                and "whatsnew" not in c[0].lower()]
     if stage == "architecture":
         return [c for c in _py_units(repository, lay["src"], tests=False) if c[3] == "class"]
     if stage == "development":
