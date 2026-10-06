@@ -378,7 +378,11 @@ def lock_sets(approved: Sequence[dict], lock_date: str, dry_run: bool = True) ->
         by_split.setdefault(t["split"], []).append(t["fingerprint"])
     sets = {s: {"tasks": len(v), "sha256": "sha256:" + hashlib.sha256("\n".join(sorted(v)).encode()).hexdigest()}
             for s, v in sorted(by_split.items())}
+    pilot = {name: "sha256:" + hashlib.sha256((DATA_DIR / name).read_bytes()).hexdigest()
+             for name in ("meib_phase1_tasks.json", "splits_v1.0.json") if (DATA_DIR / name).exists()}
     lock = {"lock_date": lock_date, "created_utc": datetime.now(timezone.utc).isoformat(), "sets": sets,
+            "pilot_files": pilot,
+            "paper_test_set": "pilot test split (splits_v1.0.json) + new tasks with split 'test' in the locked set",
             "locked_set": "eih-swe-v2", "next_set": f"eih-swe-post-lock-{lock_date}",
             "rule": "Tasks approved after this lock form a new held-out set and are never merged into "
                     "the paper's test set."}

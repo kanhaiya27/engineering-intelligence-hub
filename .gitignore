@@ -89,6 +89,8 @@ experiments/results/**/*.npz
 !experiments/results/thresholds/**/*.json
 !experiments/results/determinism/**/*.json
 !experiments/results/variance/**/*.json
+!experiments/results/power/**/*.json
+!experiments/results/routing_effect/**/*.json
 !experiments/results/queue/**/summary.json
 !experiments/results/queue/**/run.json
 !experiments/results/queue/machine_A/modeq-*/results.jsonl
