@@ -1,6 +1,7 @@
 # RQ readiness
 
-Updated after Step 2 (6 Oct 2026, branch `master-fix`, frozen manifest `95e5a587c9d60e7a`). One entry per
+Updated after Step 3 (6 Oct 2026, branch `master-fix`, frozen manifest `95e5a587c9d60e7a`, to be re-frozen
+after the M1 change set). One entry per
 research question (`docs/original_plan.md` §3). The original plan states no formal hypotheses beyond
 RQ1–RQ8 and contributions C1–C4.
 
@@ -13,6 +14,26 @@ RQ1–RQ8 and contributions C1–C4.
 | Retrieval energy components | `experiments/results/retrieval_energy/` | — |
 | Classifier before/after | `experiments/results/classifier/` | — |
 | Benchmark audit | `docs/BENCHMARK_AUDIT.md` | — |
+
+**Step 3 power check** (`experiments/results/power/machine_A/power-2026-10-06/power.json`, spread from the
+2c dev/val run). Minimum detectable effect, two-sided α 0.05, power 0.80. The test split is 24 today and
+84 / 144 / 180 if 150 / 300 / 390 new tasks are approved.
+
+| Comparison | Measure | 24 | 84 | 144 | 180 | Per stage at 180 |
+|---|---|---|---|---|---|---|
+| B vs C (RQ1) | supported (McNemar) | n/a | 0.11 | 0.08 | 0.07 | n/a |
+| C vs D (RQ2) | supported | n/a | 0.14 | 0.11 | 0.10 | n/a |
+| D vs E (RQ3) | refusal | n/a | 0.14 | 0.11 | 0.10 | n/a |
+| E vs E + routing (RQ4) | GPU J/trial | 670 | 358 | 274 | 245 | 599 |
+| E vs E + routing (RQ4) | supported | n/a | 0.10 | 0.08 | 0.07 | n/a |
+
+"n/a" means not detectable at that size even if every discordant task favoured one system.
+Consequences:
+- **RQ5 per-stage claims** are possible only through the mixed model on a continuous measure (the
+  M1 measure), never per-stage binary tests.
+- **RQ4's dev/val energy saving** (−93 J/trial, −6%) is below the MDE even at 180 test tasks.
+- **D vs E on "supported"** has too few discordant tasks (3%) to test at all. RQ3 must be reported
+  with refusals and supported rates side by side.
 
 **The one finding that blocks every RQ:** correctness (plain token F1) never reaches a task
 threshold (0 of 648 trials), so the primary success measure is 0 for every system (ASK_ME M1).
@@ -130,6 +151,9 @@ finding, reported as it stands.
 **Baselines.** E; large-LLM baseline open (D4).
 
 **Confounds left.**
+- **Classifier errors move the starting tier.** The tier from the classifier equals the tier from the
+  benchmark labels on 16/24 dev and 6/12 val tasks. 4 tasks the labels would send to 7B start on 1.5B/3B
+  (`experiments/results/routing_effect/`). The classifier is not tuned further (decision).
 - **T1:** small-tier repetition loops, 9 of 108 trials.
 - **Model swaps:** 122 loads in 108 trials, which also evict the 7B for the other systems.
 
@@ -137,7 +161,8 @@ finding, reported as it stands.
 Unsupported rate 92.9% vs 81.2%; output 804 vs 548 tokens.
 
 **Likelihood of a supported answer:** Medium. On these data the quality constraint looks violated: a
-possible negative finding.
+possible negative finding. An energy saving of the dev/val size would not be detectable (MDE 245 J at 180
+tasks).
 
 **Smallest remaining fix.** T1, D4, M1.
 
@@ -145,7 +170,15 @@ possible negative finding.
 
 **Design valid.** Partially. The method is ready (mixed model, stratified Holm).
 
-**Sample size.** 4 per stage on test now; target about 30 per stage (Step 3).
+**Sample size.** 4 per stage on test now. The realistic test size by the 12 Oct lock is 84–144, i.e.
+14–24 per stage (see the review projection in the Step 3 report).
+
+**Power** (Step 3d):
+- Per-stage binary comparisons are not detectable at any reachable size.
+- Per-stage continuous MDE at 180 test tasks is ~0.02–0.03 for the scale of token F1, which M1 will
+  replace.
+- RQ5 therefore rests on the task-random-intercept mixed model (system × stage interaction) on the M1
+  correctness measure, plus descriptive per-stage results.
 
 **Baselines.** As RQ1.
 

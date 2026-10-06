@@ -8,6 +8,40 @@ measured (with numbers only if actually measured), what is blocked.
 
 ---
 
+## 2026-10-06 (later) — Step 3: drafting tool, review queue, M1 rating batch, power check
+
+Decisions recorded (ASK_ME Decided; WORK_PLAN C27–C29).
+
+**3a: drafting tool** (`benchmark/drafting.py`, `scripts/draft_tasks.py`)
+- Seeded span sampling; drafts FAIL on missing or out-of-file lines; batches with a rotating requester.
+- 40/20/40 split assigned at first approval (a test slot needs a second reviewer).
+- Fingerprints; `lock_sets`.
+- Round 1: 70 drafts (6 repos × 6 stages, every claim checked in code, 0 validation failures; 2 spans
+  skipped with reasons). Two drafts expose real pinned-code defects: Requests `multiple_domains`, and
+  Pylint `visit_try` missing `no-else-raise`.
+
+**3b / 3c: queue by priority**
+- calibration (10);
+- L1 labels (36);
+- audit-fix proposals (20; requester excluded);
+- test correctness (24 × 2, rotating pairs);
+- drafts (70);
+- M1 blind rating batch: 40 answers, 2 raters each, key outside git, protocol pre-registered
+  (`docs/M1_PROTOCOL.md`) before any rating.
+
+**3d: power check.** Binary per-stage tests are not detectable at any reachable size; RQ4 energy saving
+below MDE. Routing tier from the classifier = from labels on 16/24 dev, 6/12 val.
+
+**3e:** lock dry run (empty: nothing approved yet); the lock covers the pilot files.
+
+**Fixes found on the way:** reviewer CLI forced to UTF-8 (Windows), GPU-hours field in the daily report.
+
+**Review counts today:** 0 decisions (queue just opened). GPU used: 3.7 h (2c run).
+
+**Next** — Step 4 after "go"; drafting rounds continue daily; the M1 selection runs once ratings are in.
+
+---
+
 ## 2026-10-06 — Step 2: preflight, approved decisions, confounds on dev/val, freeze
 
 Branch `master-fix`, fast-forwarded to master `58bf4ab` (PR #18).
