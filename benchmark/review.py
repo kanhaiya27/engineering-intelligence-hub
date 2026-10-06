@@ -247,6 +247,10 @@ class ReviewStore:
         with path.open("a", encoding="utf-8") as fh:
             fh.write(rec.model_dump_json() + "\n")
         self._clear_session(reviewer)
+        if decision == "approve" and item.split == "unassigned":
+            from benchmark.drafting import assign_split
+
+            assign_split(item, path=self.assignments_path, now=now)
         return rec
 
     # --- review timer (local only; .sessions is git-ignored)
@@ -269,6 +273,23 @@ class ReviewStore:
         if path.exists():
             path.unlink()
 
+    # --- split (new tasks get theirs at first approval; benchmark/drafting.py, S1)
+    @property
+    def assignments_path(self) -> Path:
+        return self.root / "split_assignments.json"
+
+    def effective_split(self, item: ReviewItem) -> str:
+        if item.split != "unassigned":
+            return item.split
+        if self.assignments_path.exists():
+            rec = json.loads(self.assignments_path.read_text(encoding="utf-8")).get(item.item_id)
+            if rec:
+                return rec["split"]
+        return "unassigned"
+
+    def required_reviews(self, item: ReviewItem) -> int:
+        return 2 if self.effective_split(item) in HELD_OUT_SPLITS else 1
+
     # --- status
     def status(self, item: ReviewItem) -> str:
         cur = self.current_decisions(item)
@@ -277,7 +298,7 @@ class ReviewStore:
             return "rejected"
         if kinds["fix"]:
             return "needs_fix"
-        if kinds["approve"] >= item.required_reviews:
+        if kinds["approve"] >= self.required_reviews(item):
             return "approved"
         return "partially_approved" if kinds["approve"] else "pending"
 

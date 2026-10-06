@@ -37,8 +37,8 @@ def show(batch, item, store: ReviewStore) -> str:
     done = store.current_decisions(item)
     out = [
         "=" * 78,
-        f"{item.item_id}   batch {batch.batch_id}   split {item.split}   "
-        f"needs {item.required_reviews} review(s), has {len(done)}",
+        f"{item.item_id}   batch {batch.batch_id}   split {store.effective_split(item)}   "
+        f"needs {store.required_reviews(item)} review(s), has {len(done)}",
         f"repository {item.repository} @ {item.commit_sha[:12]}   ({item.status_note})",
         f"labels: stage={item.sdlc_stage}  type={item.task_type}  complexity={item.complexity}  "
         f"criticality={item.criticality}",
