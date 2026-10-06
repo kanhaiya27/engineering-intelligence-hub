@@ -22,16 +22,8 @@ until you answer. To answer, reply with the item ID and your choice. Answered it
   (b) Reviewing continues to 14 Oct and the lock moves to 14 Oct.
   (c) A lower EIH-SWE target. Not recommended; that would be a scope change.
   **Recommended: (a).** Re-check after day one with the measured minutes per review.
-- [ ] **R2: Who requests drafted batches?** The no-self-approval rule also excludes the person
-  who *requested* a draft. If Avaneesh requests every LLM draft, he can never review new tasks.
-  **Recommended: the requester rotates per batch** (that person chooses the repository and stage
-  for the batch, and the other three review it).
 - [ ] **R3: Reviewer full names.** These are recorded in `human_approved_by` and in the paper.
   `benchmark/data/review/reviewers.yaml` has "Sanvi", "Aayan", "Radhesh". Please give full names.
-- [ ] **R4: How reviewers reach the queue.** (a) On this laptop in turns. (b) Each reviewer on
-  their own clone, committing only `benchmark/data/review/decisions/<name>.jsonl`; files never
-  conflict, and Avaneesh merges. **Recommended: (b)** for Sanvi/Aayan/Radhesh. This is review data
-  only: no code or results come in from other laptops.
 - [ ] **R5: Who is "lead_researcher"?** 44 pilot tasks carry `human_approved_by:
   "lead_researcher"`. If that is Avaneesh, he cannot decide on the calibration batch (drafted by
   "lead_researcher"), and those tasks have no independent approval.
@@ -40,83 +32,13 @@ until you answer. To answer, reply with the item ID and your choice. Answered it
 
 ## Benchmark and labels
 
-- [ ] **L1: Retrieval labels (VERIFIED list).** Review `docs/RETRIEVAL_LABELS_REVIEW.md`
-  (36 dev/val labels). Reply with the task numbers that are wrong. All others are recorded as
-  verified by you. Mode R numbers stay "draft labels" until then.
 - [ ] **L2: Approval of drafted tasks.** Every LLM-drafted task stays "drafted" until a human
   approves it in the review queue (`docs/REVIEW_GUIDE.md`). Confirm the four checks and the
   approve/fix/reject outcomes as written. **Recommended: confirm.**
-- [ ] **L3: 9 dev/val tasks cite a doc file with no line numbers** (dev-021, dev-028, dev-030,
-  ops-058, req-002, req-008, rev-046, test-034, test-038). This breaks Hard Rule 3. Their retrieval
-  labels have line spans.
-  **Recommended: take the lines from the label, check them in review, and write them into the
-  task file after approval** (Step 2d). The same check runs on the test tasks in the 3b
-  correctness pass.
-- [ ] **F1: EIH-Fresh size.** The master prompt says 30–50 tasks; the dataset spec (Tier 3) says
-  ~150. **Recommended: 50 by 12 Oct, recorded as change C19 in WORK_PLAN.** 150 needs ~200 more
-  reviews and +25 GPU-h.
-- [ ] **S1: Split rule for new EIH-SWE tasks.** **Recommended:** a deterministic stratified split
-  (seed 42) per SDLC stage × repository, in the pilot's ratio 40% dev / 20% val / 40% test. It is
-  assigned when a task is approved, so nobody chooses where a task lands.
-
-## Design decisions found in Step 1
-
-## Found in Step 2
-
-- [ ] **V1: Temperature-0 answers still vary between runs.** Seed 42 and temperature 0 were
-  already fixed. Probes on dev (`experiments/results/determinism/`):
-  - the same request in one session gives an identical answer (10/10);
-  - the first request after a fresh model load gives a different but repeatable answer;
-  - output limit 1,024 vs 2,048 gives a third answer.
-
-  The cause is llama.cpp's numeric path (prompt-cache state, `num_predict`), not sampling. Options:
-  (a) keep it and measure it with 3 trials, analysing per-task means;
-  (b) unload/reload the model before every trial, which is deterministic but adds load time and energy
-      to every trial.
-  **Recommended: (a).** It reflects real use, and the 3-trial variance is reported
-  (`experiments/results/variance/`).
-- [ ] **M1: The correctness measure cannot express "correct" for long answers.** Plain token F1
-  between 300–800-token answers and 1–3-sentence references is about 0.1–0.35 for every system,
-  while task thresholds are 0.60–0.85. A2's success (correct AND cites evidence) is then about 0 for
-  all systems, and CO₂e per successful task is undefined. Options:
-  (a) correctness = recall of the reference's content tokens (does the answer contain what the
-      reference says?), with the pass threshold calibrated on dev/val against the human-rated subset;
-  (b) human judgement as primary correctness on dev/val calibration only, with (a) on test;
-  (c) keep F1 and lower thresholds. Not recommended: it hides the problem.
-  **Recommended: (a)**, validated against 30–50 human-rated answers (Step 1e tooling) before the
-  test run. **Measured (Step 2c, 648 dev/val trials):** mean F1 is 0.235–0.260 for every system, and
-  0 of 648 trials reach the task threshold. So A2 success = 0 for all systems, and CO₂e per success
-  is undefined (`experiments/results/variance/machine_A/variance-2c-2026-10-06/variance.json`).
-
-- [ ] **T1: The routing tier's small models loop to the output limit.** In 9 of 108 E + routing
-  trials (3 tasks × 3 trials, repeated exactly), a 1.5B/3B generation repeated itself until the
-  2,048-token limit. System A–E (7B) never reached the limit (longest answer 1,200 tokens). Raising
-  the limit for all systems (master prompt 2e) would not end a loop, and with the ~9K-token widest
-  prompt it would overflow `num_ctx` 12,288. Options:
-  (a) keep 2,048 and report loops as a measured failure mode of the routing tier (they are failures
-      and count against CO₂e per success);
-  (b) add a repetition penalty for all models (changes every system's generation; needs a dev/val
-      rerun).
-  **Recommended: (a).**
-
 ## Plan decisions still open (WORK_PLAN §4)
 
-- [ ] **D4: Large-LLM baseline** (spec §7.3; a large model cannot run on 6 GB).
-  (a) Cite published figures, marked as not measured.
-  (b) A one-off paid API run. This breaks the local-only lock and its energy cannot be measured.
-  (c) The 7B with full context as the "send everything" baseline.
-  **Recommended: (c) + (a)**, as the spec recommends.
-- [ ] **D6: Mode P owner and scope.** Defects4J needs a JDK, the Defects4J framework and a test
-  harness. SWE-bench-family sets need per-repo Docker images: hundreds of GB, and ~1,300 GPU-h at
-  a guessed rate.
-  **Recommended:** Claude builds the harness, Avaneesh owns its decisions. Defects4J first on a
-  stratified subset by 20 Oct; the rest continues in November. Per the plan, Mode P "cannot
-  invalidate the primary results".
-- [ ] **D14: Completeness metric** (plan §9.2). **Recommended:** report evidence coverage as
-  "completeness (proxy)" and label it so; no new evaluator.
 - [ ] **D3: What "experiments complete" means on 25 Oct** (supervisor). The schedule now targets
   20 Oct for everything; G1 and D6 decide what is realistic.
-- [ ] **D9: Qdrant v1.13.2 → v1.15.1 upgrade.** It recreates the container (snapshot first).
 - [ ] **D10: Delete old merged branches.** Needs your OK.
 - [ ] **D13: Count mismatches in the original documents** (300–450 vs 400–500 tasks; 28 vs 26
   repos; 21 vs 22 task types). **Recommended:** the spec's locked 400–500 is binding; correct the
@@ -127,18 +49,6 @@ until you answer. To answer, reply with the item ID and your choice. Answered it
 - [ ] **C-9, C-10: References [9] and [10]** could not be found (`docs/CITATION_AUDIT.md`).
   Please supply the exact title, authors, venue and DOI, or tell me to remove them. No
   replacement will be invented.
-- [ ] **C-2: Reference [2]'s DOI 10.1145/3786581.3786932** is unconfirmed, and the venue appears
-  to be ICSE-SEIS, not the main track. **Recommended:** cite the arXiv ID 2601.02522 and state
-  the venue only once it is confirmed.
-
-## RQ6 repositories
-
-- [ ] **L6: Non-Python repositories for RQ6.** `datasets/registry.yaml` (the plan's 4 waves)
-  names Java (gson, commons-lang, jackson-databind, jsoup, mockito), JavaScript (express, axios),
-  TypeScript, Go (gin, cobra), Rust (serde, clap), C++ (nlohmann/json) and C (zstd).
-  **Recommended: google/gson (Java) and expressjs/express (JavaScript)**, both in the registry.
-  Add more only if review hours allow.
-
 ## For information (no answer needed)
 
 - Output limit: the master prompt lists 1,024 tokens as provisional. The logs show that 1,024
@@ -150,6 +60,24 @@ until you answer. To answer, reply with the item ID and your choice. Answered it
 - Step 1c installs `statsmodels` (mixed-effects models for RQ5) and adds it to the requirements.
 
 ## Decided
+
+- 2026-10-06 (Step 3 "go"):
+  - **M1** approved with guardrails: candidate correctness measures are compared against 30–50 blind
+    human ratings; the measure is chosen by agreement with humans BEFORE any system-level comparison;
+    raters never see the system; the threshold is set on dev/val from the human ratings; token F1 is
+    reported alongside.
+  - **T1**: keep 2,048; the routing-tier loops are reported as a measured failure.
+  - **V1**: keep 3 trials and report the variance.
+  - **Audit fixes**: all go into the review queue; nothing is applied before a human verifies them
+    against the pinned code; test-task fixes need two reviewers.
+  - **Decision table**: L1 (via the queue), L3 (after review), D4 (7B at full context + published
+    figures labelled "not measured here", never compared as if run locally), D6, D14 ("completeness
+    (proxy)"), F1 (EIH-Fresh 50, change C27), S1, R2, R4, RQ6 = google/gson + expressjs/express,
+    citation [2] = arXiv 2601.02522 (venue only once confirmed).
+  - **Freeze**: one change set (M1 + verified audit fixes + verified label changes), then one dev/val
+    rerun and a re-freeze.
+  - **Classifier**: no further tuning.
+- D9 (Qdrant 1.15.1) was done before Step 1; the client warns 1.19 vs server 1.15.1, which works.
 
 - 2026-10-06 **A3**: backup exported (`C:/EIH_backups/neo4j_graph_pre_A3_2026-10-06.jsonl.gz`), then
   `test:node:a`, `test:node:b` and their edge deleted. The graph now equals its build record
