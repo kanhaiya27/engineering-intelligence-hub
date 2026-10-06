@@ -66,8 +66,8 @@ final held-out test** (plan Phase 10).
 | Mode P: Defects4J 835, BugsInPy 493, CodeFlaws 500, SWE-bench Lite 300, Pro 731, SWE-rebench 500, Multi-SWE-bench flash 300, SWE-bench Multilingual 300 | 3,959 | ≥ 2 | 1 | ~7,900 | **unmeasured; ~1,300 at a guessed 10 min per attempt** |
 
 **Duration, not a deadline:** the R/Q subtotal is ≈ 550 GPU-h at the 30 s planning rate. The
-measured rate in Step 2c was ~15 s per unit, so it is likely nearer 300 GPU-h, i.e. roughly two
-to three weeks of the GPU running around the clock with cooling. Mode P comes on top. Without a
+measured rate in Step 2c was 20.6 s per unit (648 units in 3.7 h of wall time), so it is likely
+nearer 380 GPU-h, i.e. roughly two to three weeks of the GPU running around the clock with cooling. Mode P comes on top. Without a
 deadline every run keeps its full trials.
 
 ## 4. Review budget and quotas
