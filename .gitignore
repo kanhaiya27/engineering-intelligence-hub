@@ -195,3 +195,8 @@ Thumbs.db
 
 # --- Review queue: per-reviewer local timers (decisions themselves are committed) ---
 benchmark/data/review/.sessions/
+
+# --- OKF bundles and their proposal/audit state (WORK_PLAN C33) ---
+# Bundles are data: generated ones are rebuilt by scripts/okf_produce.py; hand-edited
+# bundles should be kept in their own git repository (OKF spec §3 recommends one).
+okf_bundles/

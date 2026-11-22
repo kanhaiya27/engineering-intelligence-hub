@@ -73,6 +73,8 @@ Status: ✅ done · 🟡 started · ⬜ not started. Each step is one branch and
 | 23 | Optional human study (8–12 participants) if ethics approval is obtained | Phase 11 | ⬜ optional |
 | 24 | Project website: overview, live demo, results dashboard (API contract v1 done) | added (C8) | 🟡 |
 | 25 | Paper, written alongside from the first real results; reproducibility package | Phase 12 | ⬜ |
+| 24a | **OKF knowledge layer (app feature, C33)**: Open Knowledge Format producer, consumer, validator, explorer and human-agent proposal/approval workflow, synchronised to Qdrant and Neo4j. Not part of Systems A–E | added (C33) | ⬜ |
+| R | **Post-SSD recovery (C32)**: tools, Ollama 0.35.1 + pinned models, Qdrant `eih_knowledge_v2` re-ingest, Neo4j access + graph rebuild, measurement rules re-checked on driver 621.01 | recovery | 🟡 branch `fix/post-ssd-recovery` |
 
 Supporting corpora (spec §4): CommitBench (reference for our own commit layer), LogHub (log
 analysis), SWE-bench Multimodal (diagram track) — used as the spec describes, not as benchmarks.
@@ -128,6 +130,9 @@ analysis), SWE-bench Multimodal (diagram track) — used as the spec describes, 
 | C29 | 2026-10-06 | Correctness yardstick (M1) to be replaced by the measure that agrees best with 30-50 blind human ratings, chosen before any system comparison; threshold set on dev/val from the ratings; token F1 reported alongside. Applied in ONE change set with the verified audit fixes and label changes, then one dev/val rerun and re-freeze | Avaneesh | 0/648 trials passed the F1 threshold |
 | C30 | 2026-10-06 | The 12 Oct hash lock is removed (supersedes the lock part of C28 and the master prompt's "lock sets by hash on 12 Oct"). No lock file and no set fingerprints; `lock_sets` and `draft_tasks.py lock` are deleted. Tasks approved at any time before a set's final run join their split (all in set `eih-swe-v2`); there is no post-lock held-out set. Unchanged: the 40/20/40 split is still assigned by seed at approval, the test split, EIH-Fresh and external sets are still never used for tuning and each is run exactly once. Cost to validity, disclosed in the paper: there is no hash record showing the test set was fixed before its results existed | Avaneesh | Decided after Claude explained the trade-off (recommended moving the lock to ~16 Oct instead) |
 | C31 | 2026-10-06 | Every deadline removed from the plan: the 20 Oct target, 21-25 Oct buffer, 25 Oct experiments/paper, 15 Nov final, 9 Oct freeze date and 12 Oct reviewer date. Work runs in step order until done. G1 (GPU shortfall to 20 Oct) and D3 (meaning of 25 Oct) closed; every run keeps its full trials. Decisions whose reason was a date (C27 Fresh = 50; D6 Defects4J subset first) are unchanged until Avaneesh reopens them (ASK_ME F2, P2) | Avaneesh | Instruction of 2026-10-06 |
+
+| C32 | 2026-11-22 | Post-SSD-failure recovery (≈2026-11-01): Python, Git, Docker reinstalled; Qdrant data, Neo4j graph, Ollama + models and `C:\EIH_share` / `C:\EIH_backups` were lost and are rebuilt from the pinned registry and builders. `qdrant-client` pinned to 1.15.x to match the pinned server. NVIDIA driver is now 621.01 (rules were measured on 617.14) and must be re-checked before any measured run | fact / Avaneesh | Restore the state the plan assumes; nothing in the plan changes |
+| C33 | 2026-11-22 | **Addition:** Google's Open Knowledge Format (OKF, spec v0.2, reads v0.1) as an application feature (step 24a). Research title, RQs and the A–E ablation ladder are unchanged; OKF is not a research system | Avaneesh | Shared, portable knowledge layer between the user and the agent; nothing removed |
 
 ## 6. Routine
 

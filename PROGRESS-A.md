@@ -8,6 +8,49 @@ measured (with numbers only if actually measured), what is blocked.
 
 ---
 
+## 2026-11-22/23 — Post-SSD recovery (C32) and OKF layer, part 1 (C33) · branch `fix/post-ssd-recovery`
+
+**Done (recovery)**
+- Audit: Git 2.56.1, Python 3.11.9 `.venv311` (pip check clean), torch 2.6.0+cu124 CUDA OK, Docker 29.9.3 /
+  Compose v5.7.1 were already reinstalled. NVIDIA driver is now **621.01** (rules were measured on 617.14).
+- Neo4j was "unhealthy": its healthcheck had the compose default password baked in at container creation
+  while the server uses the `.env` one. Volume backed up to `C:\EIH_backups\neo4j_data_2026-11-22_pre-healthcheck-fix.tgz`,
+  container recreated (volume untouched); healthy. Python driver 6.2.0 ↔ server 5.18.1 verified.
+- `qdrant-client` 1.19.0 → **1.15.1** (matches server 1.15.1; the client warned they were incompatible).
+- Corpus re-ingested from `.corpus_cache` (all 6 repos clean at the registry's pinned SHAs):
+  **53,905 chunks = 53,905 points** in `eih_knowledge_v2` (flask 1,615 · fastapi 20,353 · requests 1,036 ·
+  pytest 7,731 · sphinx 10,701 · pylint 12,469). The old local `ingestion_report.json` (gitignored) was
+  overwritten; it had the same totals.
+- Graph rebuilt (`scripts.build_graph --wave 1 --reset` on an empty DB): **37,066 nodes / 58,982 edges**,
+  every label and relationship count identical to the 2026-10-05 build; 0 indexed files without a node.
+  `graph_build_wave1.json` re-written (only provenance + timings differ).
+- Node.js **v26.13.1** LTS + npm 11.20.0 (zip, SHA-256 verified, per-user install).
+- Ollama **0.35.1** (the version the pinned digests were recorded with): GitHub's release CDN gives
+  ~45 KB/s per connection; downloading in 32 verified segments. Models not pulled yet.
+
+**Done (OKF, app feature only — Systems A–E unchanged)**
+- Spec studied at source: Google's OKF is **v0.2** (supersedes v0.1; reads v0.1 via §13 fallbacks).
+- `knowledge/okf/`: `document` (parse/serialize/validate/trust tiers/staleness), `bundle` (discovery, links,
+  conformance, search, index/log), `collaboration` (agent proposals → human approve/reject/edit, optimistic
+  concurrency, audit), `producer` (deterministic bundle from wave-1 code, API contract, docs), `sync`
+  (Qdrant `eih_okf` + Neo4j `:OKFConcept`), `agent` (grounded answers, link following, citation check,
+  gap proposals). `scripts/okf_produce.py`.
+- Isolation fix: `Neo4jGraphStore.count_edges()` counts `(:Entity)-[]->(:Entity)` and `clear()` deletes only
+  `:Entity`; identical numbers on the research graph (58,982 = 58,982), and the OKF projection can no
+  longer change the manifest's graph identity or be wiped by a graph rebuild.
+- Bundle `okf_bundles/eih`: 554 concepts, conformant, 3,194 links; `eih_okf` 2,707 points; 528 OKF→File
+  bridges. Research counts after the projection: 53,905 / 37,066 / 58,982 (unchanged).
+- Google's 4 sample bundles (53 concepts) consume conformant, 0 broken links, round-trip stable.
+
+**Measured / tests**: full suite before OKF tests 467 run → 464 passed, 0 failed, 3 skipped (all "Ollama not
+reachable"). OKF tests: 75 (incl. 1 live Qdrant/Neo4j integration test).
+
+**Next**: install Ollama 0.35.1, pull the 3 models and check digests; OKF + chat API routes; `/v1/trace`;
+frontend; re-check measurement rules on driver 621.01.
+**Blocked**: nothing (download speed only).
+
+---
+
 ## 2026-10-06 (evening) — Lock and deadlines removed (C30, C31)
 
 - C30: the 12 Oct hash lock is removed (`lock_sets` and `draft_tasks.py lock` deleted). The seeded

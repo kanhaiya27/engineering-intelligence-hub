@@ -49,7 +49,9 @@ sentence-transformers>=3.0.0
 transformers>=4.40.0
 
 # --- Phase-1 Vector Store & Retrieval ---
-qdrant-client>=1.9.0
+# Pinned to the server's minor version (docker-compose pins qdrant v1.15.1):
+# the client warns that versions more than one minor apart are incompatible.
+qdrant-client~=1.15.1
 rank-bm25>=0.2.2
 
 # --- Phase-1 LLM SDKs ---
