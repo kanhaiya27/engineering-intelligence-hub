@@ -71,10 +71,10 @@ Status: ✅ done · 🟡 started · ⬜ not started. Each step is one branch and
 | 21 | Build EIH-Fresh (~150 post-cutoff questions, fingerprinted, frozen) and run it once | Phase 9 | ⬜ |
 | 22 | Final held-out test, once, N = 5; Pareto frontier; ablation deltas Δ(A→B)…Δ(D→E); CO₂e per successful task | Phase 10 | ⬜ |
 | 23 | Optional human study (8–12 participants) if ethics approval is obtained | Phase 11 | ⬜ optional |
-| 24 | Project website: overview, live demo, results dashboard (API contract v1 done) | added (C8) | 🟡 |
+| 24 | Project website: overview, live demo, results dashboard (API contract v1 done) | added (C8) | 🟡 `web/` app (chat, knowledge, review, results, status) and `/v1/trace` + `/v1/trace/stream` implemented 2026-11-23 |
 | 25 | Paper, written alongside from the first real results; reproducibility package | Phase 12 | ⬜ |
-| 24a | **OKF knowledge layer (app feature, C33)**: Open Knowledge Format producer, consumer, validator, explorer and human-agent proposal/approval workflow, synchronised to Qdrant and Neo4j. Not part of Systems A–E | added (C33) | ⬜ |
-| R | **Post-SSD recovery (C32)**: tools, Ollama 0.35.1 + pinned models, Qdrant `eih_knowledge_v2` re-ingest, Neo4j access + graph rebuild, measurement rules re-checked on driver 621.01 | recovery | 🟡 branch `fix/post-ssd-recovery` |
+| 24a | **OKF knowledge layer (app feature, C33)**: Open Knowledge Format producer, consumer, validator, explorer and human-agent proposal/approval workflow, synchronised to Qdrant and Neo4j. Not part of Systems A–E | added (C33) | 🟡 built and live-tested 2026-11-23 (`docs/okf.md`); awaiting Avaneesh's review |
+| R | **Post-SSD recovery (C32)**: tools, Ollama 0.35.1 + pinned models, Qdrant `eih_knowledge_v2` re-ingest, Neo4j access + graph rebuild, measurement rules re-checked on driver 621.01 | recovery | 🟡 all restored and verified 2026-11-23 except the driver-621.01 re-check of the measurement rules (branch `fix/post-ssd-recovery`) |
 
 Supporting corpora (spec §4): CommitBench (reference for our own commit layer), LogHub (log
 analysis), SWE-bench Multimodal (diagram track) — used as the spec describes, not as benchmarks.

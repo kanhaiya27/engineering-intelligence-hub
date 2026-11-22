@@ -180,6 +180,7 @@ def system_status() -> dict:
         from apps.api import services
         names = services.bundle_names()
         s["okf"] = {"ok": bool(names), "bundles": names, "default_bundle": settings.okf.default_bundle}
+        s["warm_up"] = {"ok": services.warm_state.get("state") == "done", **services.warm_state}
     except Exception as exc:  # noqa: BLE001
         s["okf"] = {"ok": False, "error": str(exc)[:200]}
     out["services"] = s

@@ -8,6 +8,39 @@ measured (with numbers only if actually measured), what is blocked.
 
 ---
 
+## 2026-11-23 (later) — Ollama + models, API, web app, `/v1/trace`, live OKF workflow · branch `fix/post-ssd-recovery`
+
+**Done**
+- Ollama **0.35.1** installed (installer sha256 = GitHub's published digest). Its tray app auto-downloaded
+  0.40.17 and its own server would not start, so auto-update is off, the staged update is set aside, and
+  the server runs as `ollama serve` (`scripts/start_eih.ps1`). Models pulled; **all three digests and byte
+  sizes equal the CLAUDE.md pins** (1.5B/3B/7B, Q4_K_M).
+- Compose ports bound to 127.0.0.1 (SRS S5); containers recreated, data unchanged.
+- API: `/okf/*`, `/chat` + `/chat/stream` + `/conversations` (SQLite), `/status`, a `/ready` that really
+  checks, `/results`, and the frozen contract **`/v1/trace` + `/v1/trace/stream`** (built by the research
+  harness's own `M5BenchmarkRunner`; per-attempt data via a new optional `on_attempt` hook in
+  `QualityAwareRAGPipeline.execute`, default None, harness unchanged). Graph router: no silent in-memory
+  fallback. HF offline mode for the app.
+- Web app `web/` (Node 26.13.1): Chat, Knowledge (OKF explorer/editor), Review, Results, Status.
+
+**Measured (live, 7B, all MEASURED unless stated)**
+- First chat after start: 178.5 s, of which 133 s BM25 indexing → background warm-up added (144 s, once).
+  Warm: 17.1 s (5,656 in / 76 out tokens, 268.9 J GPU) and 36.2 s (891.9 J) per answer; 7B 100% in VRAM
+  at num_ctx 12,288; decode 16.5 tok/s, prefill 226 tok/s.
+- Citations: with format rules only in the system prompt the 7B cited nothing (1/1); with the rules after
+  the question, 3/3 answers cited, 0 invalid citations. Gap proposals: 0 when asked in the same call (2/2);
+  with a separate focused call the 7B filed 1 valid proposal (and 2 correctly rejected: concepts it had
+  not read). That proposal is **pending, not approved**: approval is Avaneesh's.
+- Driver 621.01 NVML observer probe (new file, Oct file untouched): idle with CUDA context 5.0 W; power
+  polling +7..+13 W; counter polling every 50 ms 404 W → "never poll" rule holds.
+- Tests: **490 passed, 0 failed, 0 skipped** (Python, incl. live Qdrant/Neo4j/Ollama tests); web 7 passed.
+
+**Next**: Avaneesh reviews the branch (and the pending proposal); finish the driver-621.01 re-check
+(no-context idle baseline, long-context probe to a new file); then WORK_PLAN step 6 review → step 7.
+**Blocked on Avaneesh**: step 6 label review; C29 blind human ratings (M1 key was lost with `C:\EIH_backups`).
+
+---
+
 ## 2026-11-22/23 — Post-SSD recovery (C32) and OKF layer, part 1 (C33) · branch `fix/post-ssd-recovery`
 
 **Done (recovery)**

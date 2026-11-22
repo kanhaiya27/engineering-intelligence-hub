@@ -13,13 +13,23 @@ have concrete implementations.
 
 from __future__ import annotations
 
+import os
+
+# The embedder and reranker are in the local HF cache; without this every model load asks
+# huggingface.co for metadata (slow, and the app failed over when the site reset the
+# connection, 2026-11-23). Set EIH_ALLOW_HF_DOWNLOAD=1 to let the app download a new model.
+if os.environ.get("EIH_ALLOW_HF_DOWNLOAD") != "1":
+    os.environ.setdefault("HF_HUB_OFFLINE", "1")
+
 from contextlib import asynccontextmanager
 from typing import AsyncIterator
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.exception_handlers import request_validation_exception_handler
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 
-from apps.api.routers import adaptive, chat, graph, health, ingest, okf, query, results, retrieval
+from apps.api.routers import adaptive, chat, graph, health, ingest, okf, query, results, retrieval, trace_v1
 from core.config import settings
 from core.logging import configure_logging, get_logger
 
@@ -43,7 +53,13 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         f"Starting {settings.project_name} v{settings.version} "
         f"[{settings.environment}]"
     )
-    # Phase-1: initialise vector store, graph store, embedding model here.
+    # Warm the embedder and the BM25 index in the background (plan §10.4: one-time loading
+    # is never charged to a query). Without this the first chat took 133 s in BM25 indexing
+    # (measured 2026-11-23). Status is reported by /status; failures are logged, not hidden.
+    import threading
+
+    from apps.api import services
+    threading.Thread(target=services.warm_up, daemon=True, name="eih-warm-up").start()
     yield
     logger.info(f"Shutting down {settings.project_name}")
 
@@ -84,6 +100,19 @@ app.include_router(adaptive.router, tags=["Adaptive Retrieval (M3)"])
 app.include_router(okf.router)
 app.include_router(chat.router)
 app.include_router(results.router)
+app.include_router(trace_v1.router)
+
+
+@app.exception_handler(RequestValidationError)
+async def _validation_error(request: Request, exc: RequestValidationError):
+    """Contract v1 (§2): /v1 errors use ErrorResponse, never FastAPI's HTTPValidationError
+    (and never echo input, paths or config). Other routes keep the FastAPI default."""
+    if request.url.path.startswith("/v1/"):
+        from apps.api.contract.v1 import ErrorCode
+        fields = sorted({".".join(str(p) for p in e.get("loc", [])[1:]) or "body" for e in exc.errors()})
+        return trace_v1.error_response(trace_v1.request_id(request), 422, ErrorCode.INVALID_REQUEST,
+                                       f"Invalid request fields: {', '.join(fields)[:400]}")
+    return await request_validation_exception_handler(request, exc)
 
 
 # ---------------------------------------------------------------------------

@@ -28,7 +28,7 @@ from __future__ import annotations
 
 import datetime
 import time
-from typing import Any, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional
 
 from core.config import settings
 from core.logging import get_logger
@@ -132,9 +132,15 @@ class QualityAwareRAGPipeline:
         initial_strategy: Optional[RetrievalStrategyConfig] = None,
         experiment_mode: ExperimentMode = ExperimentMode.SYSTEM_D,
         skip_verification: bool = False,
+        on_attempt: Optional[Callable[[Dict[str, Any]], None]] = None,
     ) -> EngTaskResponse:
         """
         Execute the quality-aware RAG pipeline with verification and bounded escalation.
+
+        ``on_attempt`` (optional, observation only) receives each attempt's full objects
+        (executed strategy, RetrievalResult, GenerationResponse, QualityReport, telemetry)
+        right after the attempt is verified. The web trace API (contract v1) needs them;
+        the research harness does not pass it, so its behaviour is unchanged.
 
         Parameters
         ----------
@@ -368,10 +374,24 @@ class QualityAwareRAGPipeline:
                 created_at=datetime.datetime.utcnow().isoformat(),
             )
 
+            def _observe(report=None):
+                if on_attempt is not None:
+                    on_attempt({
+                        "attempt_index": current_attempt, "strategy": current_strategy,
+                        "retrieval": retrieval_result, "generation": gen_response, "report": report,
+                        "threshold": threshold, "model_id": current_model,
+                        "retrieval_ms": retrieval_ms, "rerank_ms": rerank_ms,
+                        "attempt_latency_ms": attempt_latency_ms, "energy_tier": account.energy_tier,
+                        "generation_energy_joules": account.energy_joules,
+                        "rerank_energy_joules": rerank_energy_j, "co2e_grams": attempt_co2e_g,
+                        "cost_usd": account.cost_usd,
+                    })
+
             # --- D. Quality Verification Step ---
             if skip_verification:
                 final_response = candidate_response
                 passed_gate = True
+                _observe(None)
                 break
 
             from core.exceptions import EscalationExhaustedError
@@ -439,6 +459,7 @@ class QualityAwareRAGPipeline:
                 "attempt_output_tokens": attempt_output_tokens,
             }
             attempt_history.append(attempt_record)
+            _observe(report)
 
             if report.passed:
                 final_response = candidate_response

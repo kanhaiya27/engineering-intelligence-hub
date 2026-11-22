@@ -43,21 +43,32 @@ Answer ONLY from the CONTEXT blocks. Every factual sentence must cite its source
 [okf:<concept id>] or [code:<n>] exactly as written in the block header.
 Prefer human-reviewed knowledge; say so when you rely on unverified, draft, deprecated or stale concepts.
 If the context does not contain the answer, write exactly: INSUFFICIENT EVIDENCE, then say what is missing.
-Never invent concept ids, file paths, APIs or numbers.
+Never invent concept ids, file paths, APIs or numbers."""
 
-After the answer, output ONE fenced json block:
+# Repeated right after the question: small local models follow format rules far more
+# reliably when they are the last thing they read (observed with qwen2.5-coder:7b on
+# 2026-11-23: with the rules only in the system prompt the answer had no citations).
+ANSWER_FORMAT = """ANSWER FORMAT (required): answer in a few sentences and end EVERY sentence that states a fact
+with its source tag copied from a block header, e.g. "Flask stores URL rules in a Werkzeug Map [code:2]."
+or "The module defines View [okf:code/flask/src/flask/views.py]."."""
+
+# A second, focused call: with gaps requested in the same call the 7B answered and
+# stopped (2 of 2 live questions, 2026-11-23); one job per call is more reliable.
+GAPS_PROMPT = """You maintain an engineering knowledge base made of OKF concept documents.
+Given the CONTEXT (existing concepts [okf:...] and code evidence [code:n]), the QUESTION and the ANSWER,
+list knowledge the base is MISSING or that is WRONG/OUTDATED, but only facts that the [code:n] evidence shows.
+Output ONLY one fenced json block, nothing else:
 ```json
 {"knowledge_gaps": [
   {"kind": "create" | "update",
-   "concept_id": "<folder/name, for update: an existing id from the context>",
-   "type": "<OKF concept type>", "title": "...", "description": "<one sentence>",
-   "body": "<markdown; cite code as [code:<n>]>",
-   "rationale": "<why the bundle needs this>",
+   "concept_id": "<new: folder/name-with-dashes; update: an id exactly as in an [okf:...] header>",
+   "type": "<e.g. How-To, Component, Configuration, Explanation>", "title": "...", "description": "<one sentence>",
+   "body": "<markdown; cite evidence as [code:<n>]>",
+   "rationale": "<why the knowledge base needs this>",
    "conflicts_with": ["<concept ids this contradicts>"]}
 ]}
 ```
-Only propose knowledge that the CONTEXT supports (e.g. facts visible in [code:n] that no concept records,
-or a concept the code evidence contradicts). Use an empty list when nothing is missing."""
+Use {"knowledge_gaps": []} when nothing is missing."""
 
 
 @dataclass
@@ -187,7 +198,7 @@ class OKFAgent:
         for turn in (history or [])[-6:]:
             if turn.get("role") in ("user", "assistant") and turn.get("content"):
                 messages.append({"role": turn["role"], "content": turn["content"][:2000]})
-        messages.append({"role": "user", "content": f"CONTEXT:\n\n{context}\n\nQUESTION: {question}"})
+        messages.append({"role": "user", "content": f"CONTEXT:\n\n{context}\n\nQUESTION: {question}\n\n{ANSWER_FORMAT}"})
         request = GenerationRequest(prompt=messages[-1]["content"], model_id=self.model_id,
                                     system_prompt=SYSTEM_PROMPT, messages=messages,
                                     max_tokens=self.max_output_tokens, temperature=0.0)
@@ -200,14 +211,15 @@ class OKFAgent:
         """Citation check + proposals on the model output."""
         t3 = time.perf_counter()
         concepts, code, question = prep["concepts"], prep["code"], prep["question"]
-        gaps, answer_text = self._split_gaps(text or "")
+        _, answer_text = self._split_gaps(text or "")  # a stray json block is never shown as answer
         ctx_ids = {c.concept_id for c in concepts}
         cited, invalid = [], []
         for kind, ref in _CITE_RX.findall(answer_text):
             ok = ref in ctx_ids if kind == "okf" else (ref.isdigit() and 1 <= int(ref) <= len(code))
             (cited if ok else invalid).append(f"{kind}:{ref}")
-        proposals, rejected = ([], [])
+        proposals, rejected, gap_tokens = [], [], (0, 0)
         if propose:
+            gaps, gap_tokens = self._find_gaps(prep, answer_text)
             proposals, rejected = self._file_proposals(gaps, question, concepts, code)
         t4 = time.perf_counter()
         stage = dict(prep["stage_ms"], generation=round((t3 - prep["t_gen"]) * 1000, 1),
@@ -219,7 +231,7 @@ class OKFAgent:
             concepts=concepts, code_evidence=[{k: v for k, v in c.items() if k != "content"} | {"n": i}
                                               for i, c in enumerate(code, 1)],
             proposals=proposals, rejected_proposals=rejected, retrieval_mode=prep["mode"], model_id=self.model_id,
-            input_tokens=input_tokens, output_tokens=output_tokens,
+            input_tokens=input_tokens + gap_tokens[0], output_tokens=output_tokens + gap_tokens[1],
             generation_extra={k: v for k, v in (extra or {}).items()
                               if isinstance(v, (int, float, str, bool, dict, list, type(None)))},
             latency_ms=round((t4 - prep["t0"]) * 1000, 1), stage_ms=stage,
@@ -252,6 +264,22 @@ class OKFAgent:
                 yield "answer", self.finalize(prep, ev["text"], ev["input_tokens"], ev["output_tokens"],
                                               extra, propose)
 
+    def _find_gaps(self, prep: Dict[str, Any], answer_text: str):
+        """Focused second call: only the knowledge-gap list, from the same context."""
+        req = prep["request"]
+        context = req.messages[-1]["content"].split("\n\nQUESTION: ", 1)[0]
+        msg = f"{context}\n\nQUESTION: {prep['question']}\n\nANSWER:\n{answer_text}\n\nList the knowledge gaps now."
+        resp = self.llm.generate(GenerationRequest(prompt=msg, model_id=self.model_id, system_prompt=GAPS_PROMPT,
+                                                   messages=[{"role": "user", "content": msg}],
+                                                   max_tokens=self.max_output_tokens, temperature=0.0))
+        gaps, _ = self._split_gaps(resp.text or "")
+        if not gaps and resp.text and resp.text.strip().startswith("{"):
+            try:
+                gaps = json.loads(resp.text).get("knowledge_gaps") or []
+            except (json.JSONDecodeError, AttributeError):
+                gaps = [{"_unparseable": resp.text[:500]}]
+        return gaps, (resp.input_tokens or 0, resp.output_tokens or 0)
+
     @staticmethod
     def _split_gaps(text: str):
         m = _GAPS_RX.search(text)
@@ -271,8 +299,11 @@ class OKFAgent:
                 rejected.append({"gap": g, "reason": "unparseable gap description"})
                 continue
             kind = g.get("kind")
+            raw_id = str(g.get("concept_id") or "").strip().strip("[]` ")
+            if raw_id.startswith("okf:"):  # the model often copies the citation tag (2026-11-23)
+                raw_id = raw_id[4:]
             try:
-                cid = validate_concept_id(str(g.get("concept_id") or ""))
+                cid = validate_concept_id(raw_id)
             except OKFPathError as exc:
                 rejected.append({"gap": g, "reason": str(exc)})
                 continue

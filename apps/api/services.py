@@ -116,6 +116,26 @@ def llm():
         return _llm
 
 
+warm_state: Dict[str, Any] = {"state": "not_started"}
+
+
+def warm_up() -> None:
+    """Load the embedder, the hybrid (BM25) index and the OKF index once, untimed."""
+    import time as _t
+    t0 = _t.perf_counter()
+    warm_state.update(state="running")
+    try:
+        code_evidence("How is the application configured?", 1)
+        try:
+            vector_index().search("configuration", bundle=settings.okf.default_bundle, limit=1)
+        except Exception as exc:  # noqa: BLE001 - OKF index may be absent; code path still warm
+            logger.warning(f"OKF warm-up skipped: {exc}")
+        warm_state.update(state="done", seconds=round(_t.perf_counter() - t0, 1))
+    except Exception as exc:  # noqa: BLE001
+        warm_state.update(state="failed", error=str(exc)[:200])
+        logger.warning(f"warm-up failed: {exc}")
+
+
 def code_evidence(question: str, k: int) -> List[Dict[str, Any]]:
     """Code/doc chunks from the research corpus with System B's fixed hybrid strategy
     (configs/retrieval.yaml 'hybrid'), read-only. The research systems are not changed."""

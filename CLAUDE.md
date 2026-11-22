@@ -157,5 +157,10 @@ comparison has been run yet.** No deadlines (WORK_PLAN C31).
   6,141 MiB with encoders); at 16K VRAM is full; from 20K the driver silently pages to
   system RAM (5–7× slower, 4–7× the energy) while Ollama still reports "100% on GPU".
   See `experiments/results/phase1/machine_A/long_context_probe.md`.
+- **Driver 621.01 re-check (2026-11-23, after the SSD failure; `experiments/results/phase1/machine_A/driver_621.01/`):**
+  with a CUDA context held (Ollama, P8) idle = 5.0 W; polling power adds +7 to +13 W and polling
+  the counter every 50 ms reads 404 W, so "counter at start and end only, never poll" holds and
+  matters more. 7B at num_ctx 12,288 is 100% in VRAM (5.23 GB). Not yet re-checked on 621.01:
+  the no-context idle baseline (27–31 W on 617.14) and the 16K/20K long-context paging threshold.
 - Long runs: work up to 90 °C; above that, cool to 65 °C and repeat the measurement.
 - The laptop throttles at 84–87 °C; long runs need cooldowns and logged temperatures.
