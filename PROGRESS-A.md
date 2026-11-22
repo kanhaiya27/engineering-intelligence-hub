@@ -8,6 +8,33 @@ measured (with numbers only if actually measured), what is blocked.
 
 ---
 
+## 2026-11-23 (night) — Driver 621.01 re-check finished, Pipeline page, end-to-end tests · branch `fix/post-ssd-recovery`
+
+**Done**
+- One machine only (Avaneesh, 2026-11-23): present-tense two-laptop wording removed from `.env.example`,
+  `core/config.py`, `docs/API_CONTRACT.md`, `docs/RETRIEVAL_LABELS.md`. `machine_id` stays `laptop-a`
+  (stamped into every result and the manifest; renaming it would break comparisons). History unchanged.
+- Web: **Pipeline** page (System A–E trace via `/v1/trace/stream`, stage by stage; untrusted text plain).
+- Playwright end-to-end tests (`web/e2e`, real API + UI on ports 8010/5180, isolated OKF root and
+  collection `eih_okf_e2e`, cleaned up after): status, browsing Google's acme_retail bundle, a human edit
+  with attribution, and an agent proposal approved in the browser.
+- `test_api_ingest_and_retrieve_file` left a collection `eih_api_test_coll` in the live Qdrant after every
+  run; it now deletes it (the leftover held 1 test chunk; removed).
+
+**Measured (driver 621.01, new files under `experiments/results/phase1/machine_A/driver_621.01/`)**
+- Idle with **no** CUDA context: 9.2 W (P0), was 27–31 W on 617.14. Power polling at 50 ms: 64.2 W.
+- Long-context probe, 7B forced on GPU, encoders resident: 12K peak 5,908 MiB, warm 13.5 s, 756 J;
+  16K saturated VRAM, 17.3 s, 930 J; 20K pages to RAM: 87.3 s, 3,361 J, prefill 242 tok/s. Same pattern
+  as 617.14 (5,906 MiB / 12.7 s / 763 J; 90.4 s / 3,215 J at 20K): the C4 run settings stand.
+- Tests: web unit 7 passed; end-to-end 5 passed; Python 490 passed, 0 failed, 0 skipped (rerun at this commit).
+
+**Next**: WORK_PLAN step 16 (tree-sitter chunking) must leave the frozen wave-1 chunking byte-identical:
+plan = new languages only, wave-1 re-chunk compared chunk by chunk before anything is merged.
+**Blocked on Avaneesh**: step 6 label review, C29 blind ratings (M1 key lost), ASK_ME items (R3, R5, L2, F2,
+P2, D10, D13, C-9/C-10), review of the pending OKF proposal, review of this branch.
+
+---
+
 ## 2026-11-23 (later) — Ollama + models, API, web app, `/v1/trace`, live OKF workflow · branch `fix/post-ssd-recovery`
 
 **Done**

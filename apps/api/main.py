@@ -59,7 +59,8 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     import threading
 
     from apps.api import services
-    threading.Thread(target=services.warm_up, daemon=True, name="eih-warm-up").start()
+    if os.environ.get("EIH_DISABLE_WARMUP") != "1":  # end-to-end tests set this
+        threading.Thread(target=services.warm_up, daemon=True, name="eih-warm-up").start()
     yield
     logger.info(f"Shutting down {settings.project_name}")
 

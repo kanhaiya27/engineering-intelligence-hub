@@ -8,6 +8,7 @@ const DashboardPage = lazy(() => import('./pages/DashboardPage'))
 const KnowledgePage = lazy(() => import('./pages/KnowledgePage'))
 const ReviewPage = lazy(() => import('./pages/ReviewPage'))
 const StatusPage = lazy(() => import('./pages/StatusPage'))
+const PipelinePage = lazy(() => import('./pages/PipelinePage'))
 
 export default function App() {
   const { id, setId } = useIdentity()
@@ -19,6 +20,7 @@ export default function App() {
           <NavLink to="/chat">Chat</NavLink>
           <NavLink to="/knowledge">Knowledge</NavLink>
           <NavLink to="/review">Review</NavLink>
+          <NavLink to="/pipeline">Pipeline</NavLink>
           <NavLink to="/dashboard">Results</NavLink>
           <NavLink to="/status">Status</NavLink>
         </nav>
@@ -36,6 +38,7 @@ export default function App() {
           <Route path="/knowledge" element={<KnowledgePage />} />
           <Route path="/review" element={<ReviewPage />} />
           <Route path="/review/:proposalId" element={<ReviewPage />} />
+          <Route path="/pipeline" element={<PipelinePage />} />
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/status" element={<StatusPage />} />
           <Route path="*" element={<div className="state">Page not found.</div>} />

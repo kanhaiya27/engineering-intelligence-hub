@@ -316,7 +316,7 @@ class Settings(BaseSettings):
     machine_id: str = Field(
         default="unknown",
         description=(
-            "Which development machine produced a result (laptop-a | laptop-b), "
+            "Which machine produced a result (the single project laptop is laptop-a; WORK_PLAN C11), "
             "from EIH_MACHINE_ID. Recorded in every result file's provenance."
         ),
     )

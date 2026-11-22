@@ -112,7 +112,7 @@ reported as using **draft** labels.
 
 CLAUDE.md rule 3 forbids inspecting the test split. Decision (2026-10-05):
 dev + val now; the test tasks get labelled later in **one blind pass**, under a
-protocol agreed by both laptops and added to CLAUDE.md first:
+protocol decided by Avaneesh and added to CLAUDE.md first:
 
 - Done by B, after every system's configuration is frozen, and before the
   final test run.

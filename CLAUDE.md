@@ -160,7 +160,9 @@ comparison has been run yet.** No deadlines (WORK_PLAN C31).
 - **Driver 621.01 re-check (2026-11-23, after the SSD failure; `experiments/results/phase1/machine_A/driver_621.01/`):**
   with a CUDA context held (Ollama, P8) idle = 5.0 W; polling power adds +7 to +13 W and polling
   the counter every 50 ms reads 404 W, so "counter at start and end only, never poll" holds and
-  matters more. 7B at num_ctx 12,288 is 100% in VRAM (5.23 GB). Not yet re-checked on 621.01:
-  the no-context idle baseline (27–31 W on 617.14) and the 16K/20K long-context paging threshold.
+  matters more. **No CUDA context: idle is now 9.2 W in P0 (was 27–31 W on 617.14)**; any
+  "net of idle" figure must use a baseline measured on 621.01. Long-context probe repeated
+  (`driver_621.01/long_context/`): 12K fits (peak 5,908 MiB, 13.5 s, 756 J warm), 16K fills VRAM,
+  20K pages to RAM (87 s, 3,361 J): the same as on 617.14, so the C4 run settings stand.
 - Long runs: work up to 90 °C; above that, cool to 65 °C and repeat the measurement.
 - The laptop throttles at 84–87 °C; long runs need cooldowns and logged temperatures.
