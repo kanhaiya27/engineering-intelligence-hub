@@ -19,7 +19,7 @@ from typing import AsyncIterator
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from apps.api.routers import adaptive, graph, health, ingest, query, retrieval
+from apps.api.routers import adaptive, chat, graph, health, ingest, okf, query, results, retrieval
 from core.config import settings
 from core.logging import configure_logging, get_logger
 
@@ -55,9 +55,8 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 app = FastAPI(
     title=settings.project_name,
     description=(
-        "Task-Aware Energy-Efficient RAG for Software Engineering. "
-        "Research platform for optimising quality, cost, latency, energy "
-        "and carbon footprint across SDLC tasks."
+        "Task-Aware, Quality-Constrained RAG for Software Engineering: Optimising Quality, "
+        "Cost, Latency, Energy and Carbon Footprint (research title restored by WORK_PLAN C18)."
     ),
     version=settings.version,
     lifespan=lifespan,
@@ -82,6 +81,9 @@ app.include_router(retrieval.router, tags=["Retrieval"])
 app.include_router(query.router, tags=["Query"])
 app.include_router(graph.router, tags=["Knowledge Graph"])
 app.include_router(adaptive.router, tags=["Adaptive Retrieval (M3)"])
+app.include_router(okf.router)
+app.include_router(chat.router)
+app.include_router(results.router)
 
 
 # ---------------------------------------------------------------------------

@@ -174,8 +174,9 @@ class OKFAgent:
 
     # ------------------------------------------------------------------ answer
 
-    def answer(self, question: str, k: int = 5, hops: int = 1, code_k: int = 4,
-               propose: bool = True, history: Optional[List[Dict[str, str]]] = None) -> AgentAnswer:
+    def prepare(self, question: str, k: int = 5, hops: int = 1, code_k: int = 4,
+                history: Optional[List[Dict[str, str]]] = None) -> Dict[str, Any]:
+        """Retrieval + prompt (everything before the model call)."""
         t0 = time.perf_counter()
         concepts, mode = self.discover(question, k=k, hops=hops)
         t1 = time.perf_counter()
@@ -187,37 +188,69 @@ class OKFAgent:
             if turn.get("role") in ("user", "assistant") and turn.get("content"):
                 messages.append({"role": turn["role"], "content": turn["content"][:2000]})
         messages.append({"role": "user", "content": f"CONTEXT:\n\n{context}\n\nQUESTION: {question}"})
-        resp = self.llm.generate(GenerationRequest(
-            prompt=messages[-1]["content"], model_id=self.model_id, system_prompt=SYSTEM_PROMPT,
-            messages=messages, max_tokens=self.max_output_tokens, temperature=0.0))
-        t3 = time.perf_counter()
+        request = GenerationRequest(prompt=messages[-1]["content"], model_id=self.model_id,
+                                    system_prompt=SYSTEM_PROMPT, messages=messages,
+                                    max_tokens=self.max_output_tokens, temperature=0.0)
+        return {"question": question, "concepts": concepts, "mode": mode, "code": code, "request": request,
+                "t0": t0, "stage_ms": {"okf_retrieval": round((t1 - t0) * 1000, 1),
+                                       "code_retrieval": round((t2 - t1) * 1000, 1)}, "t_gen": t2}
 
-        text = resp.text or ""
-        gaps, answer_text = self._split_gaps(text)
+    def finalize(self, prep: Dict[str, Any], text: str, input_tokens: int, output_tokens: int,
+                 extra: Optional[Dict[str, Any]] = None, propose: bool = True) -> AgentAnswer:
+        """Citation check + proposals on the model output."""
+        t3 = time.perf_counter()
+        concepts, code, question = prep["concepts"], prep["code"], prep["question"]
+        gaps, answer_text = self._split_gaps(text or "")
         ctx_ids = {c.concept_id for c in concepts}
         cited, invalid = [], []
         for kind, ref in _CITE_RX.findall(answer_text):
             ok = ref in ctx_ids if kind == "okf" else (ref.isdigit() and 1 <= int(ref) <= len(code))
-            target = f"{kind}:{ref}"
-            (cited if ok else invalid).append(target)
-        proposals, rejected = [], []
+            (cited if ok else invalid).append(f"{kind}:{ref}")
+        proposals, rejected = ([], [])
         if propose:
             proposals, rejected = self._file_proposals(gaps, question, concepts, code)
         t4 = time.perf_counter()
+        stage = dict(prep["stage_ms"], generation=round((t3 - prep["t_gen"]) * 1000, 1),
+                     proposals=round((t4 - t3) * 1000, 1))
         return AgentAnswer(
             question=question, answer=answer_text.strip(),
             insufficient_evidence=INSUFFICIENT in answer_text,
             citations=sorted(set(cited)), invalid_citations=sorted(set(invalid)),
             concepts=concepts, code_evidence=[{k: v for k, v in c.items() if k != "content"} | {"n": i}
                                               for i, c in enumerate(code, 1)],
-            proposals=proposals, rejected_proposals=rejected, retrieval_mode=mode, model_id=self.model_id,
-            input_tokens=resp.input_tokens, output_tokens=resp.output_tokens,
-            generation_extra={k: v for k, v in (resp.extra or {}).items()
+            proposals=proposals, rejected_proposals=rejected, retrieval_mode=prep["mode"], model_id=self.model_id,
+            input_tokens=input_tokens, output_tokens=output_tokens,
+            generation_extra={k: v for k, v in (extra or {}).items()
                               if isinstance(v, (int, float, str, bool, dict, list, type(None)))},
-            latency_ms=round((t4 - t0) * 1000, 1),
-            stage_ms={"okf_retrieval": round((t1 - t0) * 1000, 1), "code_retrieval": round((t2 - t1) * 1000, 1),
-                      "generation": round((t3 - t2) * 1000, 1), "proposals": round((t4 - t3) * 1000, 1)},
+            latency_ms=round((t4 - prep["t0"]) * 1000, 1), stage_ms=stage,
         )
+
+    def answer(self, question: str, k: int = 5, hops: int = 1, code_k: int = 4,
+               propose: bool = True, history: Optional[List[Dict[str, str]]] = None) -> AgentAnswer:
+        prep = self.prepare(question, k=k, hops=hops, code_k=code_k, history=history)
+        resp = self.llm.generate(prep["request"])
+        return self.finalize(prep, resp.text, resp.input_tokens, resp.output_tokens, resp.extra, propose)
+
+    def answer_stream(self, question: str, k: int = 5, hops: int = 1, code_k: int = 4,
+                      propose: bool = True, history: Optional[List[Dict[str, str]]] = None):
+        """Yields ("context", {...}), ("delta", text)..., ("answer", AgentAnswer)."""
+        prep = self.prepare(question, k=k, hops=hops, code_k=code_k, history=history)
+        yield "context", {"concepts": [c.__dict__ for c in prep["concepts"]], "retrieval_mode": prep["mode"],
+                          "code_evidence": [{k: v for k, v in c.items() if k != "content"} | {"n": i}
+                                            for i, c in enumerate(prep["code"], 1)],
+                          "stage_ms": prep["stage_ms"]}
+        if not hasattr(self.llm, "stream_chat"):
+            resp = self.llm.generate(prep["request"])
+            yield "delta", resp.text
+            yield "answer", self.finalize(prep, resp.text, resp.input_tokens, resp.output_tokens, resp.extra, propose)
+            return
+        for ev in self.llm.stream_chat(prep["request"]):
+            if "delta" in ev:
+                yield "delta", ev["delta"]
+            elif ev.get("done"):
+                extra = {k: v for k, v in ev.items() if k not in ("done", "text")}
+                yield "answer", self.finalize(prep, ev["text"], ev["input_tokens"], ev["output_tokens"],
+                                              extra, propose)
 
     @staticmethod
     def _split_gaps(text: str):

@@ -43,7 +43,7 @@ measured (with numbers only if actually measured), what is blocked.
 - Google's 4 sample bundles (53 concepts) consume conformant, 0 broken links, round-trip stable.
 
 **Measured / tests**: full suite before OKF tests 467 run → 464 passed, 0 failed, 3 skipped (all "Ollama not
-reachable"). OKF tests: 75 (incl. 1 live Qdrant/Neo4j integration test).
+reachable"). OKF tests: 41 (32 spec + collaboration, 6 producer/sync incl. 1 live Qdrant/Neo4j integration test, 3 agent).
 
 **Next**: install Ollama 0.35.1, pull the 3 models and check digests; OKF + chat API routes; `/v1/trace`;
 frontend; re-check measurement rules on driver 621.01.

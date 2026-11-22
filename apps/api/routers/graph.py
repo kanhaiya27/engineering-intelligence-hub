@@ -10,7 +10,6 @@ from fastapi import APIRouter, HTTPException, status
 
 from core.logging import get_logger
 from knowledge.graph.base import BaseGraphStore
-from knowledge.graph.in_memory import InMemoryGraphStore
 from knowledge.graph.neo4j import Neo4jGraphStore
 from knowledge.graph.queries import get_entity, get_neighborhood
 
@@ -22,16 +21,15 @@ _graph_store: Optional[BaseGraphStore] = None
 
 
 def get_graph_store() -> BaseGraphStore:
+    """The live Neo4j store. No silent in-memory fallback: an empty stand-in graph would
+    answer every query with 'not found' and look healthy. Tests inject a store directly."""
     global _graph_store
     if _graph_store is None:
-        # Try Neo4j first, fallback to InMemoryGraphStore
         neo = Neo4jGraphStore()
-        if neo.is_available():
-            _graph_store = neo
-        else:
-            in_mem = InMemoryGraphStore()
-            in_mem.connect()
-            _graph_store = in_mem
+        if not neo.is_available():
+            raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                                detail="Neo4j is not reachable; the knowledge graph is unavailable.")
+        _graph_store = neo
     return _graph_store
 
 

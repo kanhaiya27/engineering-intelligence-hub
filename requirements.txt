@@ -9,6 +9,7 @@
 # --- Web framework ---
 fastapi>=0.110.0
 uvicorn[standard]>=0.29.0
+python-multipart>=0.0.9   # file uploads (OKF bundle import, POST /ingest/file)
 
 # --- Pydantic / settings ---
 pydantic>=2.6.0

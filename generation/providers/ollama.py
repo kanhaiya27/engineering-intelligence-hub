@@ -25,7 +25,7 @@ warm call.
 from __future__ import annotations
 
 import time
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Dict, Iterator, List, Optional
 
 import httpx
 
@@ -275,6 +275,67 @@ class OllamaProvider(BaseLLMProvider):
             raw_response=data,
             extra=extra,
         )
+
+    def stream_chat(self, request: GenerationRequest) -> Iterator[Dict[str, Any]]:
+        """Streamed chat for the interactive app: yields {"delta": text} events, then one
+        {"done": True, ...} event with the same accounting as generate() (tokens, digest,
+        energy measured by the NVML counter at start and end of the whole stream only).
+
+        The research harness never streams; it calls generate()."""
+        import json as _json
+
+        options = self._options(request)
+        messages: List[Dict[str, str]] = []
+        if request.system_prompt:
+            messages.append({"role": "system", "content": request.system_prompt})
+        messages.extend(request.messages or [{"role": "user", "content": request.prompt}])
+        context_check = self.check_context(request.model_id, messages, options)
+        cold_start = None if self.is_resident(request.model_id) else self.load(request.model_id, options)
+        body = {"model": request.model_id, "messages": messages, "stream": True,
+                "options": options, "keep_alive": self.keep_alive}
+        meter = self._meter_factory() if self.measure_energy else None
+        t0 = time.perf_counter()
+        final: Dict[str, Any] = {}
+        parts: List[str] = []
+        if meter:
+            meter.__enter__()
+        try:
+            with self._client.stream("POST", "/api/chat", json=body) as resp:
+                if resp.status_code != 200:
+                    raise GenerationError(f"Ollama error {resp.status_code}: {resp.read()[:300]!r}")
+                for line in resp.iter_lines():
+                    if not line:
+                        continue
+                    data = _json.loads(line)
+                    delta = (data.get("message") or {}).get("content", "")
+                    if delta:
+                        parts.append(delta)
+                        yield {"delta": delta}
+                    if data.get("done"):
+                        final = data
+        except httpx.HTTPError as exc:
+            raise GenerationError(f"Cannot reach Ollama at {self.base_url}: {exc}") from exc
+        finally:
+            if meter:
+                meter.__exit__(None, None, None)
+        energy = meter.result if meter else None
+        latency_ms = (time.perf_counter() - t0) * 1000.0
+        in_tok, out_tok = int(final.get("prompt_eval_count") or 0), int(final.get("eval_count") or 0)
+        yield {
+            "done": True, "text": "".join(parts), "model_id": request.model_id,
+            "model_digest": self.model_digest(request.model_id),
+            "input_tokens": in_tok, "output_tokens": out_tok, "latency_ms": round(latency_ms, 2),
+            "finish_reason": final.get("done_reason") or "stop", "context_check": context_check,
+            "cold_start": cold_start, "energy": energy.to_dict() if energy else None,
+            "energy_joules": energy.energy_j if energy else None,
+            "energy_reliability": (None if energy is None or energy.energy_j is None else
+                                   "ok" if energy.duration_s >= MIN_RELIABLE_ENERGY_WINDOW_S else "low_short_window"),
+        }
+
+    def stream(self, request: GenerationRequest) -> Iterator[str]:
+        for ev in self.stream_chat(request):
+            if "delta" in ev:
+                yield ev["delta"]
 
     def unload(self, model_id: str) -> None:
         """Release a model from memory (keep_alive 0)."""
