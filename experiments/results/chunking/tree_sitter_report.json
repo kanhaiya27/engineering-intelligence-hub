@@ -1,0 +1,176 @@
+{
+  "study": "tree_sitter_chunking_validation",
+  "provenance": {
+    "recorded_at_utc": "2026-11-23T01:42:50+00:00",
+    "machine_id": "laptop-a",
+    "platform": "Windows-10-10.0.26300-SP0",
+    "python": "3.11.9",
+    "gpu": {
+      "name": "NVIDIA GeForce RTX 4050 Laptop GPU",
+      "driver": "621.01",
+      "vram_total_mib": 6141,
+      "power_default_limit_w": 80.0,
+      "power_max_limit_w": 140.0,
+      "compute_capability": "8.9"
+    },
+    "torch": {
+      "torch": "2.6.0+cu124",
+      "cuda": "12.4",
+      "cudnn": 90100,
+      "cuda_available": true
+    },
+    "ollama": null,
+    "git": {
+      "sha": "cd02e2712607761fbaba51f5b1a416b0d2ff133e",
+      "branch": "feat/tree-sitter-chunking",
+      "dirty": true
+    },
+    "sustainability_config": {
+      "carbon_region": "custom",
+      "carbon_intensity_gco2_per_kwh": 713.0,
+      "cpu_tdp_watts": 45.0,
+      "gpu_tdp_watts": 80.0
+    }
+  },
+  "config": {
+    "repos": [
+      "gson",
+      "express",
+      "gin",
+      "cobra",
+      "serde",
+      "zstd"
+    ],
+    "max_tokens_per_chunk": 512,
+    "parser": "web-tree-sitter 0.27.2 (WASM)"
+  },
+  "results": {
+    "gson": {
+      "repository": "google/gson",
+      "tag": "gson-parent-2.11.0",
+      "commit": "828a97be0f8d58108b140b77df8dc76b657f4a87",
+      "by_language": {
+        "java": {
+          "files": 249,
+          "chunks": 3944,
+          "tree_sitter_chunks": 3938,
+          "window_chunks": 6,
+          "fallback_no_definitions": 6,
+          "fallback_other": 0,
+          "files_with_parse_errors_kept": 0,
+          "max_tokens": 512,
+          "uncovered_lines": 0,
+          "window_baseline_chunks": 1323
+        }
+      }
+    },
+    "express": {
+      "repository": "expressjs/express",
+      "tag": "4.19.2",
+      "commit": "04bc62787be974874bc1467b23606c36bc9779ba",
+      "by_language": {
+        "javascript": {
+          "files": 152,
+          "chunks": 607,
+          "tree_sitter_chunks": 380,
+          "window_chunks": 227,
+          "fallback_no_definitions": 102,
+          "fallback_other": 0,
+          "files_with_parse_errors_kept": 0,
+          "max_tokens": 512,
+          "uncovered_lines": 0,
+          "window_baseline_chunks": 474
+        }
+      }
+    },
+    "gin": {
+      "repository": "gin-gonic/gin",
+      "tag": "v1.10.0",
+      "commit": "75ccf94d605a05fe24817fc2f166f6f2959d5cea",
+      "by_language": {
+        "go": {
+          "files": 92,
+          "chunks": 1406,
+          "tree_sitter_chunks": 1400,
+          "window_chunks": 6,
+          "fallback_no_definitions": 6,
+          "fallback_other": 0,
+          "files_with_parse_errors_kept": 0,
+          "max_tokens": 512,
+          "uncovered_lines": 0,
+          "window_baseline_chunks": 535
+        }
+      }
+    },
+    "cobra": {
+      "repository": "spf13/cobra",
+      "tag": "v1.8.1",
+      "commit": "e94f6d0dd9a5e5738dca6bce03c4b1207ffbc0ec",
+      "by_language": {
+        "go": {
+          "files": 36,
+          "chunks": 751,
+          "tree_sitter_chunks": 750,
+          "window_chunks": 1,
+          "fallback_no_definitions": 1,
+          "fallback_other": 0,
+          "files_with_parse_errors_kept": 0,
+          "max_tokens": 512,
+          "uncovered_lines": 0,
+          "window_baseline_chunks": 380
+        }
+      }
+    },
+    "serde": {
+      "repository": "serde-rs/serde",
+      "tag": "v1.0.208",
+      "commit": "026e91a68cdb00ed89bae5f566852ecbd7525315",
+      "by_language": {
+        "rust": {
+          "files": 167,
+          "chunks": 2517,
+          "tree_sitter_chunks": 2517,
+          "window_chunks": 0,
+          "fallback_no_definitions": 0,
+          "fallback_other": 0,
+          "files_with_parse_errors_kept": 0,
+          "max_tokens": 512,
+          "uncovered_lines": 0,
+          "window_baseline_chunks": 939
+        }
+      }
+    },
+    "zstd": {
+      "repository": "facebook/zstd",
+      "tag": "v1.5.6",
+      "commit": "794ea1b0afca0f020f4e57b6732332231fb23c70",
+      "by_language": {
+        "c": {
+          "files": 254,
+          "chunks": 6428,
+          "tree_sitter_chunks": 5612,
+          "window_chunks": 816,
+          "fallback_no_definitions": 29,
+          "fallback_other": 51,
+          "files_with_parse_errors_kept": 76,
+          "max_tokens": 512,
+          "uncovered_lines": 0,
+          "window_baseline_chunks": 4263
+        },
+        "cpp": {
+          "files": 14,
+          "chunks": 125,
+          "tree_sitter_chunks": 125,
+          "window_chunks": 0,
+          "fallback_no_definitions": 0,
+          "fallback_other": 0,
+          "files_with_parse_errors_kept": 1,
+          "max_tokens": 512,
+          "uncovered_lines": 0,
+          "window_baseline_chunks": 70
+        }
+      }
+    }
+  },
+  "seconds": 40.1
+}

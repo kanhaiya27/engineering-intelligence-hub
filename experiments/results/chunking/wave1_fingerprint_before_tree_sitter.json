@@ -1,0 +1,31 @@
+{
+  "wave": 1,
+  "repositories": {
+    "flask": {
+      "chunks": 1615,
+      "sha256": "3407769fdabc4d32b616b70dee31c34b74ac42a836c4d49d80d28a5d911168ea"
+    },
+    "fastapi": {
+      "chunks": 20353,
+      "sha256": "f60768e60e0efe8024f0ba297bcfd0abb2782d442a9ac153bdb9d2a67018fe37"
+    },
+    "requests": {
+      "chunks": 1036,
+      "sha256": "8ab12e60ee9a8994ed6e5f270f12f9697b030d340b9ca8a0a84d3031d0f9b932"
+    },
+    "pytest": {
+      "chunks": 7731,
+      "sha256": "978aa7c0ce2f7eb023775db39f05b29209120781a768010fd4a18980f079f944"
+    },
+    "sphinx": {
+      "chunks": 10701,
+      "sha256": "adf1dc9c1698a6a7cf024e04ac6390ce73c29e05cf672b2f51121b826fd96490"
+    },
+    "pylint": {
+      "chunks": 12469,
+      "sha256": "18a7f48abb50914584bb981128f7d5b224302a9b6731eebc92fff4b7898e8837"
+    }
+  },
+  "total_chunks": 53905,
+  "sha256": "d5c5e2f674a58145562457b07c073389c3ef14fcaec9d6ba83ddeb1ada3ecf2c"
+}

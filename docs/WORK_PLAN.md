@@ -63,7 +63,7 @@ Status: ✅ done · 🟡 started · ⬜ not started. Each step is one branch and
 | 13 | External Mode R: RepoBench, CrossCodeEval | Phase 5 | ⬜ |
 | 14 | External Mode Q: CodeRepoQA (1,000 stratified), StackRepoQA (1,318) | Phase 6 | ⬜ |
 | 15 | Large-AI-model baseline (spec §7.3, decision D4) | spec §7.3 | ⬜ data from the long-context probe exists |
-| 16 | Code splitting (tree-sitter) for Java, Go, Rust, JS/TS, C/C++ | Phase 2 | ⬜ |
+| 16 | Code splitting (tree-sitter) for Java, Go, Rust, JS/TS, C/C++ | Phase 2 | 🟡 built 2026-11-23 (WASM, C34), waves 2+ only; validated on 6 repos (`experiments/results/chunking/`); awaiting review |
 | 17 | More projects: corpus waves 2–4 (≥ 8 repos, ≥ 4 languages) + their code map | Phase 3 | ⬜ |
 | 18 | Security-risk slice: Big-Vul / PrimeVul (500 each, classification, RQ4) | spec §8 phase 6 | ⬜ |
 | 19 | Mode P patch harness incl. the **agentic** routing tier of Fig. 6.1 (not built yet): Defects4J → BugsInPy, CodeFlaws → SWE-bench Lite, SWE-bench Pro (731), SWE-rebench (~500) → Multi-SWE-bench flash (300), SWE-bench Multilingual (300) | Phase 7 | ⬜ (D6) |
@@ -133,6 +133,7 @@ analysis), SWE-bench Multimodal (diagram track) — used as the spec describes, 
 
 | C32 | 2026-11-22 | Post-SSD-failure recovery (≈2026-11-01): Python, Git, Docker reinstalled; Qdrant data, Neo4j graph, Ollama + models and `C:\EIH_share` / `C:\EIH_backups` were lost and are rebuilt from the pinned registry and builders. `qdrant-client` pinned to 1.15.x to match the pinned server. NVIDIA driver is now 621.01 (rules were measured on 617.14) and must be re-checked before any measured run | fact / Avaneesh | Restore the state the plan assumes; nothing in the plan changes |
 | C33 | 2026-11-22 | **Addition:** Google's Open Knowledge Format (OKF, spec v0.2, reads v0.1) as an application feature (step 24a). Research title, RQs and the A–E ablation ladder are unchanged; OKF is not a research system | Avaneesh | Shared, portable knowledge layer between the user and the agent; nothing removed |
+| C34 | 2026-11-23 | Tree-sitter chunking (step 16) applies to **waves 2–4 only**; wave 1 keeps its chunker (proved byte-identical: 53,905 chunks, fingerprint `d5c5e2f6…`). Parsing uses the official **WebAssembly** build of tree-sitter in Node (`tools/treesitter/`), because Windows Smart App Control blocks the native Python binding; Smart App Control stays on | Avaneesh (T16 option (a); WASM route) | Keeps the corpus, manifest and dev/val results of wave 1 valid; no security setting changed |
 
 ## 6. Routine
 

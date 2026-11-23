@@ -140,7 +140,8 @@ No deadlines are tracked in this repository (WORK_PLAN C31).
 ## Quick Start (Windows, PowerShell)
 
 Requirements on the machine: Python 3.11 (`.venv311`), Docker Desktop, Ollama **0.35.1**
-(run the server with `ollama serve`; the tray app auto-updates), Node.js LTS (web UI only).
+(run the server with `ollama serve`; the tray app auto-updates), Node.js LTS (web UI, and the
+tree-sitter WebAssembly parser for corpus waves 2–4: `cd tools\treesitter; npm ci --ignore-scripts`).
 
 ```powershell
 cd C:\Projects\Majors\engineering-intelligence-hub

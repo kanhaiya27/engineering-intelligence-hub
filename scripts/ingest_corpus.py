@@ -55,6 +55,42 @@ REPORT_PATH = Path("experiments/results/ingestion_report.json")
 UPSERT_BATCH = 256
 
 
+_SYNTAX = None
+
+
+def chunker_id(entry: Dict[str, Any]) -> str:
+    """Which code chunker a registry entry is ingested with (recorded in the report).
+
+    ASK_ME T16 option (a), decided by Avaneesh 2026-11-23: tree-sitter chunking only for
+    waves 2+; wave 1 keeps the pre-step-16 chunker so its 53,905-chunk corpus, the manifest
+    and every dev/val result stay valid (`scripts/chunking_fingerprint.py` proves it)."""
+    return "python_ast+tree_sitter_wasm" if int(entry.get("wave") or 1) >= 2 else "python_ast+line_window"
+
+
+_NORMALIZERS: Dict[str, ArtifactNormalizer] = {}
+
+
+def normalizer_for(entry: Dict[str, Any]) -> ArtifactNormalizer:
+    """The normalizer (and so the chunker) used for one registry entry.
+
+    One shared normalizer per chunker within a run, as before step 16 (it also de-duplicates
+    identical files across repositories, so sharing is part of the frozen behaviour)."""
+    global _SYNTAX
+    cid = chunker_id(entry)
+    if cid not in _NORMALIZERS:
+        if cid == "python_ast+line_window":
+            _NORMALIZERS[cid] = ArtifactNormalizer()
+        else:
+            from ingestion.processors.chunker import CodeAwareChunker, UniversalChunker
+            from ingestion.processors.syntax_chunker import TreeSitterService
+
+            if _SYNTAX is None:
+                _SYNTAX = TreeSitterService()
+            _NORMALIZERS[cid] = ArtifactNormalizer(
+                chunker=UniversalChunker(code_chunker=CodeAwareChunker(syntax=_SYNTAX)))
+    return _NORMALIZERS[cid]
+
+
 def load_registry(path: Path = REGISTRY_PATH) -> Dict[str, Any]:
     with open(path, "r", encoding="utf-8") as f:
         return yaml.safe_load(f)
@@ -173,6 +209,7 @@ def ingest_repository(
 
     return {
         "repo_id": entry["repo_id"],
+        "chunker": chunker_id(entry),
         "repository": repo_slug,
         "commit_sha": commit_sha,
         "artifacts": len(artifacts),
@@ -215,7 +252,6 @@ def main() -> int:
     embedder = BGEEmbeddingModel()
     store = QdrantVectorStore()
     store.connect()
-    normalizer = ArtifactNormalizer()
 
     results: List[Dict[str, Any]] = []
     failures: List[Dict[str, str]] = []
@@ -241,7 +277,7 @@ def main() -> int:
                 )
 
             stats = ingest_repository(
-                entry, repo_path, sha, collection, embedder, store, normalizer
+                entry, repo_path, sha, collection, embedder, store, normalizer_for(entry)
             )
             results.append(stats)
 

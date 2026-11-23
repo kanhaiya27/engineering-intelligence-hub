@@ -223,8 +223,9 @@ def _def_end(node: ast.AST, n_lines: int) -> int:
 
 class CodeAwareChunker(BaseChunker):
     """
-    Code-aware chunker: AST symbol boundaries for Python, a token-bounded sliding window
-    for other languages (plan §10.6: tree-sitter for other languages is still to come).
+    Code-aware chunker: AST symbol boundaries for Python; tree-sitter symbol boundaries for
+    Java/Go/Rust/JS/TS/C/C++ when a syntax service is given (step 16, waves 2+ only); otherwise
+    a token-bounded sliding window (wave 1, unchanged).
     """
 
     def __init__(
@@ -232,11 +233,15 @@ class CodeAwareChunker(BaseChunker):
         max_tokens_per_chunk: int = 512,
         min_tokens_per_chunk: int = 20,
         overlap_lines: int = 5,
+        syntax=None,
     ) -> None:
         self.max_tokens_per_chunk = max_tokens_per_chunk
         self.min_tokens_per_chunk = min_tokens_per_chunk
         self.overlap_lines = overlap_lines
         self._splitter = _Splitter(max_tokens_per_chunk)
+        # Optional tree-sitter service (ingestion/processors/syntax_chunker.py). None = the
+        # pre-step-16 behaviour, byte for byte (wave 1, ASK_ME T16 option (a)).
+        self.syntax = syntax
 
     @property
     def chunker_name(self) -> str:
@@ -309,6 +314,20 @@ class CodeAwareChunker(BaseChunker):
                 units = None
             if units:
                 return _build_chunks(artifact, lines, units, self._splitter)
+
+        if self.syntax is not None and not is_python:
+            from ingestion.processors.syntax_chunker import language_id, syntax_units
+
+            lang = language_id(getattr(artifact, "language", None), artifact.source_path)
+            if lang is not None:
+                parsed = self.syntax.parse(lang, content)
+                fits = lambda s, e: self._splitter.fits("\n".join(lines[s - 1: e]))  # noqa: E731
+                units = syntax_units(parsed, lang, len(lines), fits)
+                if units:
+                    return _build_chunks(artifact, lines, units, self._splitter)
+                artifact.metadata["syntax_fallback"] = (
+                    "parse_error" if parsed.get("has_error") else
+                    "no_definitions" if parsed.get("ok") else f"service_error: {parsed.get('error', '?')}")
 
         # Non-Python (or unparsable) code: token-bounded sliding window with line overlap.
         window = [(1, len(lines), {"symbol_name": None, "chunk_type": "code_block"})]

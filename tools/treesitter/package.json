@@ -1,0 +1,16 @@
+{
+  "name": "eih-treesitter",
+  "private": true,
+  "type": "module",
+  "description": "tree-sitter (WebAssembly) parser service for EIH ingestion; runs inside Node so no unsigned native code is loaded (Smart App Control).",
+  "dependencies": {
+    "tree-sitter-c": "0.24.1",
+    "tree-sitter-cpp": "0.23.4",
+    "tree-sitter-go": "0.25.0",
+    "tree-sitter-java": "0.23.5",
+    "tree-sitter-javascript": "0.25.0",
+    "tree-sitter-rust": "0.24.0",
+    "tree-sitter-typescript": "0.23.2",
+    "web-tree-sitter": "0.27.2"
+  }
+}

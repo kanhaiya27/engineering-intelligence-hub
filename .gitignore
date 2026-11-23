@@ -88,6 +88,7 @@ experiments/results/**/*.npz
 !experiments/results/classifier/**/*.json
 !experiments/results/thresholds/**/*.json
 !experiments/results/determinism/**/*.json
+!experiments/results/chunking/**/*.json
 !experiments/results/variance/**/*.json
 !experiments/results/power/**/*.json
 !experiments/results/routing_effect/**/*.json

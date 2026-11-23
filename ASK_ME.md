@@ -44,14 +44,6 @@ until you answer. To answer, reply with the item ID and your choice. Answered it
   repos; 21 vs 22 task types). **Recommended:** the spec's locked 400–500 is binding; correct the
   two counts in the paper.
 
-- [ ] **T16: Tree-sitter chunking (step 16) and the frozen wave-1 corpus.** Wave 1 already holds 1,869
-  chunks of non-Python source code (JS, C, …, `ingestion_report.json` "doc:source_code"), cut by the
-  generic splitter. Tree-sitter would chunk them differently, so applying it to wave 1 changes the corpus
-  (53,905 points, bound in the manifest) and every dev/val result made on it. Options: (a) tree-sitter
-  only for new waves 2–4 (wave 1 unchanged); (b) also re-chunk wave 1 into a new `eih_knowledge_v3`
-  and re-run dev/val before any comparison. **Recommended: (a)** for the A–E comparison on wave 1, and
-  report the chunker per wave; (b) only if you want one chunker everywhere (costs the dev/val reruns).
-
 ## Citations
 
 - [ ] **C-9, C-10: References [9] and [10]** could not be found (`docs/CITATION_AUDIT.md`).
@@ -71,6 +63,8 @@ until you answer. To answer, reply with the item ID and your choice. Answered it
 - Step 1c installs `statsmodels` (mixed-effects models for RQ5) and adds it to the requirements.
 
 ## Decided
+
+- 2026-11-23: **T16 = option (a)**: tree-sitter only for new waves 2–4; wave 1 unchanged (WORK_PLAN C34). Tree-sitter runs as WebAssembly in Node (Smart App Control stays on).
 
 - 2026-10-06 (Step 3 "go"):
   - **M1** approved with guardrails: candidate correctness measures are compared against 30–50 blind
