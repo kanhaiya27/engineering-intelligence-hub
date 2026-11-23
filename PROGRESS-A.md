@@ -8,6 +8,36 @@ measured (with numbers only if actually measured), what is blocked.
 
 ---
 
+## 2026-11-23 (late night) — Step 16: tree-sitter chunking, waves 2+ only (C34) · branch `feat/tree-sitter-chunking`
+
+Branched from `fix/post-ssd-recovery` (not yet merged), so this branch contains that work too.
+
+**Decided**: T16 option (a) (Avaneesh): tree-sitter only for waves 2–4. Windows Smart App Control (enforced)
+blocked the native `tree_sitter` Python DLL; Avaneesh chose the WebAssembly route, so Smart App Control stays on.
+
+**Done**
+- `tools/treesitter/`: web-tree-sitter 0.27.2 + official grammar .wasm (java 0.23.5, go 0.25.0, rust 0.24.0,
+  javascript 0.25.0, typescript/tsx 0.23.2, c 0.24.1, cpp 0.23.4), installed with `--ignore-scripts` (no native build).
+- `ingestion/processors/syntax_chunker.py` + opt-in `CodeAwareChunker(syntax=...)`; `ingest_corpus` picks the chunker
+  per wave and records it per repository; `scripts/chunking_fingerprint.py`, `scripts/chunking_report.py`.
+- Native Python tree-sitter packages uninstalled again (unusable under Smart App Control).
+
+**Measured**
+- Wave 1 fingerprint before and after (and re-run for determinism): 53,905 chunks, sha256 `d5c5e2f6…` —
+  IDENTICAL. The frozen corpus, manifest and dev/val results are unaffected.
+- Real repositories (clones only, nothing indexed): 0 chunks above 512 tokens, 0 uncovered lines.
+  Tree-sitter units: gson 3,938/3,944, gin 1,400/1,406, cobra 750/751, serde 2,517/2,517, zstd C 5,612/6,428
+  (76 files kept despite local parse errors), zstd C++ 125/125, express 380/607 (102 files have no definitions).
+- First version mislabelled "no definitions" as "parse error" and missed CommonJS `x.y = function` and
+  `#ifdef`-wrapped C; fixed (zstd C 20% → 87%, express 54% → 63% tree-sitter units).
+
+- Tests: Python **506 passed, 0 failed, 0 skipped** (16 new syntax-chunker tests).
+
+**Next**: step 17 needs a decision before indexing waves 2–4: they must not go into `eih_knowledge_v2`
+(the manifest binds 53,905 points); recommended a separate collection per added wave set.
+
+---
+
 ## 2026-11-23 (night) — Driver 621.01 re-check finished, Pipeline page, end-to-end tests · branch `fix/post-ssd-recovery`
 
 **Done**
