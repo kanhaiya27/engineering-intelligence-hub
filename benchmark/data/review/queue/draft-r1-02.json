@@ -1,0 +1,790 @@
+{
+  "batch_id": "draft-r1-02",
+  "created_at": "2026-10-06T01:36:54.485528+00:00",
+  "purpose": "review",
+  "assigned_to": [
+    "Avaneesh Kumar Verma",
+    "Aayan",
+    "Radhesh"
+  ],
+  "priority": 50,
+  "items": [
+    {
+      "item_id": "eih-swe-4b7c9600aa",
+      "kind": "new_task",
+      "split": "unassigned",
+      "repository": "psf/requests",
+      "commit_sha": "0e322af87745eff34caffe4df68456ebc20d9068",
+      "sdlc_stage": "architecture",
+      "task_type": "architecture_qa",
+      "complexity": "low",
+      "criticality": "medium",
+      "query": "In Requests' exception hierarchy, what does catching `requests.exceptions.Timeout` cover, and how are `ConnectTimeout` and `ReadTimeout` related to it?",
+      "proposed_answer": "`Timeout` is a `RequestException` meaning the request timed out; catching it catches both `ConnectTimeout` and `ReadTimeout`. `ConnectTimeout` inherits from both `ConnectionError` and `Timeout` (timed out while connecting), and `ReadTimeout` inherits from `Timeout` (the server sent no data in the allotted time).",
+      "acceptable_alternatives": [
+        "except Timeout catches ConnectTimeout (ConnectionError + Timeout) and ReadTimeout (Timeout)."
+      ],
+      "evidence": [
+        {
+          "file": "src/requests/exceptions.py",
+          "start_line": 71,
+          "end_line": 77,
+          "text": "class Timeout(RequestException):\n    \"\"\"The request timed out.\n\n    Catching this error will catch both\n    :exc:`~requests.exceptions.ConnectTimeout` and\n    :exc:`~requests.exceptions.ReadTimeout` errors.\n    \"\"\"",
+          "span_sha256": "sha256:adda265de3e4ef01bbd3802ceb656693f1892257f49d58e51616c74f403d2d71"
+        },
+        {
+          "file": "src/requests/exceptions.py",
+          "start_line": 80,
+          "end_line": 88,
+          "text": "class ConnectTimeout(ConnectionError, Timeout):\n    \"\"\"The request timed out while trying to connect to the remote server.\n\n    Requests that produced this error are safe to retry.\n    \"\"\"\n\n\nclass ReadTimeout(Timeout):\n    \"\"\"The server did not send any data in the allotted amount of time.\"\"\"",
+          "span_sha256": "sha256:901b62ea0b3c4863fbc78b97afe77ebefaa59e672f79a161fca2b0adb646f805"
+        }
+      ],
+      "drafted_by": "Claude Opus 5.5 (EIH drafting tool)",
+      "requested_by": "Sanvi",
+      "status_note": "drafted (LLM draft, not verified); span span-20b9167b1e30"
+    },
+    {
+      "item_id": "eih-swe-2ab1116451",
+      "kind": "new_task",
+      "split": "unassigned",
+      "repository": "psf/requests",
+      "commit_sha": "0e322af87745eff34caffe4df68456ebc20d9068",
+      "sdlc_stage": "architecture",
+      "task_type": "architecture_qa",
+      "complexity": "medium",
+      "criticality": "low",
+      "query": "What interface does Requests' `BaseAdapter` define for transport adapters, and what must a subclass implement?",
+      "proposed_answer": "`BaseAdapter` (the base transport adapter) defines two methods that raise `NotImplementedError`, so subclasses must implement them: `send(request, stream=False, timeout=None, verify=True, cert=None, proxies=None)`, which sends a `PreparedRequest` and returns a `Response` (timeout may be a float or a (connect, read) tuple; verify is a bool or a CA-bundle path), and `close()`, which cleans up adapter-specific items. `HTTPAdapter` is the built-in subclass.",
+      "acceptable_alternatives": [
+        "Subclasses implement send(request, stream, timeout, verify, cert, proxies) -> Response and close(); HTTPAdapter is the concrete one."
+      ],
+      "evidence": [
+        {
+          "file": "src/requests/adapters.py",
+          "start_line": 137,
+          "end_line": 167,
+          "text": "class BaseAdapter:\n    \"\"\"The Base Transport Adapter\"\"\"\n\n    def __init__(self):\n        super().__init__()\n\n    def send(\n        self, request, stream=False, timeout=None, verify=True, cert=None, proxies=None\n    ):\n        \"\"\"Sends PreparedRequest object. Returns Response object.\n\n        :param request: The :class:`PreparedRequest <PreparedRequest>` being sent.\n        :param stream: (optional) Whether to stream the request content.\n        :param timeout: (optional) How long to wait for the server to send\n            data before giving up, as a float, or a :ref:`(connect timeout,\n            read timeout) <timeouts>` tuple.\n        :type timeout: float or tuple\n        :param verify: (optional) Either a boolean, in which case it controls whether we verify\n            the server's TLS certificate, or a string, in which case it must be a path\n            to a CA bundle to use\n        :param cert: (optional) Any user-provided SSL certificate to be trusted.\n        :param proxies: (optional) The proxies dictionary to apply to the request.\n        \"\"\"\n        raise NotImplementedError\n\n    def close(self):\n        \"\"\"Cleans up adapter specific items.\"\"\"\n        raise NotImplementedError\n\n\nclass HTTPAdapter(BaseAdapter):",
+          "span_sha256": "sha256:213b3c8dd277c802c84a975c49b5f2bfe5b9e185c9914d79c0d72e0498968198"
+        }
+      ],
+      "drafted_by": "Claude Opus 5.5 (EIH drafting tool)",
+      "requested_by": "Sanvi",
+      "status_note": "drafted (LLM draft, not verified); span span-38e88ff588d4"
+    },
+    {
+      "item_id": "eih-swe-1310f6c93d",
+      "kind": "new_task",
+      "split": "unassigned",
+      "repository": "psf/requests",
+      "commit_sha": "0e322af87745eff34caffe4df68456ebc20d9068",
+      "sdlc_stage": "development",
+      "task_type": "code_explanation",
+      "complexity": "medium",
+      "criticality": "low",
+      "query": "Does `RequestsCookieJar.multiple_domains()` actually return True whenever the jar holds cookies from more than one domain? Explain what the code computes.",
+      "proposed_answer": "No. It iterates over the cookies and returns `True` only when a cookie's (non-None) domain has already been seen, i.e. when two cookies share the same domain; otherwise it appends the domain and finally returns `False`. A jar with exactly one cookie each from two different domains returns `False`, despite the docstring ('Returns True if there are multiple domains in the jar').",
+      "acceptable_alternatives": [
+        "It detects a repeated domain, not distinct domains: two cookies from two different domains give False, contrary to the docstring."
+      ],
+      "evidence": [
+        {
+          "file": "src/requests/cookies.py",
+          "start_line": 293,
+          "end_line": 304,
+          "text": "    def multiple_domains(self):\n        \"\"\"Returns True if there are multiple domains in the jar.\n        Returns False otherwise.\n\n        :rtype: bool\n        \"\"\"\n        domains = []\n        for cookie in iter(self):\n            if cookie.domain is not None and cookie.domain in domains:\n                return True\n            domains.append(cookie.domain)\n        return False  # there is only one domain in jar",
+          "span_sha256": "sha256:91593612f6a79955059f1bbae465c075603c88a4947880b921ab31e0cd075c32"
+        }
+      ],
+      "drafted_by": "Claude Opus 5.5 (EIH drafting tool)",
+      "requested_by": "Sanvi",
+      "status_note": "drafted (LLM draft, not verified); span span-fb4c19efe50c"
+    },
+    {
+      "item_id": "eih-swe-2afc6b44c3",
+      "kind": "new_task",
+      "split": "unassigned",
+      "repository": "psf/requests",
+      "commit_sha": "0e322af87745eff34caffe4df68456ebc20d9068",
+      "sdlc_stage": "development",
+      "task_type": "code_explanation",
+      "complexity": "low",
+      "criticality": "low",
+      "query": "How does Requests' `merge_hooks` combine request-level and session-level hooks, and why does it special-case an empty `response` list?",
+      "proposed_answer": "If the session hooks are None or their `response` list is empty, it returns the request hooks; if the request hooks are None or their `response` list is empty, it returns the session hooks; otherwise it merges them with `merge_setting(request_hooks, session_hooks, dict_class)`. The special case exists because a request hook dict of `{'response': []}` would otherwise break session hooks entirely in the merge.",
+      "acceptable_alternatives": [
+        "Empty or missing response hooks on one side return the other side; otherwise merge_setting merges them (an empty response list would break session hooks)."
+      ],
+      "evidence": [
+        {
+          "file": "src/requests/sessions.py",
+          "start_line": 91,
+          "end_line": 103,
+          "text": "def merge_hooks(request_hooks, session_hooks, dict_class=OrderedDict):\n    \"\"\"Properly merges both requests and session hooks.\n\n    This is necessary because when request_hooks == {'response': []}, the\n    merge breaks Session hooks entirely.\n    \"\"\"\n    if session_hooks is None or session_hooks.get(\"response\") == []:\n        return request_hooks\n\n    if request_hooks is None or request_hooks.get(\"response\") == []:\n        return session_hooks\n\n    return merge_setting(request_hooks, session_hooks, dict_class)",
+          "span_sha256": "sha256:3d52f7dca65506f1163a6203097264b0b7ae2ac943b94e37d80c48c679be7804"
+        }
+      ],
+      "drafted_by": "Claude Opus 5.5 (EIH drafting tool)",
+      "requested_by": "Sanvi",
+      "status_note": "drafted (LLM draft, not verified); span span-9902db8a7858"
+    },
+    {
+      "item_id": "eih-swe-78960ddd6a",
+      "kind": "new_task",
+      "split": "unassigned",
+      "repository": "psf/requests",
+      "commit_sha": "0e322af87745eff34caffe4df68456ebc20d9068",
+      "sdlc_stage": "testing",
+      "task_type": "test_explanation",
+      "complexity": "medium",
+      "criticality": "low",
+      "query": "What does Requests' `test_DIGEST_AUTH_SETS_SESSION_COOKIES` verify, and which part of `HTTPDigestAuth` makes cookies from the 401 challenge survive into the retried request?",
+      "proposed_answer": "For each digest algorithm it calls an httpbin digest-auth URL through a `requests.Session` with `HTTPDigestAuth('user', 'pass')` and asserts the session ends up with the cookie `fake == 'fake_value'`. When handling the 401, `HTTPDigestAuth` copies the request, calls `extract_cookies_to_jar(prep._cookies, r.request, r.raw)` to take cookies from the challenge response, and `prep.prepare_cookies(prep._cookies)` before resending with the Digest `Authorization` header.",
+      "acceptable_alternatives": [
+        "Digest auth through a Session keeps cookies set during the challenge; handle_401 extracts them into the retried request's cookies."
+      ],
+      "evidence": [
+        {
+          "file": "tests/test_requests.py",
+          "start_line": 733,
+          "end_line": 739,
+          "text": "    def test_DIGEST_AUTH_SETS_SESSION_COOKIES(self, httpbin):\n        for authtype in self.digest_auth_algo:\n            url = httpbin(\"digest-auth\", \"auth\", \"user\", \"pass\", authtype)\n            auth = HTTPDigestAuth(\"user\", \"pass\")\n            s = requests.Session()\n            s.get(url, auth=auth)\n            assert s.cookies[\"fake\"] == \"fake_value\"",
+          "span_sha256": "sha256:a1a7ede1d317b740b66f85c940944bd07a73ae265782ae699e649c5535bbbf91"
+        },
+        {
+          "file": "src/requests/auth.py",
+          "start_line": 266,
+          "end_line": 275,
+          "text": "            # to allow our new request to reuse the same one.\n            r.content\n            r.close()\n            prep = r.request.copy()\n            extract_cookies_to_jar(prep._cookies, r.request, r.raw)\n            prep.prepare_cookies(prep._cookies)\n\n            prep.headers[\"Authorization\"] = self.build_digest_header(\n                prep.method, prep.url\n            )",
+          "span_sha256": "sha256:9498fba2c33ebe4a19667dc840b02be2476c394ce664fc576c3daaa3c73e33c1"
+        }
+      ],
+      "drafted_by": "Claude Opus 5.5 (EIH drafting tool)",
+      "requested_by": "Sanvi",
+      "status_note": "drafted (LLM draft, not verified); span span-e4308d7b34fe"
+    },
+    {
+      "item_id": "eih-swe-e16a29dbee",
+      "kind": "new_task",
+      "split": "unassigned",
+      "repository": "psf/requests",
+      "commit_sha": "0e322af87745eff34caffe4df68456ebc20d9068",
+      "sdlc_stage": "testing",
+      "task_type": "test_generation",
+      "complexity": "low",
+      "criticality": "low",
+      "query": "Write a Requests test checking that a prepared PUT request whose data is UTF-8 encoded bytes keeps a `bytes` body.",
+      "proposed_answer": "```python\ndef test_binary_put(self):\n    request = requests.Request(\n        \"PUT\", \"http://example.com\", data=\"ööö\".encode()\n    ).prepare()\n    assert isinstance(request.body, bytes)\n```",
+      "acceptable_alternatives": [
+        "Prepare Request('PUT', url, data='...'.encode()) and assert isinstance(request.body, bytes)."
+      ],
+      "evidence": [
+        {
+          "file": "tests/test_requests.py",
+          "start_line": 180,
+          "end_line": 184,
+          "text": "    def test_binary_put(self):\n        request = requests.Request(\n            \"PUT\", \"http://example.com\", data=\"ööö\".encode()\n        ).prepare()\n        assert isinstance(request.body, bytes)",
+          "span_sha256": "sha256:d806c0885a7b90ca9406681b89e48e898d69cf41c98ea05d644e8a3133455407"
+        }
+      ],
+      "drafted_by": "Claude Opus 5.5 (EIH drafting tool)",
+      "requested_by": "Sanvi",
+      "status_note": "drafted (LLM draft, not verified); span span-d606cd93ac05"
+    },
+    {
+      "item_id": "eih-swe-29a070d31f",
+      "kind": "new_task",
+      "split": "unassigned",
+      "repository": "psf/requests",
+      "commit_sha": "0e322af87745eff34caffe4df68456ebc20d9068",
+      "sdlc_stage": "code_review",
+      "task_type": "defect_detection",
+      "complexity": "medium",
+      "criticality": "medium",
+      "query": "Review this call: `requests.post(url, data={'a': 1}, json={'b': 2})`. What body is sent, and what is wrong with passing both?",
+      "proposed_answer": "`requests.post` forwards both `data` and `json` to `request('post', ...)`. When the body is prepared, JSON is only used if `data` is empty (`if not data and json is not None`), so here the form data `a=1` is sent and the `json` argument is silently ignored. Pass only one of them.",
+      "acceptable_alternatives": [
+        "data wins: json is used only when data is empty, so json={'b': 2} is silently dropped."
+      ],
+      "evidence": [
+        {
+          "file": "src/requests/api.py",
+          "start_line": 103,
+          "end_line": 115,
+          "text": "def post(url, data=None, json=None, **kwargs):\n    r\"\"\"Sends a POST request.\n\n    :param url: URL for the new :class:`Request` object.\n    :param data: (optional) Dictionary, list of tuples, bytes, or file-like\n        object to send in the body of the :class:`Request`.\n    :param json: (optional) A JSON serializable Python object to send in the body of the :class:`Request`.\n    :param \\*\\*kwargs: Optional arguments that ``request`` takes.\n    :return: :class:`Response <Response>` object\n    :rtype: requests.Response\n    \"\"\"\n\n    return request(\"post\", url, data=data, json=json, **kwargs)",
+          "span_sha256": "sha256:468e0107d647ed440181b10bb3e20c614c67a031f590414e26bd3e06c98abcf2"
+        },
+        {
+          "file": "src/requests/models.py",
+          "start_line": 504,
+          "end_line": 515,
+          "text": "        if not data and json is not None:\n            # urllib3 requires a bytes-like body. Python 2's json.dumps\n            # provides this natively, but Python 3 gives a Unicode string.\n            content_type = \"application/json\"\n\n            try:\n                body = complexjson.dumps(json, allow_nan=False)\n            except ValueError as ve:\n                raise InvalidJSONError(ve, request=self)\n\n            if not isinstance(body, bytes):\n                body = body.encode(\"utf-8\")",
+          "span_sha256": "sha256:b5c7d044aa796c88f5c0eeba8f8f836bb0796da843d86380e372caafe43f44f0"
+        }
+      ],
+      "drafted_by": "Claude Opus 5.5 (EIH drafting tool)",
+      "requested_by": "Sanvi",
+      "status_note": "drafted (LLM draft, not verified); span span-fd593cd9ecf3"
+    },
+    {
+      "item_id": "eih-swe-d44b3c3a04",
+      "kind": "new_task",
+      "split": "unassigned",
+      "repository": "psf/requests",
+      "commit_sha": "0e322af87745eff34caffe4df68456ebc20d9068",
+      "sdlc_stage": "code_review",
+      "task_type": "review_assistance",
+      "complexity": "low",
+      "criticality": "low",
+      "query": "A reviewer notices `requests.head(url)` returns a 301 for a redirecting URL, while `requests.get(url)` follows it. Is this a bug, and how do you make HEAD follow redirects?",
+      "proposed_answer": "Not a bug: `requests.head` sets `allow_redirects` to `False` unless the caller provides it (`kwargs.setdefault('allow_redirects', False)`), unlike the default `request` behaviour. Call `requests.head(url, allow_redirects=True)` to follow redirects.",
+      "acceptable_alternatives": [
+        "head defaults allow_redirects=False; pass allow_redirects=True."
+      ],
+      "evidence": [
+        {
+          "file": "src/requests/api.py",
+          "start_line": 88,
+          "end_line": 100,
+          "text": "def head(url, **kwargs):\n    r\"\"\"Sends a HEAD request.\n\n    :param url: URL for the new :class:`Request` object.\n    :param \\*\\*kwargs: Optional arguments that ``request`` takes. If\n        `allow_redirects` is not provided, it will be set to `False` (as\n        opposed to the default :meth:`request` behavior).\n    :return: :class:`Response <Response>` object\n    :rtype: requests.Response\n    \"\"\"\n\n    kwargs.setdefault(\"allow_redirects\", False)\n    return request(\"head\", url, **kwargs)",
+          "span_sha256": "sha256:dee65a334921754b54eb66827f3f643a7ee81739672dd1367b26a21963a7f72c"
+        }
+      ],
+      "drafted_by": "Claude Opus 5.5 (EIH drafting tool)",
+      "requested_by": "Sanvi",
+      "status_note": "drafted (LLM draft, not verified); span span-d3365bbf49a6"
+    },
+    {
+      "item_id": "eih-swe-df537cd66d",
+      "kind": "new_task",
+      "split": "unassigned",
+      "repository": "psf/requests",
+      "commit_sha": "0e322af87745eff34caffe4df68456ebc20d9068",
+      "sdlc_stage": "maintenance",
+      "task_type": "root_cause_assistance",
+      "complexity": "high",
+      "criticality": "medium",
+      "query": "Requests is given the URL `http://example.com/a%zzb`, which contains an invalid percent-escape. Why doesn't preparing the request fail, and what path is sent?",
+      "proposed_answer": "Preparing the URL calls `requote_uri`. It first runs `unquote_unreserved`, which tries `int('zz', 16)` for the escape, fails and raises `InvalidURL(\"Invalid percent-escape sequence: 'zz'\")`. `requote_uri` catches that `InvalidURL` and instead quotes the whole URI with '%' not marked safe, so the stray '%' is encoded: the path becomes `/a%25zzb`.",
+      "acceptable_alternatives": [
+        "unquote_unreserved raises InvalidURL but requote_uri catches it and quotes the original with % escaped, giving /a%25zzb."
+      ],
+      "evidence": [
+        {
+          "file": "src/requests/utils.py",
+          "start_line": 636,
+          "end_line": 657,
+          "text": "def unquote_unreserved(uri):\n    \"\"\"Un-escape any percent-escape sequences in a URI that are unreserved\n    characters. This leaves all reserved, illegal and non-ASCII bytes encoded.\n\n    :rtype: str\n    \"\"\"\n    parts = uri.split(\"%\")\n    for i in range(1, len(parts)):\n        h = parts[i][0:2]\n        if len(h) == 2 and h.isalnum():\n            try:\n                c = chr(int(h, 16))\n            except ValueError:\n                raise InvalidURL(f\"Invalid percent-escape sequence: '{h}'\")\n\n            if c in UNRESERVED_SET:\n                parts[i] = c + parts[i][2:]\n            else:\n                parts[i] = f\"%{parts[i]}\"\n        else:\n            parts[i] = f\"%{parts[i]}\"\n    return \"\".join(parts)",
+          "span_sha256": "sha256:cfb19b5cbeb2baf5dee9bc777c9c9f17b6333149b9d9b65714343f11216c91c9"
+        },
+        {
+          "file": "src/requests/utils.py",
+          "start_line": 660,
+          "end_line": 679,
+          "text": "def requote_uri(uri):\n    \"\"\"Re-quote the given URI.\n\n    This function passes the given URI through an unquote/quote cycle to\n    ensure that it is fully and consistently quoted.\n\n    :rtype: str\n    \"\"\"\n    safe_with_percent = \"!#$%&'()*+,/:;=?@[]~\"\n    safe_without_percent = \"!#$&'()*+,/:;=?@[]~\"\n    try:\n        # Unquote only the unreserved characters\n        # Then quote only illegal characters (do not quote reserved,\n        # unreserved, or '%')\n        return quote(unquote_unreserved(uri), safe=safe_with_percent)\n    except InvalidURL:\n        # We couldn't unquote the given URI, so let's try quoting it, but\n        # there may be unquoted '%'s in the URI. We need to make sure they're\n        # properly quoted so they do not cause issues elsewhere.\n        return quote(uri, safe=safe_without_percent)",
+          "span_sha256": "sha256:0705348354d9d1f7a7c9ab58749478cf0b411e660dc8ed0c425442c07c1f0848"
+        },
+        {
+          "file": "src/requests/models.py",
+          "start_line": 480,
+          "end_line": 480,
+          "text": "        url = requote_uri(urlunparse([scheme, netloc, path, None, query, fragment]))",
+          "span_sha256": "sha256:9cc63aa0fc05e8892113d854a4301308c3711b40f70ecc0ae6f3574d27d8913a"
+        }
+      ],
+      "drafted_by": "Claude Opus 5.5 (EIH drafting tool)",
+      "requested_by": "Sanvi",
+      "status_note": "drafted (LLM draft, not verified); span span-c499ae7ce460"
+    },
+    {
+      "item_id": "eih-swe-80aad40d85",
+      "kind": "new_task",
+      "split": "unassigned",
+      "repository": "psf/requests",
+      "commit_sha": "0e322af87745eff34caffe4df68456ebc20d9068",
+      "sdlc_stage": "maintenance",
+      "task_type": "error_analysis",
+      "complexity": "low",
+      "criticality": "low",
+      "query": "Diagnose: `session.send(requests.Request('GET', url))` raises `ValueError: You can only send PreparedRequests.` Why, and what is the fix?",
+      "proposed_answer": "`Session.send` guards against being given a `Request` object: `if isinstance(request, Request): raise ValueError(\"You can only send PreparedRequests.\")`. Prepare it first, with `session.prepare_request(req)` (which merges session settings) or `req.prepare()`, then pass the `PreparedRequest` to `send`.",
+      "acceptable_alternatives": [
+        "send only accepts PreparedRequest; call session.prepare_request(req) or req.prepare() first."
+      ],
+      "evidence": [
+        {
+          "file": "src/requests/sessions.py",
+          "start_line": 686,
+          "end_line": 689,
+          "text": "        # It's possible that users might accidentally send a Request object.\n        # Guard against that specific failure case.\n        if isinstance(request, Request):\n            raise ValueError(\"You can only send PreparedRequests.\")",
+          "span_sha256": "sha256:76c38a918708c72bfcdf3cfa5ad5d688ebe29a13536c44397376990a1c08b5b7"
+        },
+        {
+          "file": "src/requests/sessions.py",
+          "start_line": 457,
+          "end_line": 457,
+          "text": "    def prepare_request(self, request):",
+          "span_sha256": "sha256:62b50c0207125ad44d08942cd5aaa1d73f69f01aec501c846cc59342800bc2fa"
+        },
+        {
+          "file": "src/requests/models.py",
+          "start_line": 295,
+          "end_line": 295,
+          "text": "    def prepare(self):",
+          "span_sha256": "sha256:ad522b6ac8829f59af5c8a629fa53930294e95f61f662077000750d8b9f2c846"
+        }
+      ],
+      "drafted_by": "Claude Opus 5.5 (EIH drafting tool)",
+      "requested_by": "Sanvi",
+      "status_note": "drafted (LLM draft, not verified); span span-5339bcba163b"
+    },
+    {
+      "item_id": "eih-swe-9e1188c19c",
+      "kind": "new_task",
+      "split": "unassigned",
+      "repository": "pytest-dev/pytest",
+      "commit_sha": "bbcec9c46509c417ef58e4849847b4aa43f4591e",
+      "sdlc_stage": "requirements",
+      "task_type": "requirement_retrieval",
+      "complexity": "low",
+      "criticality": "low",
+      "query": "Which entry in pytest's changelog ('Improved Documentation') records documenting that `python -m pytest` adds the current directory to `sys.path`, and which issue is it linked to?",
+      "proposed_answer": "The 'Improved Documentation' entry \"Add documentation about the ``python -m pytest`` invocation adding the current directory to sys.path\", linked to issue #911.",
+      "acceptable_alternatives": [
+        "Issue 911: documentation of python -m pytest adding the current directory to sys.path."
+      ],
+      "evidence": [
+        {
+          "file": "doc/en/changelog.rst",
+          "start_line": 7123,
+          "end_line": 7140,
+          "text": "Improved Documentation\n----------------------\n\n- Introduce a dedicated section about conftest.py. (:issue:`1505`)\n\n- Explicitly mention ``xpass`` in the documentation of ``xfail``. (:issue:`1997`)\n\n- Append example for pytest.param in the example/parametrize document. (:issue:`2658`)\n\n- Clarify language of proposal for fixtures parameters (:issue:`2893`)\n\n- List python 3.6 in the documented supported versions in the getting started\n  document. (:issue:`2903`)\n\n- Clarify the documentation of available fixture scopes. (:issue:`538`)\n\n- Add documentation about the ``python -m pytest`` invocation adding the\n  current directory to sys.path. (:issue:`911`)",
+          "span_sha256": "sha256:268aa2aa43da46db9eb44452a1efada653e71d2c91ade40fa8e55f93c48a4151"
+        }
+      ],
+      "drafted_by": "Claude Opus 5.5 (EIH drafting tool)",
+      "requested_by": "Sanvi",
+      "status_note": "drafted (LLM draft, not verified); span span-0dced9e52c4d"
+    },
+    {
+      "item_id": "eih-swe-a8c9a4e0bd",
+      "kind": "new_task",
+      "split": "unassigned",
+      "repository": "pytest-dev/pytest",
+      "commit_sha": "bbcec9c46509c417ef58e4849847b4aa43f4591e",
+      "sdlc_stage": "architecture",
+      "task_type": "architecture_qa",
+      "complexity": "medium",
+      "criticality": "low",
+      "query": "In pytest, how are the legacy `tmpdir` and `tmpdir_factory` fixtures implemented on top of the modern temporary-path machinery (`src/_pytest/legacypath.py`)?",
+      "proposed_answer": "Both live in `LegacyTmpdirPlugin`. `tmpdir_factory` is a session-scoped fixture returning `request.config._tmpdirhandler`, a `TempdirFactory` set up in `pytest_configure`. `tmpdir` is a function-scoped fixture that takes `tmp_path` and returns `legacy_path(tmp_path)`, i.e. the same per-test directory wrapped as a legacy `py.path`-style object. Its docstring notes that `tmp_path` is preferred nowadays.",
+      "acceptable_alternatives": [
+        "tmpdir wraps tmp_path with legacy_path; tmpdir_factory (session scope) returns config._tmpdirhandler."
+      ],
+      "evidence": [
+        {
+          "file": "src/_pytest/legacypath.py",
+          "start_line": 296,
+          "end_line": 325,
+          "text": "class LegacyTmpdirPlugin:\n    @staticmethod\n    @fixture(scope=\"session\")\n    def tmpdir_factory(request: FixtureRequest) -> TempdirFactory:\n        \"\"\"Return a :class:`pytest.TempdirFactory` instance for the test session.\"\"\"\n        # Set dynamically by pytest_configure().\n        return request.config._tmpdirhandler  # type: ignore\n\n    @staticmethod\n    @fixture\n    def tmpdir(tmp_path: Path) -> LEGACY_PATH:\n        \"\"\"Return a temporary directory path object which is unique to each test\n        function invocation, created as a sub directory of the base temporary\n        directory.\n\n        By default, a new base temporary directory is created each test session,\n        and old bases are removed after 3 sessions, to aid in debugging. If\n        ``--basetemp`` is used then it is cleared each session. See\n        :ref:`temporary directory location and retention`.\n\n        The returned object is a `legacy_path`_ object.\n\n        .. note::\n            These days, it is preferred to use ``tmp_path``.\n\n            :ref:`About the tmpdir and tmpdir_factory fixtures<tmpdir and tmpdir_factory>`.\n\n        .. _legacy_path: https://py.readthedocs.io/en/latest/path.html\n        \"\"\"\n        return legacy_path(tmp_path)",
+          "span_sha256": "sha256:59219f4f69815ae193e17b3866928fd41c9c235c861fcdf943a07d16c7e0e939"
+        }
+      ],
+      "drafted_by": "Claude Opus 5.5 (EIH drafting tool)",
+      "requested_by": "Sanvi",
+      "status_note": "drafted (LLM draft, not verified); span span-29222c06015e"
+    },
+    {
+      "item_id": "eih-swe-07f400f6fd",
+      "kind": "new_task",
+      "split": "unassigned",
+      "repository": "pytest-dev/pytest",
+      "commit_sha": "bbcec9c46509c417ef58e4849847b4aa43f4591e",
+      "sdlc_stage": "architecture",
+      "task_type": "code_explanation",
+      "complexity": "medium",
+      "criticality": "low",
+      "query": "What happens when a test calls `pytest.fail(123)` (an int instead of a string), and why does pytest's outcome exception class behave that way?",
+      "proposed_answer": "`pytest.fail` raises `Failed(msg=reason, pytrace=pytrace)`, and `Failed` is an `OutcomeException`. `OutcomeException.__init__` checks that `msg` is None or a `str`; otherwise it raises `TypeError(\"Failed expected string as 'msg' parameter, got 'int' instead.\\nPerhaps you meant to use a mark?\")`. Outcome exceptions derive from `BaseException`, not `Exception`, and carry the message (`msg`) and whether to show a traceback (`pytrace`).",
+      "acceptable_alternatives": [
+        "OutcomeException.__init__ rejects a non-str msg with TypeError ('... expected string as msg ... Perhaps you meant to use a mark?')."
+      ],
+      "evidence": [
+        {
+          "file": "src/_pytest/outcomes.py",
+          "start_line": 18,
+          "end_line": 38,
+          "text": "class OutcomeException(BaseException):\n    \"\"\"OutcomeException and its subclass instances indicate and contain info\n    about test and collection outcomes.\"\"\"\n\n    def __init__(self, msg: str | None = None, pytrace: bool = True) -> None:\n        if msg is not None and not isinstance(msg, str):\n            error_msg = (  # type: ignore[unreachable]\n                \"{} expected string as 'msg' parameter, got '{}' instead.\\n\"\n                \"Perhaps you meant to use a mark?\"\n            )\n            raise TypeError(error_msg.format(type(self).__name__, type(msg).__name__))\n        super().__init__(msg)\n        self.msg = msg\n        self.pytrace = pytrace\n\n    def __repr__(self) -> str:\n        if self.msg is not None:\n            return self.msg\n        return f\"<{self.__class__.__name__} instance>\"\n\n    __str__ = __repr__",
+          "span_sha256": "sha256:9559bfb58f7f333893387ca969ccd96d24310637899cd334f4e0e6013fe7714a"
+        },
+        {
+          "file": "src/_pytest/outcomes.py",
+          "start_line": 164,
+          "end_line": 178,
+          "text": "def fail(reason: str = \"\", pytrace: bool = True) -> NoReturn:\n    \"\"\"Explicitly fail an executing test with the given message.\n\n    :param reason:\n        The message to show the user as reason for the failure.\n\n    :param pytrace:\n        If False, msg represents the full failure information and no\n        python traceback will be reported.\n\n    :raises pytest.fail.Exception:\n        The exception that is raised.\n    \"\"\"\n    __tracebackhide__ = True\n    raise Failed(msg=reason, pytrace=pytrace)",
+          "span_sha256": "sha256:d5788caab60bc110b16d56b74e6968616f3c74d2b1f7dc0268f6fec437a8391c"
+        }
+      ],
+      "drafted_by": "Claude Opus 5.5 (EIH drafting tool)",
+      "requested_by": "Sanvi",
+      "status_note": "drafted (LLM draft, not verified); span span-5669fdc27904"
+    },
+    {
+      "item_id": "eih-swe-688f82aec3",
+      "kind": "new_task",
+      "split": "unassigned",
+      "repository": "pytest-dev/pytest",
+      "commit_sha": "bbcec9c46509c417ef58e4849847b4aa43f4591e",
+      "sdlc_stage": "development",
+      "task_type": "code_explanation",
+      "complexity": "medium",
+      "criticality": "low",
+      "query": "In pytest's `-m`/`-k` expression lexer (`src/_pytest/mark/expression.py`), which characters can form an identifier, how are quoted strings handled, and which inputs raise a `ParseError`?",
+      "proposed_answer": "Spaces and tabs are skipped; `(`, `)`, `=` and `,` are single-character tokens. A quoted string ('...' or \"...\") runs to the matching closing quote. A missing closing quote raises `ParseError('closing quote ... is missing')`, and any backslash in the input raises `ParseError('escaping with \"\\\" not supported in marker expression')`. Otherwise a run of word characters, `:`, `+`, `-`, `.`, `[`, `]`, `\\` or `/` forms a token: `or`, `and` and `not` become operators, anything else an identifier. Any other character raises `ParseError('unexpected character ...')`, and lexing ends with an EOF token.",
+      "acceptable_alternatives": [
+        "Identifiers are runs of \\w, :, +, -, ., [, ], \\ and /; or/and/not are keywords; missing closing quotes, backslash escapes and other characters raise ParseError."
+      ],
+      "evidence": [
+        {
+          "file": "src/_pytest/mark/expression.py",
+          "start_line": 89,
+          "end_line": 139,
+          "text": "    def lex(self, input: str) -> Iterator[Token]:\n        pos = 0\n        while pos < len(input):\n            if input[pos] in (\" \", \"\\t\"):\n                pos += 1\n            elif input[pos] == \"(\":\n                yield Token(TokenType.LPAREN, \"(\", pos)\n                pos += 1\n            elif input[pos] == \")\":\n                yield Token(TokenType.RPAREN, \")\", pos)\n                pos += 1\n            elif input[pos] == \"=\":\n                yield Token(TokenType.EQUAL, \"=\", pos)\n                pos += 1\n            elif input[pos] == \",\":\n                yield Token(TokenType.COMMA, \",\", pos)\n                pos += 1\n            elif (quote_char := input[pos]) in (\"'\", '\"'):\n                end_quote_pos = input.find(quote_char, pos + 1)\n                if end_quote_pos == -1:\n                    raise ParseError(\n                        pos + 1,\n                        f'closing quote \"{quote_char}\" is missing',\n                    )\n                value = input[pos : end_quote_pos + 1]\n                if (backslash_pos := input.find(\"\\\\\")) != -1:\n                    raise ParseError(\n                        backslash_pos + 1,\n                        r'escaping with \"\\\" not supported in marker expression',\n                    )\n                yield Token(TokenType.STRING, value, pos)\n                pos += len(value)\n            else:\n                match = re.match(r\"(:?\\w|:|\\+|-|\\.|\\[|\\]|\\\\|/)+\", input[pos:])\n                if match:\n                    value = match.group(0)\n                    if value == \"or\":\n                        yield Token(TokenType.OR, value, pos)\n                    elif value == \"and\":\n                        yield Token(TokenType.AND, value, pos)\n                    elif value == \"not\":\n                        yield Token(TokenType.NOT, value, pos)\n                    else:\n                        yield Token(TokenType.IDENT, value, pos)\n                    pos += len(value)\n                else:\n                    raise ParseError(\n                        pos + 1,\n                        f'unexpected character \"{input[pos]}\"',\n                    )\n        yield Token(TokenType.EOF, \"\", pos)",
+          "span_sha256": "sha256:b2293d387a1e281c94d2a90c4a7b5e284673724f07cd464021e913f4bb97ccf9"
+        }
+      ],
+      "drafted_by": "Claude Opus 5.5 (EIH drafting tool)",
+      "requested_by": "Sanvi",
+      "status_note": "drafted (LLM draft, not verified); span span-664d682bf451"
+    },
+    {
+      "item_id": "eih-swe-2a2fde0311",
+      "kind": "new_task",
+      "split": "unassigned",
+      "repository": "pytest-dev/pytest",
+      "commit_sha": "bbcec9c46509c417ef58e4849847b4aa43f4591e",
+      "sdlc_stage": "development",
+      "task_type": "code_generation",
+      "complexity": "medium",
+      "criticality": "low",
+      "query": "Write a `pytest_addoption` hook that adds a `--slow` flag in its own help group named 'myplugin', listed after the 'general' group in `pytest --help`, and explain what `getgroup` does when the group already exists.",
+      "proposed_answer": "```python\ndef pytest_addoption(parser):\n    group = parser.getgroup(\"myplugin\", \"My plugin options\", after=\"general\")\n    group.addoption(\"--slow\", action=\"store_true\", default=False, help=\"run slow tests\")\n```\n`getgroup` returns the existing `OptionGroup` if one with that name exists. Otherwise it creates one and inserts it right after the group named `after` (at the end if that group is not found). The group's `addoption` takes the same arguments as `parser.addoption` and lists the option under that group in `--help`.",
+      "acceptable_alternatives": [
+        "parser.getgroup('myplugin', ..., after='general').addoption('--slow', action='store_true'); getgroup returns an existing group of that name or creates one after `after`."
+      ],
+      "evidence": [
+        {
+          "file": "src/_pytest/config/argparsing.py",
+          "start_line": 65,
+          "end_line": 89,
+          "text": "    def getgroup(\n        self, name: str, description: str = \"\", after: str | None = None\n    ) -> OptionGroup:\n        \"\"\"Get (or create) a named option Group.\n\n        :param name: Name of the option group.\n        :param description: Long description for --help output.\n        :param after: Name of another group, used for ordering --help output.\n        :returns: The option group.\n\n        The returned group object has an ``addoption`` method with the same\n        signature as :func:`parser.addoption <pytest.Parser.addoption>` but\n        will be shown in the respective group in the output of\n        ``pytest --help``.\n        \"\"\"\n        for group in self._groups:\n            if group.name == name:\n                return group\n        group = OptionGroup(name, description, parser=self, _ispytest=True)\n        i = 0\n        for i, grp in enumerate(self._groups):\n            if grp.name == after:\n                break\n        self._groups.insert(i + 1, group)\n        return group",
+          "span_sha256": "sha256:dda7da9906725e9b1da2fdd7066ab8e780053cc40407a98132545d50b96c3153"
+        }
+      ],
+      "drafted_by": "Claude Opus 5.5 (EIH drafting tool)",
+      "requested_by": "Sanvi",
+      "status_note": "drafted (LLM draft, not verified); span span-061247fa218c"
+    },
+    {
+      "item_id": "eih-swe-ac5338a819",
+      "kind": "new_task",
+      "split": "unassigned",
+      "repository": "pytest-dev/pytest",
+      "commit_sha": "bbcec9c46509c417ef58e4849847b4aa43f4591e",
+      "sdlc_stage": "testing",
+      "task_type": "test_explanation",
+      "complexity": "medium",
+      "criticality": "low",
+      "query": "What does pytest's `test_rewrite_warning` check, and why does it run pytest in a subprocess?",
+      "proposed_answer": "It writes a conftest that calls `pytest.register_assert_rewrite(\"_pytest\")`, a module that is already imported, then runs pytest and expects output matching `*Module already imported*: _pytest`, the warning that the module cannot be rewritten. It uses `runpytest_subprocess()` because `pytester` explicitly disables this warning in-process.",
+      "acceptable_alternatives": [
+        "Registering an already-imported module for assertion rewriting warns 'Module already imported'; a subprocess is needed because pytester disables the warning."
+      ],
+      "evidence": [
+        {
+          "file": "testing/test_assertrewrite.py",
+          "start_line": 947,
+          "end_line": 956,
+          "text": "    def test_rewrite_warning(self, pytester: Pytester) -> None:\n        pytester.makeconftest(\n            \"\"\"\n            import pytest\n            pytest.register_assert_rewrite(\"_pytest\")\n        \"\"\"\n        )\n        # needs to be a subprocess because pytester explicitly disables this warning\n        result = pytester.runpytest_subprocess()\n        result.stdout.fnmatch_lines([\"*Module already imported*: _pytest\"])",
+          "span_sha256": "sha256:6e9be994ec09a4c90e8745e9787abfc6bdf97754b5743e33f11205cb128dcbe4"
+        }
+      ],
+      "drafted_by": "Claude Opus 5.5 (EIH drafting tool)",
+      "requested_by": "Sanvi",
+      "status_note": "drafted (LLM draft, not verified); span span-2cb408f3c97d"
+    },
+    {
+      "item_id": "eih-swe-6f011f4010",
+      "kind": "new_task",
+      "split": "unassigned",
+      "repository": "pytest-dev/pytest",
+      "commit_sha": "bbcec9c46509c417ef58e4849847b4aa43f4591e",
+      "sdlc_stage": "testing",
+      "task_type": "test_generation",
+      "complexity": "medium",
+      "criticality": "low",
+      "query": "Write a pytest (pytester-based) test that checks a generator fixture which never yields makes the test error with `ValueError: <name> did not yield a value`.",
+      "proposed_answer": "```python\ndef test_yield_fixture_with_no_value(pytester: Pytester) -> None:\n    pytester.makepyfile(\n        \"\"\"\n        import pytest\n        @pytest.fixture(name='custom')\n        def empty_yield():\n            if False:\n                yield\n\n        def test_fixt(custom):\n            pass\n        \"\"\"\n    )\n    expected = \"E               ValueError: custom did not yield a value\"\n    result = pytester.runpytest()\n    result.assert_outcomes(errors=1)\n    result.stdout.fnmatch_lines([expected])\n    assert result.ret == ExitCode.TESTS_FAILED\n```",
+      "acceptable_alternatives": [
+        "A pytester test defining a named generator fixture that never yields, asserting errors=1 and 'ValueError: custom did not yield a value'."
+      ],
+      "evidence": [
+        {
+          "file": "testing/python/fixtures.py",
+          "start_line": 4672,
+          "end_line": 4689,
+          "text": "def test_yield_fixture_with_no_value(pytester: Pytester) -> None:\n    pytester.makepyfile(\n        \"\"\"\n        import pytest\n        @pytest.fixture(name='custom')\n        def empty_yield():\n            if False:\n                yield\n\n        def test_fixt(custom):\n            pass\n        \"\"\"\n    )\n    expected = \"E               ValueError: custom did not yield a value\"\n    result = pytester.runpytest()\n    result.assert_outcomes(errors=1)\n    result.stdout.fnmatch_lines([expected])\n    assert result.ret == ExitCode.TESTS_FAILED",
+          "span_sha256": "sha256:13694c718c65bc3604f73894a7769996ae59937f9d9dcc48d43e907b0aecdfba"
+        }
+      ],
+      "drafted_by": "Claude Opus 5.5 (EIH drafting tool)",
+      "requested_by": "Sanvi",
+      "status_note": "drafted (LLM draft, not verified); span span-909a2f586fbb"
+    },
+    {
+      "item_id": "eih-swe-5471fe3d97",
+      "kind": "new_task",
+      "split": "unassigned",
+      "repository": "pytest-dev/pytest",
+      "commit_sha": "bbcec9c46509c417ef58e4849847b4aa43f4591e",
+      "sdlc_stage": "code_review",
+      "task_type": "review_assistance",
+      "complexity": "medium",
+      "criticality": "low",
+      "query": "Review `pytest_plugin_registered` in `src/_pytest/legacypath.py`: why does it register `LegacyTestdirPlugin` from this hook instead of in `pytest_configure`, and what prevents double registration?",
+      "proposed_answer": "`pytester` is not loaded by default and is commonly loaded from a conftest, after `pytest_configure` may already have run. So the hook reacts whenever a plugin is registered: if that plugin is the `pytester` plugin and `LegacyTestdirPlugin` is not yet registered (`manager.is_registered`), it registers it under the name `legacypath-pytester`. The `is_registered` check prevents registering it twice.",
+      "acceptable_alternatives": [
+        "Because pytester may be loaded later from a conftest; the hook registers LegacyTestdirPlugin when pytester appears, guarded by is_registered."
+      ],
+      "evidence": [
+        {
+          "file": "src/_pytest/legacypath.py",
+          "start_line": 467,
+          "end_line": 473,
+          "text": "@hookimpl\ndef pytest_plugin_registered(plugin: object, manager: PytestPluginManager) -> None:\n    # pytester is not loaded by default and is commonly loaded from a conftest,\n    # so checking for it in `pytest_configure` is not enough.\n    is_pytester = plugin is manager.get_plugin(\"pytester\")\n    if is_pytester and not manager.is_registered(LegacyTestdirPlugin):\n        manager.register(LegacyTestdirPlugin, \"legacypath-pytester\")",
+          "span_sha256": "sha256:510e75b84083200f26d30762b55ee44d8b8771a823dda2c993a0bae528a6b0f1"
+        }
+      ],
+      "drafted_by": "Claude Opus 5.5 (EIH drafting tool)",
+      "requested_by": "Sanvi",
+      "status_note": "drafted (LLM draft, not verified); span span-5d88552e2a1c"
+    },
+    {
+      "item_id": "eih-swe-8423699df0",
+      "kind": "new_task",
+      "split": "unassigned",
+      "repository": "pytest-dev/pytest",
+      "commit_sha": "bbcec9c46509c417ef58e4849847b4aa43f4591e",
+      "sdlc_stage": "code_review",
+      "task_type": "review_assistance",
+      "complexity": "medium",
+      "criticality": "low",
+      "query": "Review the nested `parse_num` helper in `LocalPath.make_numbered_dir` (`src/_pytest/_py/path.py`). What does it return for a directory that does not match the prefix or has a non-numeric suffix, and how do its callers cope with that?",
+      "proposed_answer": "It lower-cases the basename and, if it starts with the (lower-cased) prefix, returns the int after the prefix. For a basename without the prefix, or a suffix that is not an integer (`ValueError` is swallowed), it falls through and implicitly returns `None`. Both callers check `if num is not None` before using it: when computing `maxnum` for the next directory number, and when deciding which old directories (`num <= maxnum - keep`) to remove.",
+      "acceptable_alternatives": [
+        "It returns an int or implicitly None; callers skip None both when finding maxnum and when pruning old directories."
+      ],
+      "evidence": [
+        {
+          "file": "src/_pytest/_py/path.py",
+          "start_line": 1287,
+          "end_line": 1296,
+          "text": "        nprefix = prefix.lower()\n\n        def parse_num(path):\n            \"\"\"Parse the number out of a path (if it matches the prefix)\"\"\"\n            nbasename = path.basename.lower()\n            if nbasename.startswith(nprefix):\n                try:\n                    return int(nbasename[len(nprefix) :])\n                except ValueError:\n                    pass",
+          "span_sha256": "sha256:8dbb609c802e716da3a6a0ef001c0185ed5343edcb22f03b29506f01f210583c"
+        },
+        {
+          "file": "src/_pytest/_py/path.py",
+          "start_line": 1334,
+          "end_line": 1338,
+          "text": "            maxnum = -1\n            for path in rootdir.listdir():\n                num = parse_num(path)\n                if num is not None:\n                    maxnum = max(maxnum, num)",
+          "span_sha256": "sha256:960551ceb8d0b48f5e297d4b630c96afc7ed3cb73b7adcb8007ba7014b474fad"
+        },
+        {
+          "file": "src/_pytest/_py/path.py",
+          "start_line": 1378,
+          "end_line": 1380,
+          "text": "            for path in rootdir.listdir():\n                num = parse_num(path)\n                if num is not None and num <= (maxnum - keep):",
+          "span_sha256": "sha256:e6fa3e07bf89f537b9eaebcc18f3178247b4ee234af25d3077ab49d0d4169b75"
+        }
+      ],
+      "drafted_by": "Claude Opus 5.5 (EIH drafting tool)",
+      "requested_by": "Sanvi",
+      "status_note": "drafted (LLM draft, not verified); span span-fb15f431fa09"
+    },
+    {
+      "item_id": "eih-swe-a45a28ab7f",
+      "kind": "new_task",
+      "split": "unassigned",
+      "repository": "pytest-dev/pytest",
+      "commit_sha": "bbcec9c46509c417ef58e4849847b4aa43f4591e",
+      "sdlc_stage": "maintenance",
+      "task_type": "error_analysis",
+      "complexity": "medium",
+      "criticality": "medium",
+      "query": "When running a `unittest.TestCase` class under pytest, the run ends with `ExceptionGroup: Unittest class cleanup errors`. What produces this error, and when would you see a plain exception instead?",
+      "proposed_answer": "pytest invokes `setUpClass`/`tearDownClass` through a class-scoped autouse fixture. After teardown (or after a failing `setUpClass`) it calls the class's `doClassCleanups` and then `process_teardown_exceptions`, which reads `cls.tearDown_exceptions` (errors recorded during class cleanup). If there is exactly one exception, it is re-raised directly for readability; if there are several, they are raised together as `ExceptionGroup(\"Unittest class cleanup errors\", exceptions)`.",
+      "acceptable_alternatives": [
+        "Several class-cleanup errors recorded in tearDown_exceptions are raised as an ExceptionGroup; a single one is raised directly."
+      ],
+      "evidence": [
+        {
+          "file": "src/_pytest/unittest.py",
+          "start_line": 116,
+          "end_line": 160,
+          "text": "        \"\"\"Register an auto-use fixture to invoke setUpClass and\n        tearDownClass (#517).\"\"\"\n        setup = getattr(cls, \"setUpClass\", None)\n        teardown = getattr(cls, \"tearDownClass\", None)\n        if setup is None and teardown is None:\n            return None\n        cleanup = getattr(cls, \"doClassCleanups\", lambda: None)\n\n        def process_teardown_exceptions() -> None:\n            # tearDown_exceptions is a list set in the class containing exc_infos for errors during\n            # teardown for the class.\n            exc_infos = getattr(cls, \"tearDown_exceptions\", None)\n            if not exc_infos:\n                return\n            exceptions = [exc for (_, exc, _) in exc_infos]\n            # If a single exception, raise it directly as this provides a more readable\n            # error (hopefully this will improve in #12255).\n            if len(exceptions) == 1:\n                raise exceptions[0]\n            else:\n                raise ExceptionGroup(\"Unittest class cleanup errors\", exceptions)\n\n        def unittest_setup_class_fixture(\n            request: FixtureRequest,\n        ) -> Generator[None, None, None]:\n            cls = request.cls\n            if _is_skipped(cls):\n                reason = cls.__unittest_skip_why__\n                raise pytest.skip.Exception(reason, _use_item_location=True)\n            if setup is not None:\n                try:\n                    setup()\n                # unittest does not call the cleanup function for every BaseException, so we\n                # follow this here.\n                except Exception:\n                    cleanup()\n                    process_teardown_exceptions()\n                    raise\n            yield\n            try:\n                if teardown is not None:\n                    teardown()\n            finally:\n                cleanup()\n                process_teardown_exceptions()",
+          "span_sha256": "sha256:477f4a7aa00be3a891daad50b943e2eb4c820bca84f5a1cb9b55d057558de715"
+        }
+      ],
+      "drafted_by": "Claude Opus 5.5 (EIH drafting tool)",
+      "requested_by": "Sanvi",
+      "status_note": "drafted (LLM draft, not verified); span span-0d63ff522c93"
+    },
+    {
+      "item_id": "eih-swe-8fced42135",
+      "kind": "new_task",
+      "split": "unassigned",
+      "repository": "pytest-dev/pytest",
+      "commit_sha": "bbcec9c46509c417ef58e4849847b4aa43f4591e",
+      "sdlc_stage": "maintenance",
+      "task_type": "error_analysis",
+      "complexity": "low",
+      "criticality": "low",
+      "query": "Diagnose: a test that calls `input()` fails with `OSError: pytest: reading from stdin while output is captured!  Consider using `-s`.` Why, and how can it be run?",
+      "proposed_answer": "While capturing output, pytest replaces `sys.stdin` with `DontReadFromInput`, whose `read`, `readline` and `readlines` raise this `OSError`, so any attempt to read standard input fails. Run with `-s` (no capturing) if the test really needs interactive input, or better, avoid reading stdin in tests (e.g. monkeypatch the input).",
+      "acceptable_alternatives": [
+        "Captured stdin is DontReadFromInput, which raises OSError on read; use -s or avoid stdin."
+      ],
+      "evidence": [
+        {
+          "file": "src/_pytest/capture.py",
+          "start_line": 201,
+          "end_line": 220,
+          "text": "\nclass DontReadFromInput(TextIO):\n    @property\n    def encoding(self) -> str:\n        return sys.__stdin__.encoding\n\n    def read(self, size: int = -1) -> str:\n        raise OSError(\n            \"pytest: reading from stdin while output is captured!  Consider using `-s`.\"\n        )\n\n    readline = read\n\n    def __next__(self) -> str:\n        return self.readline()\n\n    def readlines(self, hint: int | None = -1) -> list[str]:\n        raise OSError(\n            \"pytest: reading from stdin while output is captured!  Consider using `-s`.\"\n        )",
+          "span_sha256": "sha256:c2254b5bbd9c32e72d5a9863bf86eea6a3564ba64e55f1a7d26a4030be2f5dac"
+        },
+        {
+          "file": "src/_pytest/capture.py",
+          "start_line": 348,
+          "end_line": 351,
+          "text": "        if tmpfile is None:\n            if name == \"stdin\":\n                tmpfile = DontReadFromInput()\n            else:",
+          "span_sha256": "sha256:6f1bbfa73c38cc56ce658a49a7cdfa889d530dcd4c52a1e4757c324b4095890c"
+        }
+      ],
+      "drafted_by": "Claude Opus 5.5 (EIH drafting tool)",
+      "requested_by": "Sanvi",
+      "status_note": "drafted (LLM draft, not verified); span span-0009033655a2"
+    },
+    {
+      "item_id": "eih-swe-104d1417c6",
+      "kind": "new_task",
+      "split": "unassigned",
+      "repository": "sphinx-doc/sphinx",
+      "commit_sha": "0d912c85fd3ec385432fe707f6a0678425d1e841",
+      "sdlc_stage": "requirements",
+      "task_type": "requirement_retrieval",
+      "complexity": "low",
+      "criticality": "low",
+      "query": "Which system packages does Sphinx's installation guide name for installing Sphinx on Debian/Ubuntu, RHEL/CentOS and other Linux distributions, and what naming confusion does it warn about?",
+      "proposed_answer": "Debian/Ubuntu: `apt-get install python3-sphinx`; RHEL/CentOS: `yum install python-sphinx` (both install Python if it is not present). Other distributions usually call the package `python3-sphinx`, `python-sphinx` or `sphinx`. It warns that at least two other packages have 'sphinx' in their name: the CMU Sphinx speech-recognition toolkit and the Sphinx search full-text search database.",
+      "acceptable_alternatives": [
+        "python3-sphinx (apt), python-sphinx (yum), else python3-sphinx/python-sphinx/sphinx; beware CMU Sphinx and Sphinx search."
+      ],
+      "evidence": [
+        {
+          "file": "doc/usage/installation.rst",
+          "start_line": 95,
+          "end_line": 127,
+          "text": "Linux\n~~~~~\n\nDebian/Ubuntu\n\"\"\"\"\"\"\"\"\"\"\"\"\"\n\nInstall either ``python3-sphinx`` using :command:`apt-get`:\n\n::\n\n   $ apt-get install python3-sphinx\n\nIf it not already present, this will install Python for you.\n\nRHEL, CentOS\n\"\"\"\"\"\"\"\"\"\"\"\"\n\nInstall ``python-sphinx`` using :command:`yum`:\n\n::\n\n   $ yum install python-sphinx\n\nIf it not already present, this will install Python for you.\n\nOther distributions\n\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\n\nMost Linux distributions have Sphinx in their package repositories.  Usually\nthe package is called ``python3-sphinx``, ``python-sphinx`` or ``sphinx``.  Be\naware that there are at least two other packages with ``sphinx`` in their name:\na speech recognition toolkit (*CMU Sphinx*) and a full-text search database\n(*Sphinx search*).",
+          "span_sha256": "sha256:8959f10f582d5306da1f7c7e0d04d1945d4c47f518334b996e28d3cf4049ec7b"
+        }
+      ],
+      "drafted_by": "Claude Opus 5.5 (EIH drafting tool)",
+      "requested_by": "Sanvi",
+      "status_note": "drafted (LLM draft, not verified); span span-f3eca92a39d9"
+    },
+    {
+      "item_id": "eih-swe-538f929cda",
+      "kind": "new_task",
+      "split": "unassigned",
+      "repository": "sphinx-doc/sphinx",
+      "commit_sha": "0d912c85fd3ec385432fe707f6a0678425d1e841",
+      "sdlc_stage": "requirements",
+      "task_type": "requirement_understanding",
+      "complexity": "medium",
+      "criticality": "low",
+      "query": "In what order does Sphinx's `any` role look for a target, what happens when it finds none or several, and how does it interact with intersphinx?",
+      "proposed_answer": "First it tries the standard cross-reference targets that `doc`, `ref` or `option` would find (including custom objects added to the standard domain via `Sphinx.add_object_type`); then it looks for objects in all loaded domains, each domain deciding how specific a match must be. If no target or several targets are found, a warning is emitted (for several, you can switch to a specific role). With `sphinx.ext.intersphinx`, if no local target is found, all object types of the intersphinx inventories are also searched. It was added in 1.3 and is a good candidate for `default_role`.",
+      "acceptable_alternatives": [
+        "Standard-domain targets first, then every loaded domain; warns on zero or multiple matches; falls back to intersphinx inventories."
+      ],
+      "evidence": [
+        {
+          "file": "doc/usage/referencing.rst",
+          "start_line": 33,
+          "end_line": 72,
+          "text": "Cross-referencing anything\n--------------------------\n\n.. rst:role:: any\n\n   .. versionadded:: 1.3\n\n   This convenience role tries to do its best to find a valid target for its\n   reference text.\n\n   * First, it tries standard cross-reference targets that would be referenced\n     by :rst:role:`doc`, :rst:role:`ref` or :rst:role:`option`.\n\n     Custom objects added to the standard domain by extensions (see\n     :meth:`.Sphinx.add_object_type`) are also searched.\n\n   * Then, it looks for objects (targets) in all loaded domains.  It is up to\n     the domains how specific a match must be.  For example, in the Python\n     domain a reference of ``:any:`Builder``` would match the\n     ``sphinx.builders.Builder`` class.\n\n   If none or multiple targets are found, a warning will be emitted.  In the\n   case of multiple targets, you can change \"any\" to a specific role.\n\n   This role is a good candidate for setting :confval:`default_role`.  If you\n   do, you can write cross-references without a lot of markup overhead.  For\n   example, in this Python function documentation::\n\n      .. function:: install()\n\n         This function installs a `handler` for every signal known by the\n         `signal` module.  See the section `about-signals` for more information.\n\n   there could be references to a glossary term (usually ``:term:`handler```), a\n   Python module (usually ``:py:mod:`signal``` or ``:mod:`signal```) and a\n   section (usually ``:ref:`about-signals```).\n\n   The :rst:role:`any` role also works together with the\n   :mod:`~sphinx.ext.intersphinx` extension: when no local cross-reference is\n   found, all object types of intersphinx inventories are also searched.",
+          "span_sha256": "sha256:106740ef0678cd48287b795c48da7a6be0805a6b09c0995d8737ee86b8c40f72"
+        }
+      ],
+      "drafted_by": "Claude Opus 5.5 (EIH drafting tool)",
+      "requested_by": "Sanvi",
+      "status_note": "drafted (LLM draft, not verified); span span-940d42c0f0c6"
+    },
+    {
+      "item_id": "eih-swe-c0371e1d99",
+      "kind": "new_task",
+      "split": "unassigned",
+      "repository": "sphinx-doc/sphinx",
+      "commit_sha": "0d912c85fd3ec385432fe707f6a0678425d1e841",
+      "sdlc_stage": "architecture",
+      "task_type": "architecture_qa",
+      "complexity": "medium",
+      "criticality": "low",
+      "query": "How does `sphinx.ext.todo`'s `TodoListProcessor` turn each `todolist` node into the list of todos, and what changes when `todo_include_todos` or `todo_link_only` is set?",
+      "proposed_answer": "It gathers all todos from the `todo` domain and, for every `todolist` node in the doctree: if `todo_include_todos` is false it simply removes the node. Otherwise it replaces the node with, for each todo, a deep copy with its ids cleared and its references resolved for the current document (by temporarily wrapping it in a document node), followed by a 'todo-source' paragraph linking to the original entry. With `todo_link_only` the paragraph is just '<<original entry>>'; otherwise it reads '(The <<original entry>> is located in <source>, line <n>.)'. If no URI can be computed (e.g. LaTeX), the link target is skipped.",
+      "acceptable_alternatives": [
+        "Each todolist becomes copies of all todos plus links to the originals; removed when todo_include_todos is false; todo_link_only shortens the link text."
+      ],
+      "evidence": [
+        {
+          "file": "sphinx/ext/todo.py",
+          "start_line": 123,
+          "end_line": 196,
+          "text": "class TodoListProcessor:\n    def __init__(self, app: Sphinx, doctree: nodes.document, docname: str) -> None:\n        self.builder = app.builder\n        self.config = app.config\n        self.env = app.env\n        self.domain = cast(TodoDomain, app.env.get_domain('todo'))\n        self.document = new_document('')\n\n        self.process(doctree, docname)\n\n    def process(self, doctree: nodes.document, docname: str) -> None:\n        todos: list[todo_node] = functools.reduce(\n            operator.iadd, self.domain.todos.values(), [])\n        for node in list(doctree.findall(todolist)):\n            if not self.config.todo_include_todos:\n                node.parent.remove(node)\n                continue\n\n            if node.get('ids'):\n                content: list[Element] = [nodes.target()]\n            else:\n                content = []\n\n            for todo in todos:\n                # Create a copy of the todo node\n                new_todo = todo.deepcopy()\n                new_todo['ids'].clear()\n\n                self.resolve_reference(new_todo, docname)\n                content.append(new_todo)\n\n                todo_ref = self.create_todo_reference(todo, docname)\n                content.append(todo_ref)\n\n            node.replace_self(content)\n\n    def create_todo_reference(self, todo: todo_node, docname: str) -> nodes.paragraph:\n        if self.config.todo_link_only:\n            description = _('<<original entry>>')\n        else:\n            description = (_('(The <<original entry>> is located in %s, line %d.)') %\n                           (todo.source, todo.line))\n\n        prefix = description[:description.find('<<')]\n        suffix = description[description.find('>>') + 2:]\n\n        para = nodes.paragraph(classes=['todo-source'])\n        para += nodes.Text(prefix)\n\n        # Create a reference\n        linktext = nodes.emphasis(_('original entry'), _('original entry'))\n        reference = nodes.reference('', '', linktext, internal=True)\n        try:\n            reference['refuri'] = self.builder.get_relative_uri(docname, todo['docname'])\n            reference['refuri'] += '#' + todo['ids'][0]\n        except NoUri:\n            # ignore if no URI can be determined, e.g. for LaTeX output\n            pass\n\n        para += reference\n        para += nodes.Text(suffix)\n\n        return para\n\n    def resolve_reference(self, todo: todo_node, docname: str) -> None:\n        \"\"\"Resolve references in the todo content.\"\"\"\n        for node in todo.findall(addnodes.pending_xref):\n            if 'refdoc' in node:\n                node['refdoc'] = docname\n\n        # Note: To resolve references, it is needed to wrap it with document node\n        self.document += todo\n        self.env.resolve_references(self.document, docname, self.builder)\n        self.document.remove(todo)",
+          "span_sha256": "sha256:85a4f462770ec64cdf76a833187769c662c982557a9dd50a90c9313717134cde"
+        }
+      ],
+      "drafted_by": "Claude Opus 5.5 (EIH drafting tool)",
+      "requested_by": "Sanvi",
+      "status_note": "drafted (LLM draft, not verified); span span-c6778c060ce1"
+    },
+    {
+      "item_id": "eih-swe-0e19254ac1",
+      "kind": "new_task",
+      "split": "unassigned",
+      "repository": "sphinx-doc/sphinx",
+      "commit_sha": "0d912c85fd3ec385432fe707f6a0678425d1e841",
+      "sdlc_stage": "architecture",
+      "task_type": "code_explanation",
+      "complexity": "medium",
+      "criticality": "low",
+      "query": "What does Sphinx's `AutoNumbering` transform do, and which nodes does it act on?",
+      "proposed_answer": "It is a `SphinxTransform` (priority 210) that registers IDs for tables, figures and literal blocks so they can be numbered. For every element in the document, if the standard domain says the node is enumerable, the node has a numfig title, and it has no ids yet, it calls `document.note_implicit_target(node)` to give it an implicit target id.",
+      "acceptable_alternatives": [
+        "Gives enumerable nodes with a numfig title but no ids an implicit target so they can be numbered."
+      ],
+      "evidence": [
+        {
+          "file": "sphinx/transforms/__init__.py",
+          "start_line": 202,
+          "end_line": 216,
+          "text": "class AutoNumbering(SphinxTransform):\n    \"\"\"\n    Register IDs of tables, figures and literal_blocks to assign numbers.\n    \"\"\"\n\n    default_priority = 210\n\n    def apply(self, **kwargs: Any) -> None:\n        domain: StandardDomain = self.env.domains['std']\n\n        for node in self.document.findall(nodes.Element):\n            if (domain.is_enumerable_node(node) and\n                    domain.get_numfig_title(node) is not None and\n                    node['ids'] == []):\n                self.document.note_implicit_target(node)",
+          "span_sha256": "sha256:738c57a44beaa0df5d10ba99804c49e6551d7ad7dac743ca6da4662433584d68"
+        }
+      ],
+      "drafted_by": "Claude Opus 5.5 (EIH drafting tool)",
+      "requested_by": "Sanvi",
+      "status_note": "drafted (LLM draft, not verified); span span-f1818c2a6055"
+    }
+  ]
+}

@@ -93,8 +93,9 @@ class ReviewItem(BaseModel):
 class ReviewBatch(BaseModel):
     batch_id: str
     created_at: str
-    purpose: str = Field(description="calibration | review | test_correctness_pass")
+    purpose: str = Field(description="calibration | review | test_correctness_pass | label_review | fix_proposal")
     assigned_to: List[str] = Field(default_factory=list)
+    priority: int = Field(default=50, description="lower is served first by `review.py next`")
     items: List[ReviewItem]
 
     @field_validator("items")
@@ -185,8 +186,9 @@ class ReviewStore:
     def batches(self) -> List[ReviewBatch]:
         if not self.queue_dir.exists():
             return []
-        return [ReviewBatch.model_validate_json(p.read_text(encoding="utf-8"))
-                for p in sorted(self.queue_dir.glob("*.json"))]
+        batches = [ReviewBatch.model_validate_json(p.read_text(encoding="utf-8"))
+                   for p in sorted(self.queue_dir.glob("*.json"))]
+        return sorted(batches, key=lambda b: (b.priority, b.batch_id))
 
     def save_batch(self, batch: ReviewBatch, overwrite: bool = False) -> Path:
         self.queue_dir.mkdir(parents=True, exist_ok=True)
@@ -247,6 +249,10 @@ class ReviewStore:
         with path.open("a", encoding="utf-8") as fh:
             fh.write(rec.model_dump_json() + "\n")
         self._clear_session(reviewer)
+        if decision == "approve" and item.split == "unassigned":
+            from benchmark.drafting import assign_split
+
+            assign_split(item, path=self.assignments_path, now=now)
         return rec
 
     # --- review timer (local only; .sessions is git-ignored)
@@ -269,6 +275,23 @@ class ReviewStore:
         if path.exists():
             path.unlink()
 
+    # --- split (new tasks get theirs at first approval; benchmark/drafting.py, S1)
+    @property
+    def assignments_path(self) -> Path:
+        return self.root / "split_assignments.json"
+
+    def effective_split(self, item: ReviewItem) -> str:
+        if item.split != "unassigned":
+            return item.split
+        if self.assignments_path.exists():
+            rec = json.loads(self.assignments_path.read_text(encoding="utf-8")).get(item.item_id)
+            if rec:
+                return rec["split"]
+        return "unassigned"
+
+    def required_reviews(self, item: ReviewItem) -> int:
+        return 2 if self.effective_split(item) in HELD_OUT_SPLITS else 1
+
     # --- status
     def status(self, item: ReviewItem) -> str:
         cur = self.current_decisions(item)
@@ -277,7 +300,7 @@ class ReviewStore:
             return "rejected"
         if kinds["fix"]:
             return "needs_fix"
-        if kinds["approve"] >= item.required_reviews:
+        if kinds["approve"] >= self.required_reviews(item):
             return "approved"
         return "partially_approved" if kinds["approve"] else "pending"
 
@@ -387,9 +410,9 @@ def progress_report(store: ReviewStore, day: Optional[str] = None,
     for ledger in gpu_ledgers:
         for line in Path(ledger).read_text(encoding="utf-8").splitlines():
             rec = json.loads(line) if line.strip() else {}
-            trial = rec.get("trial") or rec.get("result") or {}
-            if (day is None or str(rec.get("finished_utc", rec.get("timestamp", ""))).startswith(day)) and "latency_ms" in trial:
-                gpu_s += trial["latency_ms"] / 1000.0
+            # job-queue ledger: started_utc + wall_s per unit (UTC dates)
+            if rec.get("status") == "ok" and (day is None or str(rec.get("started_utc", "")).startswith(day)):
+                gpu_s += float(rec.get("wall_s") or 0.0)
     blockers = []
     if ask_me and Path(ask_me).exists():
         blockers = [l.strip()[6:] for l in Path(ask_me).read_text(encoding="utf-8").splitlines()
@@ -415,6 +438,15 @@ def progress_report(store: ReviewStore, day: Optional[str] = None,
 # ---------------------------------------------------------------------------
 
 
+WHOLE_FILE_MAX_LINES = 400
+
+
+def _pinned_lines(repository: str, file: str) -> List[str]:
+    from benchmark import retrieval_labels as rl
+
+    return (rl.repo_dir(repository) / file).read_text(encoding="utf-8").splitlines()
+
+
 def snippet(repository: str, file: str, start: int, end: int) -> EvidenceSnippet:
     """Exact lines from the pinned checkout in .corpus_cache (refuses an unpinned checkout)."""
     from benchmark import retrieval_labels as rl
@@ -433,7 +465,7 @@ def snippet(repository: str, file: str, start: int, end: int) -> EvidenceSnippet
 
 
 def item_from_task(task: dict, split: str, drafted_by: str, requested_by: Optional[str] = None,
-                   label: Optional[dict] = None) -> ReviewItem:
+                   label: Optional[dict] = None, allow_evidence_defects: bool = False) -> ReviewItem:
     """Review item for an existing task, showing the exact lines its evidence cites.
 
     Some pilot tasks cite a documentation file without line numbers. For those, the lines
@@ -442,7 +474,25 @@ def item_from_task(task: dict, split: str, drafted_by: str, requested_by: Option
     """
     from experiments.m5.manifest import wave1_repository_pins
 
-    ev, from_label = [], []
+    if allow_evidence_defects:
+        # Correctness pass: a task whose cited evidence cannot be shown is still reviewed; the
+        # defect is stated and the reviewer opens the pinned file (two reviewers, fix or reject).
+        try:
+            return item_from_task(task, split, drafted_by, requested_by, label)
+        except (ReviewError, OSError) as exc:
+            cited = [f"{e.get('file_path')} L{e.get('line_start')}-L{e.get('line_end')}"
+                     for e in task.get("source_evidence", [])]
+            return ReviewItem(
+                item_id=task["task_id"], kind="existing_task", split=split, repository=task["repository"],
+                commit_sha=wave1_repository_pins()[task["repository"]], sdlc_stage=task["sdlc_stage"],
+                task_type=task["task_type"], complexity=task.get("complexity"), criticality=task.get("criticality"),
+                query=task["query"], proposed_answer=task["ground_truth"],
+                acceptable_alternatives=task.get("acceptable_alternatives", []), evidence=[],
+                drafted_by=drafted_by, requested_by=requested_by,
+                status_note=(f"EVIDENCE DEFECT: {exc}. Cited: {cited}. Open the file at the pinned commit "
+                             "yourself; evidence_correct fails - use fix (name the right lines) or reject."))
+
+    ev, from_label, whole = [], [], []
     for e in task.get("source_evidence", []):
         if not e.get("file_path"):
             continue
@@ -451,7 +501,15 @@ def item_from_task(task: dict, split: str, drafted_by: str, requested_by: Option
             continue
         spans = [s for s in (label or {}).get("required_evidence", []) if s["file"] == e["file_path"]]
         if not spans:
-            raise ReviewError(f"{task['task_id']} cites {e['file_path']} without line numbers and no label covers it")
+            # No label (e.g. a test task, labelled only right before the final run): show the whole
+            # file if it is short enough to read, and the reviewer names the lines in a `fix`.
+            n_lines = len(_pinned_lines(task["repository"], e["file_path"]))
+            if n_lines > WHOLE_FILE_MAX_LINES:
+                raise ReviewError(f"{task['task_id']}: evidence file has no line numbers and is too long "
+                                  f"({n_lines} lines) to show whole")
+            ev.append(snippet(task["repository"], e["file_path"], 1, n_lines))
+            whole.append(e["file_path"])
+            continue
         ev += [snippet(task["repository"], s["file"], s["start_line"], s["end_line"]) for s in spans]
         from_label.append(e["file_path"])
     if not ev:
@@ -459,6 +517,9 @@ def item_from_task(task: dict, split: str, drafted_by: str, requested_by: Option
     note = "existing benchmark task"
     if from_label:
         note += f"; task cites {from_label} without lines - lines shown are from its draft retrieval label"
+    if whole:
+        note += (f"; task cites {whole} without lines - the WHOLE file is shown: if the answer is right, "
+                 "use `fix` with evidence_correct failed and name the exact lines in the note")
     return ReviewItem(item_id=task["task_id"], kind="existing_task", split=split, repository=task["repository"],
                       commit_sha=wave1_repository_pins()[task["repository"]], sdlc_stage=task["sdlc_stage"],
                       task_type=task["task_type"], complexity=task.get("complexity"),
@@ -466,3 +527,37 @@ def item_from_task(task: dict, split: str, drafted_by: str, requested_by: Option
                       proposed_answer=task["ground_truth"],
                       acceptable_alternatives=task.get("acceptable_alternatives", []), evidence=ev,
                       drafted_by=drafted_by, requested_by=requested_by, status_note=note)
+
+
+def item_from_label(label: dict, task: dict) -> ReviewItem:
+    """A retrieval label (L1) as a review item: do these exact lines hold the evidence for the answer?"""
+    ev = [snippet(label["repository"], e["file"], e["start_line"], e["end_line"]) for e in label["required_evidence"]]
+    return ReviewItem(
+        item_id=f"label-{label['task_id']}", kind="retrieval_label", split=label["split"],
+        repository=label["repository"], commit_sha=label["commit_sha"], sdlc_stage=task["sdlc_stage"],
+        task_type=task["task_type"], complexity=task.get("complexity"), criticality=task.get("criticality"),
+        query=task["query"], proposed_answer=task["ground_truth"], evidence=ev,
+        drafted_by=label["annotator"], requested_by=None,
+        status_note=("RETRIEVAL LABEL (L1): approve if these lines contain the evidence needed to answer and "
+                     "nothing essential is missing; fix = name the missing/wrong lines. The question/answer "
+                     "themselves are checked elsewhere."))
+
+
+def item_from_proposal(task: dict, proposal: dict, label: Optional[dict], requested_by: str) -> ReviewItem:
+    """A proposed fix to an existing task (audit), shown as the full corrected task with exact evidence."""
+    from experiments.m5.manifest import wave1_repository_pins
+
+    spans = ([(e["file"], e["start_line"], e["end_line"]) for e in label["required_evidence"]]
+             if proposal.get("evidence") == "label" else [tuple(e) for e in proposal["evidence"]])
+    ev = [snippet(task["repository"], f, s, e) for f, s, e in spans]   # raises if any line is missing
+    changed = [k for k in ("query", "ground_truth", "acceptable_alternatives") if k in proposal]
+    return ReviewItem(
+        item_id=f"{task['task_id']}-fix-v1.2", kind="fix_proposal", split=label["split"] if label else "dev",
+        repository=task["repository"], commit_sha=wave1_repository_pins()[task["repository"]],
+        sdlc_stage=task["sdlc_stage"], task_type=task["task_type"], complexity=task.get("complexity"),
+        criticality=task.get("criticality"), query=proposal.get("query", task["query"]),
+        proposed_answer=proposal.get("ground_truth", task["ground_truth"]),
+        acceptable_alternatives=proposal.get("acceptable_alternatives", task.get("acceptable_alternatives", [])),
+        evidence=ev, drafted_by="Claude Opus 5.5 (benchmark audit 2026-10-06)", requested_by=requested_by,
+        status_note=(f"PROPOSED FIX ({', '.join(changed + ['evidence']) }) - audit reason: {proposal['why']} "
+                     "Approve only if the corrected task is right against the shown lines."))

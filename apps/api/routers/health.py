@@ -98,10 +98,90 @@ async def info() -> InfoResponse:
     )
 
 
-@router.get("/ready", summary="Readiness probe")
-async def ready() -> dict:
-    """
-    Readiness probe. In Phase-0 always returns ready.
-    Phase-1: will check vector store, graph store, and embedding model.
-    """
-    return {"status": "ready", "phase": "0-foundation"}
+@router.get("/ready", summary="Readiness probe (real checks)")
+def ready() -> dict:
+    """Ready only when every required service answers: Qdrant (research collection with points),
+    Neo4j, Ollama with the configured model. Each check reports its own state; nothing is assumed."""
+    checks = system_status()["services"]
+    required = ("qdrant", "neo4j", "ollama")
+    ok = all(checks[k]["ok"] for k in required)
+    return {"status": "ready" if ok else "not_ready", "checks": {k: checks[k] for k in required}}
+
+
+def _pinned_digests() -> dict:
+    import yaml
+
+    from core.config import PROJECT_ROOT
+    models = yaml.safe_load((PROJECT_ROOT / "configs" / "models.yaml").read_text(encoding="utf-8"))["models"]
+    return {m["model_id"]: (m.get("extra") or {}).get("digest") for m in models}
+
+
+@router.get("/status", summary="Service status for the UI")
+def system_status() -> dict:
+    """Qdrant, Neo4j, Ollama (+ pinned-digest check), GPU, OKF; measured live on every call."""
+    import httpx
+
+    out: dict = {"machine_id": settings.machine_id, "checked_at": datetime.now(timezone.utc).isoformat()}
+    s: dict = {}
+    # Qdrant
+    try:
+        from knowledge.vector.qdrant import QdrantVectorStore
+        vs = QdrantVectorStore()
+        vs.connect()
+        coll = settings.vector_store.collection_name
+        n = vs.count(coll) if vs.collection_exists(coll) else 0
+        okf_n = vs.count(settings.okf.collection_name) if vs.collection_exists(settings.okf.collection_name) else 0
+        s["qdrant"] = {"ok": n > 0, "collection": coll, "points": n, "okf_collection": settings.okf.collection_name,
+                       "okf_points": okf_n}
+    except Exception as exc:  # noqa: BLE001
+        s["qdrant"] = {"ok": False, "error": str(exc)[:200]}
+    # Neo4j
+    try:
+        from knowledge.graph.neo4j import Neo4jGraphStore
+        g = Neo4jGraphStore()
+        if g.is_available():
+            okf = g.query("MATCH (c:OKFConcept) RETURN count(c) AS n")[0]["n"]
+            s["neo4j"] = {"ok": True, "entity_nodes": g.count_nodes(), "entity_edges": g.count_edges(),
+                          "okf_concepts": okf}
+        else:
+            s["neo4j"] = {"ok": False, "error": "not reachable"}
+    except Exception as exc:  # noqa: BLE001
+        s["neo4j"] = {"ok": False, "error": str(exc)[:200]}
+    # Ollama
+    base = settings.secrets.local_model_base_url or "http://localhost:11434"
+    try:
+        tags = httpx.get(f"{base.rstrip('/')}/api/tags", timeout=3).json().get("models", [])
+        version = httpx.get(f"{base.rstrip('/')}/api/version", timeout=3).json().get("version")
+        pinned = _pinned_digests()
+        models = []
+        for mid, digest in pinned.items():
+            got = next((m.get("digest") for m in tags if m.get("name") == mid or m.get("model") == mid), None)
+            models.append({"model_id": mid, "pulled": got is not None, "digest": got,
+                           "digest_matches_pin": (got == digest) if got and digest else None})
+        default = settings.model.default_model_id
+        s["ollama"] = {"ok": any(m["model_id"] == default and m["pulled"] for m in models), "version": version,
+                       "default_model": default, "models": models}
+    except Exception as exc:  # noqa: BLE001
+        s["ollama"] = {"ok": False, "error": f"not reachable at {base}: {str(exc)[:120]}"}
+    # GPU
+    try:
+        import pynvml
+        pynvml.nvmlInit()
+        h = pynvml.nvmlDeviceGetHandleByIndex(0)
+        mem = pynvml.nvmlDeviceGetMemoryInfo(h)
+        s["gpu"] = {"ok": True, "name": pynvml.nvmlDeviceGetName(h), "driver": pynvml.nvmlSystemGetDriverVersion(),
+                    "vram_used_mib": mem.used // 2**20, "vram_total_mib": mem.total // 2**20,
+                    "temperature_c": pynvml.nvmlDeviceGetTemperature(h, pynvml.NVML_TEMPERATURE_GPU)}
+        pynvml.nvmlShutdown()
+    except Exception as exc:  # noqa: BLE001
+        s["gpu"] = {"ok": False, "error": str(exc)[:200]}
+    # OKF
+    try:
+        from apps.api import services
+        names = services.bundle_names()
+        s["okf"] = {"ok": bool(names), "bundles": names, "default_bundle": settings.okf.default_bundle}
+        s["warm_up"] = {"ok": services.warm_state.get("state") == "done", **services.warm_state}
+    except Exception as exc:  # noqa: BLE001
+        s["okf"] = {"ok": False, "error": str(exc)[:200]}
+    out["services"] = s
+    return out

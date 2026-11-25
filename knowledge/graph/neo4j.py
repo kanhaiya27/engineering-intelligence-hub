@@ -249,8 +249,12 @@ class Neo4jGraphStore(BaseGraphStore):
         if not self._driver:
             self.connect()
 
+        # Only edges of the engineering graph (between :Entity nodes). Other data in the
+        # same database (the OKF projection, :OKFConcept) must not change the counts the
+        # experiment manifest binds (WORK_PLAN C21). Identical to counting all edges while
+        # the database holds only the engineering graph (58,982 = 58,982, 2026-11-22).
         rel = f":{relationship}" if relationship else ""
-        cypher = f"MATCH ()-[r{rel}]->() RETURN count(r) AS cnt"
+        cypher = f"MATCH (:Entity)-[r{rel}]->(:Entity) RETURN count(r) AS cnt"
         with self._driver.session(database=self.database) as session:
             result = session.run(cypher)
             record = result.single()
@@ -348,8 +352,9 @@ class Neo4jGraphStore(BaseGraphStore):
             self.connect()
         with self._driver.session(database=self.database) as session:
             while True:
+                # Engineering graph only: a graph rebuild must not delete the OKF projection.
                 deleted = session.run(
-                    "MATCH (n) WITH n LIMIT 10000 DETACH DELETE n RETURN count(n) AS c").single()["c"]
+                    "MATCH (n:Entity) WITH n LIMIT 10000 DETACH DELETE n RETURN count(n) AS c").single()["c"]
                 if not deleted:
                     break
 

@@ -1,0 +1,790 @@
+{
+  "batch_id": "draft-r1-01",
+  "created_at": "2026-10-06T01:36:54.480499+00:00",
+  "purpose": "review",
+  "assigned_to": [
+    "Sanvi",
+    "Aayan",
+    "Radhesh"
+  ],
+  "priority": 50,
+  "items": [
+    {
+      "item_id": "eih-swe-7e8808f642",
+      "kind": "new_task",
+      "split": "unassigned",
+      "repository": "pallets/flask",
+      "commit_sha": "c12a5d874c5a014495eb2db8a73f40037bc813ac",
+      "sdlc_stage": "requirements",
+      "task_type": "requirement_understanding",
+      "complexity": "low",
+      "criticality": "medium",
+      "query": "According to Flask's quickstart, how should WSGI middleware such as Werkzeug's ProxyFix be added to an application, and why is `app.wsgi_app` wrapped instead of `app`?",
+      "proposed_answer": "Wrap the application's `wsgi_app` attribute, e.g. `app.wsgi_app = ProxyFix(app.wsgi_app)`. Wrapping `app.wsgi_app` rather than `app` keeps `app` pointing at the Flask application instead of the middleware, so you can continue to use and configure `app` directly.",
+      "acceptable_alternatives": [
+        "Assign app.wsgi_app = Middleware(app.wsgi_app); app stays the Flask object so it can still be configured."
+      ],
+      "evidence": [
+        {
+          "file": "docs/quickstart.rst",
+          "start_line": 878,
+          "end_line": 893,
+          "text": "Hooking in WSGI Middleware\n--------------------------\n\nTo add WSGI middleware to your Flask application, wrap the application's\n``wsgi_app`` attribute. For example, to apply Werkzeug's\n:class:`~werkzeug.middleware.proxy_fix.ProxyFix` middleware for running\nbehind Nginx:\n\n.. code-block:: python\n\n    from werkzeug.middleware.proxy_fix import ProxyFix\n    app.wsgi_app = ProxyFix(app.wsgi_app)\n\nWrapping ``app.wsgi_app`` instead of ``app`` means that ``app`` still\npoints at your Flask application, not at the middleware, so you can\ncontinue to use and configure ``app`` directly.",
+          "span_sha256": "sha256:b20f027db20392309f26a3cfedab82011715f78de8f26b75f58e4aa136fbd295"
+        }
+      ],
+      "drafted_by": "Claude Opus 5.5 (EIH drafting tool)",
+      "requested_by": "Avaneesh Kumar Verma",
+      "status_note": "drafted (LLM draft, not verified); span span-7ec90eb7ba81"
+    },
+    {
+      "item_id": "eih-swe-d335c727ce",
+      "kind": "new_task",
+      "split": "unassigned",
+      "repository": "pallets/flask",
+      "commit_sha": "c12a5d874c5a014495eb2db8a73f40037bc813ac",
+      "sdlc_stage": "requirements",
+      "task_type": "requirement_understanding",
+      "complexity": "low",
+      "criticality": "low",
+      "query": "What does the 'Deploy to Production' part of the Flask tutorial cover, and what does it explicitly leave out?",
+      "proposed_answer": "It gives an overview of how to create the distribution file and install it on a server. It does not go into specifics of which server or software to use, points to the deploying documentation (`/deploying/index`) for hosting options, and warns that an environment set up on a development computer probably shouldn't host a real public application.",
+      "acceptable_alternatives": [
+        "Covers building and installing the distribution; not which server/software to use (see the deploying docs)."
+      ],
+      "evidence": [
+        {
+          "file": "docs/tutorial/deploy.rst",
+          "start_line": 1,
+          "end_line": 11,
+          "text": "Deploy to Production\n====================\n\nThis part of the tutorial assumes you have a server that you want to\ndeploy your application to. It gives an overview of how to create the\ndistribution file and install it, but won't go into specifics about\nwhat server or software to use. You can set up a new environment on your\ndevelopment computer to try out the instructions below, but probably\nshouldn't use it for hosting a real public application. See\n:doc:`/deploying/index` for a list of many different ways to host your\napplication.",
+          "span_sha256": "sha256:80acd17343227b0fe7aafff62a5cccf0f7527a424400bb75dabbb25af958997f"
+        }
+      ],
+      "drafted_by": "Claude Opus 5.5 (EIH drafting tool)",
+      "requested_by": "Avaneesh Kumar Verma",
+      "status_note": "drafted (LLM draft, not verified); span span-b2b885e40138"
+    },
+    {
+      "item_id": "eih-swe-8beff3b7b5",
+      "kind": "new_task",
+      "split": "unassigned",
+      "repository": "pallets/flask",
+      "commit_sha": "c12a5d874c5a014495eb2db8a73f40037bc813ac",
+      "sdlc_stage": "architecture",
+      "task_type": "code_explanation",
+      "complexity": "low",
+      "criticality": "low",
+      "query": "What is `DebugFilesKeyError` in Flask's `debughelpers.py`, which classes does it inherit from, and what does its error message tell the developer?",
+      "proposed_answer": "It is raised from `request.files` during debugging when a requested file key is missing. It subclasses both `KeyError` and `AssertionError`. Its message says the key does not exist in `request.files`, reports the request mimetype (which is not 'multipart/form-data', so no file contents were transmitted), tells you to add `enctype=\"multipart/form-data\"` to the form, and, if the form did receive values under that key, lists the file names the browser submitted instead.",
+      "acceptable_alternatives": [
+        "A KeyError+AssertionError subclass raised for missing request.files keys in debug mode; its message points to the missing multipart/form-data enctype and lists transmitted file names."
+      ],
+      "evidence": [
+        {
+          "file": "src/flask/debughelpers.py",
+          "start_line": 23,
+          "end_line": 47,
+          "text": "class DebugFilesKeyError(KeyError, AssertionError):\n    \"\"\"Raised from request.files during debugging.  The idea is that it can\n    provide a better error message than just a generic KeyError/BadRequest.\n    \"\"\"\n\n    def __init__(self, request: Request, key: str) -> None:\n        form_matches = request.form.getlist(key)\n        buf = [\n            f\"You tried to access the file {key!r} in the request.files\"\n            \" dictionary but it does not exist. The mimetype for the\"\n            f\" request is {request.mimetype!r} instead of\"\n            \" 'multipart/form-data' which means that no file contents\"\n            \" were transmitted. To fix this error you should provide\"\n            ' enctype=\"multipart/form-data\" in your form.'\n        ]\n        if form_matches:\n            names = \", \".join(repr(x) for x in form_matches)\n            buf.append(\n                \"\\n\\nThe browser instead transmitted some file names. \"\n                f\"This was submitted: {names}\"\n            )\n        self.msg = \"\".join(buf)\n\n    def __str__(self) -> str:\n        return self.msg",
+          "span_sha256": "sha256:b53786a80fd1d2691655a90fb96e15f0cea8c91e6d26da84ebe1153226d69aee"
+        }
+      ],
+      "drafted_by": "Claude Opus 5.5 (EIH drafting tool)",
+      "requested_by": "Avaneesh Kumar Verma",
+      "status_note": "drafted (LLM draft, not verified); span span-9e50b1e513f0"
+    },
+    {
+      "item_id": "eih-swe-d6b29cd240",
+      "kind": "new_task",
+      "split": "unassigned",
+      "repository": "pallets/flask",
+      "commit_sha": "c12a5d874c5a014495eb2db8a73f40037bc813ac",
+      "sdlc_stage": "architecture",
+      "task_type": "code_explanation",
+      "complexity": "low",
+      "criticality": "low",
+      "query": "In Flask's tagged JSON serializer (`src/flask/json/tag.py`), how does the `PassList` tag handle Python lists?",
+      "proposed_answer": "`PassList.check` matches any value that is a `list`. `to_json` returns a new list with every item passed through `self.serializer.tag(item)`, so nested values are tagged. `tag` is the same function as `to_json`, so the list itself is not wrapped in a tag key; only its items are tagged.",
+      "acceptable_alternatives": [
+        "It matches lists and tags each element with the serializer; tag = to_json, so the list gets no tag of its own."
+      ],
+      "evidence": [
+        {
+          "file": "src/flask/json/tag.py",
+          "start_line": 147,
+          "end_line": 156,
+          "text": "class PassList(JSONTag):\n    __slots__ = ()\n\n    def check(self, value: t.Any) -> bool:\n        return isinstance(value, list)\n\n    def to_json(self, value: t.Any) -> t.Any:\n        return [self.serializer.tag(item) for item in value]\n\n    tag = to_json",
+          "span_sha256": "sha256:909e362ca06c54f1b3285dc728efcebb2303bd391ca2c1b9c6502112a54678c2"
+        }
+      ],
+      "drafted_by": "Claude Opus 5.5 (EIH drafting tool)",
+      "requested_by": "Avaneesh Kumar Verma",
+      "status_note": "drafted (LLM draft, not verified); span span-3fb798dd85c3"
+    },
+    {
+      "item_id": "eih-swe-f550e90051",
+      "kind": "new_task",
+      "split": "unassigned",
+      "repository": "pallets/flask",
+      "commit_sha": "c12a5d874c5a014495eb2db8a73f40037bc813ac",
+      "sdlc_stage": "development",
+      "task_type": "code_explanation",
+      "complexity": "low",
+      "criticality": "low",
+      "query": "What does `make_aborter` on a Flask app return, and how is that object used?",
+      "proposed_answer": "It creates the object assigned to `app.aborter`: an instance of `aborter_class`, which defaults to `werkzeug.exceptions.Aborter`. `flask.abort` calls that object to raise HTTP errors, and it can also be called directly. It was added in Flask 2.2.",
+      "acceptable_alternatives": [
+        "Returns self.aborter_class() (werkzeug Aborter by default), the object flask.abort calls to raise HTTP errors."
+      ],
+      "evidence": [
+        {
+          "file": "src/flask/sansio/app.py",
+          "start_line": 498,
+          "end_line": 508,
+          "text": "    def make_aborter(self) -> Aborter:\n        \"\"\"Create the object to assign to :attr:`aborter`. That object\n        is called by :func:`flask.abort` to raise HTTP errors, and can\n        be called directly as well.\n\n        By default, this creates an instance of :attr:`aborter_class`,\n        which defaults to :class:`werkzeug.exceptions.Aborter`.\n\n        .. versionadded:: 2.2\n        \"\"\"\n        return self.aborter_class()",
+          "span_sha256": "sha256:6e60baabd571e7afed2e46de5e52e12d9b31a71b6e0ec6a4211f839451fb4519"
+        }
+      ],
+      "drafted_by": "Claude Opus 5.5 (EIH drafting tool)",
+      "requested_by": "Avaneesh Kumar Verma",
+      "status_note": "drafted (LLM draft, not verified); span span-2a02f7797ba9"
+    },
+    {
+      "item_id": "eih-swe-c426550739",
+      "kind": "new_task",
+      "split": "unassigned",
+      "repository": "pallets/flask",
+      "commit_sha": "c12a5d874c5a014495eb2db8a73f40037bc813ac",
+      "sdlc_stage": "development",
+      "task_type": "code_generation",
+      "complexity": "medium",
+      "criticality": "low",
+      "query": "Write Flask code that makes `db` and `User` available automatically in `flask shell`, and explain how Flask builds the shell context from it.",
+      "proposed_answer": "```python\n@app.shell_context_processor\ndef make_shell_context():\n    return {\"db\": db, \"User\": User}\n```\n`shell_context_processor` appends the function to `app.shell_context_processors` and returns it unchanged. When the shell starts, `app.make_shell_context()` begins with `app` and `g` and updates that dict with the result of every registered processor.",
+      "acceptable_alternatives": [
+        "Decorate a function returning {'db': db, 'User': User} with @app.shell_context_processor; make_shell_context merges every processor's dict."
+      ],
+      "evidence": [
+        {
+          "file": "src/flask/sansio/app.py",
+          "start_line": 812,
+          "end_line": 821,
+          "text": "    @setupmethod\n    def shell_context_processor(\n        self, f: T_shell_context_processor\n    ) -> T_shell_context_processor:\n        \"\"\"Registers a shell context processor function.\n\n        .. versionadded:: 0.11\n        \"\"\"\n        self.shell_context_processors.append(f)\n        return f",
+          "span_sha256": "sha256:38af5a91d55448d34ec6eea0f7809fc8784d8df11022bc1957a11dd249c18692"
+        },
+        {
+          "file": "src/flask/app.py",
+          "start_line": 497,
+          "end_line": 507,
+          "text": "    def make_shell_context(self) -> dict[str, t.Any]:\n        \"\"\"Returns the shell context for an interactive shell for this\n        application.  This runs all the registered shell context\n        processors.\n\n        .. versionadded:: 0.11\n        \"\"\"\n        rv = {\"app\": self, \"g\": g}\n        for processor in self.shell_context_processors:\n            rv.update(processor())\n        return rv",
+          "span_sha256": "sha256:fd0b8e3dd6b513a9e8fb52d5ba98a85a9724e8df07e39680b6ee29b0f191ce45"
+        }
+      ],
+      "drafted_by": "Claude Opus 5.5 (EIH drafting tool)",
+      "requested_by": "Avaneesh Kumar Verma",
+      "status_note": "drafted (LLM draft, not verified); span span-5eeb5db607fd"
+    },
+    {
+      "item_id": "eih-swe-0ea9d9e10e",
+      "kind": "new_task",
+      "split": "unassigned",
+      "repository": "pallets/flask",
+      "commit_sha": "c12a5d874c5a014495eb2db8a73f40037bc813ac",
+      "sdlc_stage": "testing",
+      "task_type": "test_explanation",
+      "complexity": "medium",
+      "criticality": "low",
+      "query": "What does Flask's `test_blueprint_url_processors` test verify, and how do `url_defaults` and `url_value_preprocessor` make its assertions pass?",
+      "proposed_answer": "It verifies that a blueprint mounted at `/<lang_code>` can take the language code out of the URL and put it back automatically when building URLs. `url_value_preprocessor` pops `lang_code` from the view arguments into `flask.g.lang_code`; `url_defaults` sets `lang_code` from `g` when a URL is built. So `url_for('.about')` inside `/de/` returns `/de/about`, and `url_for('.index')` from `/de/about` returns `/de/`.",
+      "acceptable_alternatives": [
+        "The preprocessor moves lang_code into g and url_defaults re-inserts it, so relative url_for calls keep the /de/ prefix."
+      ],
+      "evidence": [
+        {
+          "file": "tests/test_blueprints.py",
+          "start_line": 151,
+          "end_line": 173,
+          "text": "def test_blueprint_url_processors(app, client):\n    bp = flask.Blueprint(\"frontend\", __name__, url_prefix=\"/<lang_code>\")\n\n    @bp.url_defaults\n    def add_language_code(endpoint, values):\n        values.setdefault(\"lang_code\", flask.g.lang_code)\n\n    @bp.url_value_preprocessor\n    def pull_lang_code(endpoint, values):\n        flask.g.lang_code = values.pop(\"lang_code\")\n\n    @bp.route(\"/\")\n    def index():\n        return flask.url_for(\".about\")\n\n    @bp.route(\"/about\")\n    def about():\n        return flask.url_for(\".index\")\n\n    app.register_blueprint(bp)\n\n    assert client.get(\"/de/\").data == b\"/de/about\"\n    assert client.get(\"/de/about\").data == b\"/de/\"",
+          "span_sha256": "sha256:cd7b6e9cd08415c90c7e7dc07d14d0c7608e6e668f07023bd903bf7587a9db8d"
+        }
+      ],
+      "drafted_by": "Claude Opus 5.5 (EIH drafting tool)",
+      "requested_by": "Avaneesh Kumar Verma",
+      "status_note": "drafted (LLM draft, not verified); span span-f48e4b888a3e"
+    },
+    {
+      "item_id": "eih-swe-84c37c74a1",
+      "kind": "new_task",
+      "split": "unassigned",
+      "repository": "pallets/flask",
+      "commit_sha": "c12a5d874c5a014495eb2db8a73f40037bc813ac",
+      "sdlc_stage": "testing",
+      "task_type": "test_generation",
+      "complexity": "low",
+      "criticality": "low",
+      "query": "Write a pytest test (using Flask's `app` and `req_ctx` fixtures) that checks `jsonify` responses use a custom mimetype set on the app's JSON provider.",
+      "proposed_answer": "```python\ndef test_jsonify_mimetype(app, req_ctx):\n    app.json.mimetype = \"application/vnd.api+json\"\n    msg = {\"msg\": {\"submsg\": \"W00t\"}}\n    rv = flask.make_response(flask.jsonify(msg), 200)\n    assert rv.mimetype == \"application/vnd.api+json\"\n```",
+      "acceptable_alternatives": [
+        "Set app.json.mimetype, build a response with flask.jsonify inside a request context and assert response.mimetype equals it."
+      ],
+      "evidence": [
+        {
+          "file": "tests/test_basic.py",
+          "start_line": 1284,
+          "end_line": 1288,
+          "text": "def test_jsonify_mimetype(app, req_ctx):\n    app.json.mimetype = \"application/vnd.api+json\"\n    msg = {\"msg\": {\"submsg\": \"W00t\"}}\n    rv = flask.make_response(flask.jsonify(msg), 200)\n    assert rv.mimetype == \"application/vnd.api+json\"",
+          "span_sha256": "sha256:ddf65f9860293a96f5d10bc14393a66d585e5379804acf0f4294901dbb2fcaa0"
+        }
+      ],
+      "drafted_by": "Claude Opus 5.5 (EIH drafting tool)",
+      "requested_by": "Avaneesh Kumar Verma",
+      "status_note": "drafted (LLM draft, not verified); span span-41cf2f4931e8"
+    },
+    {
+      "item_id": "eih-swe-680bcbae0f",
+      "kind": "new_task",
+      "split": "unassigned",
+      "repository": "pallets/flask",
+      "commit_sha": "c12a5d874c5a014495eb2db8a73f40037bc813ac",
+      "sdlc_stage": "code_review",
+      "task_type": "defect_detection",
+      "complexity": "low",
+      "criticality": "medium",
+      "query": "Review this Flask code: `with app.open_resource('cache.json', 'w') as f: f.write(data)`. What happens, and what should be used instead?",
+      "proposed_answer": "It raises `ValueError('Resources can only be opened for reading.')`: `open_resource` opens files relative to `app.root_path` and only accepts the modes 'r', 'rt' and 'rb'. To write a file, use `app.open_instance_resource('cache.json', 'w')`, which opens relative to `app.instance_path` and also allows writing.",
+      "acceptable_alternatives": [
+        "open_resource is read-only (r/rt/rb) and raises ValueError; use open_instance_resource for writable files in the instance folder."
+      ],
+      "evidence": [
+        {
+          "file": "src/flask/app.py",
+          "start_line": 322,
+          "end_line": 347,
+          "text": "    def open_resource(self, resource: str, mode: str = \"rb\") -> t.IO[t.AnyStr]:\n        \"\"\"Open a resource file relative to :attr:`root_path` for\n        reading.\n\n        For example, if the file ``schema.sql`` is next to the file\n        ``app.py`` where the ``Flask`` app is defined, it can be opened\n        with:\n\n        .. code-block:: python\n\n            with app.open_resource(\"schema.sql\") as f:\n                conn.executescript(f.read())\n\n        :param resource: Path to the resource relative to\n            :attr:`root_path`.\n        :param mode: Open the file in this mode. Only reading is\n            supported, valid values are \"r\" (or \"rt\") and \"rb\".\n\n        Note this is a duplicate of the same method in the Flask\n        class.\n\n        \"\"\"\n        if mode not in {\"r\", \"rt\", \"rb\"}:\n            raise ValueError(\"Resources can only be opened for reading.\")\n\n        return open(os.path.join(self.root_path, resource), mode)",
+          "span_sha256": "sha256:7de8752323ba46c40c85f992a2dfbff0a84f6363a6cc28e8d2976db8b4f0f5f6"
+        },
+        {
+          "file": "src/flask/app.py",
+          "start_line": 349,
+          "end_line": 359,
+          "text": "    def open_instance_resource(self, resource: str, mode: str = \"rb\") -> t.IO[t.AnyStr]:\n        \"\"\"Opens a resource from the application's instance folder\n        (:attr:`instance_path`).  Otherwise works like\n        :meth:`open_resource`.  Instance resources can also be opened for\n        writing.\n\n        :param resource: the name of the resource.  To access resources within\n                         subfolders use forward slashes as separator.\n        :param mode: resource file opening mode, default is 'rb'.\n        \"\"\"\n        return open(os.path.join(self.instance_path, resource), mode)",
+          "span_sha256": "sha256:b7adbb16023f0919decdac17f89a30d2a77d2a39f7a8ae507f5cd939b4effab3"
+        }
+      ],
+      "drafted_by": "Claude Opus 5.5 (EIH drafting tool)",
+      "requested_by": "Avaneesh Kumar Verma",
+      "status_note": "drafted (LLM draft, not verified); span span-18d9fa92b041"
+    },
+    {
+      "item_id": "eih-swe-327a6ce3cf",
+      "kind": "new_task",
+      "split": "unassigned",
+      "repository": "pallets/flask",
+      "commit_sha": "c12a5d874c5a014495eb2db8a73f40037bc813ac",
+      "sdlc_stage": "code_review",
+      "task_type": "review_assistance",
+      "complexity": "low",
+      "criticality": "low",
+      "query": "A reviewer sees `data = app.json.load(f)` where `f` was opened with `open(path, 'rb')`. Is that valid with Flask's JSON provider, and what does `load` do?",
+      "proposed_answer": "Yes. `JSONProvider.load` accepts a file opened for reading text or UTF-8 bytes. It reads the whole file and returns `self.loads(fp.read(), **kwargs)`, passing any keyword arguments on to the underlying JSON library.",
+      "acceptable_alternatives": [
+        "Valid: load takes a text or UTF-8 bytes file and returns self.loads(fp.read(), **kwargs)."
+      ],
+      "evidence": [
+        {
+          "file": "src/flask/json/provider.py",
+          "start_line": 67,
+          "end_line": 73,
+          "text": "    def load(self, fp: t.IO[t.AnyStr], **kwargs: t.Any) -> t.Any:\n        \"\"\"Deserialize data as JSON read from a file.\n\n        :param fp: A file opened for reading text or UTF-8 bytes.\n        :param kwargs: May be passed to the underlying JSON library.\n        \"\"\"\n        return self.loads(fp.read(), **kwargs)",
+          "span_sha256": "sha256:179ea156b3b2ffadf6e59f783cc6b82ba0e14a3b9af9f90151181a486ca47a1a"
+        }
+      ],
+      "drafted_by": "Claude Opus 5.5 (EIH drafting tool)",
+      "requested_by": "Avaneesh Kumar Verma",
+      "status_note": "drafted (LLM draft, not verified); span span-a3135ec4cdef"
+    },
+    {
+      "item_id": "eih-swe-fa2e2dfafb",
+      "kind": "new_task",
+      "split": "unassigned",
+      "repository": "pallets/flask",
+      "commit_sha": "c12a5d874c5a014495eb2db8a73f40037bc813ac",
+      "sdlc_stage": "maintenance",
+      "task_type": "error_analysis",
+      "complexity": "medium",
+      "criticality": "medium",
+      "query": "Diagnose this Flask error raised when a view writes to the session: `RuntimeError: The session is unavailable because no secret key was set.  Set the secret_key on the application to something unique and secret.`",
+      "proposed_answer": "No secret key is configured, so the cookie session interface cannot build a signing serializer and `open_session` returns `None`. The request context then installs a `NullSession`, which allows read-only access but raises this `RuntimeError` from `__setitem__`, `__delitem__`, `clear`, `pop`, `popitem`, `update` and `setdefault`. Fix: set `app.secret_key` (the `SECRET_KEY` config) to a unique, secret value.",
+      "acceptable_alternatives": [
+        "Without SECRET_KEY the session is a NullSession whose mutating methods raise this error; set app.secret_key."
+      ],
+      "evidence": [
+        {
+          "file": "src/flask/sessions.py",
+          "start_line": 94,
+          "end_line": 109,
+          "text": "\nclass NullSession(SecureCookieSession):\n    \"\"\"Class used to generate nicer error messages if sessions are not\n    available.  Will still allow read-only access to the empty session\n    but fail on setting.\n    \"\"\"\n\n    def _fail(self, *args: t.Any, **kwargs: t.Any) -> t.NoReturn:\n        raise RuntimeError(\n            \"The session is unavailable because no secret \"\n            \"key was set.  Set the secret_key on the \"\n            \"application to something unique and secret.\"\n        )\n\n    __setitem__ = __delitem__ = clear = pop = popitem = update = setdefault = _fail  # type: ignore # noqa: B950\n    del _fail",
+          "span_sha256": "sha256:8687b458c8611421643798866aa6d533ec94ed6e465c3bd4a3088697325c9374"
+        },
+        {
+          "file": "src/flask/sessions.py",
+          "start_line": 307,
+          "end_line": 309,
+          "text": "    def get_signing_serializer(self, app: Flask) -> URLSafeTimedSerializer | None:\n        if not app.secret_key:\n            return None",
+          "span_sha256": "sha256:6e8b95cdf42ef26eb4d83d0bf2c224a2d5e24a4e80148ca8c3562a6d164721d1"
+        },
+        {
+          "file": "src/flask/sessions.py",
+          "start_line": 320,
+          "end_line": 323,
+          "text": "    def open_session(self, app: Flask, request: Request) -> SecureCookieSession | None:\n        s = self.get_signing_serializer(app)\n        if s is None:\n            return None",
+          "span_sha256": "sha256:c76f95cc893e91e12ade02b0db5cb06e82ce2709f7571e46ed81d69ecbb945d9"
+        },
+        {
+          "file": "src/flask/ctx.py",
+          "start_line": 384,
+          "end_line": 389,
+          "text": "        if self.session is None:\n            session_interface = self.app.session_interface\n            self.session = session_interface.open_session(self.app, self.request)\n\n            if self.session is None:\n                self.session = session_interface.make_null_session(self.app)",
+          "span_sha256": "sha256:f96b961d92dab3c20072878a4f06346d407063042327c88136a2b4a6fb7fe10e"
+        }
+      ],
+      "drafted_by": "Claude Opus 5.5 (EIH drafting tool)",
+      "requested_by": "Avaneesh Kumar Verma",
+      "status_note": "drafted (LLM draft, not verified); span span-86de492e0fa9"
+    },
+    {
+      "item_id": "eih-swe-9d2955d61c",
+      "kind": "new_task",
+      "split": "unassigned",
+      "repository": "pallets/flask",
+      "commit_sha": "c12a5d874c5a014495eb2db8a73f40037bc813ac",
+      "sdlc_stage": "maintenance",
+      "task_type": "error_analysis",
+      "complexity": "medium",
+      "criticality": "medium",
+      "query": "A Flask 3.0 app with an `async def` view fails with `RuntimeError: Install Flask with the 'async' extra in order to use async views.` Why, and how is it fixed?",
+      "proposed_answer": "Flask runs coroutine views through `app.ensure_sync`, which wraps them with `app.async_to_sync`. That method imports `asgiref.sync.async_to_sync`; if `asgiref` is not installed, the `ImportError` is turned into this `RuntimeError`. Fix: install the async extra, `pip install \"flask[async]\"`, which adds `asgiref>=3.2`.",
+      "acceptable_alternatives": [
+        "asgiref is missing: async views go through async_to_sync, which needs asgiref; install flask[async]."
+      ],
+      "evidence": [
+        {
+          "file": "src/flask/app.py",
+          "start_line": 929,
+          "end_line": 964,
+          "text": "    def ensure_sync(self, func: t.Callable[..., t.Any]) -> t.Callable[..., t.Any]:\n        \"\"\"Ensure that the function is synchronous for WSGI workers.\n        Plain ``def`` functions are returned as-is. ``async def``\n        functions are wrapped to run and wait for the response.\n\n        Override this method to change how the app runs async views.\n\n        .. versionadded:: 2.0\n        \"\"\"\n        if iscoroutinefunction(func):\n            return self.async_to_sync(func)\n\n        return func\n\n    def async_to_sync(\n        self, func: t.Callable[..., t.Coroutine[t.Any, t.Any, t.Any]]\n    ) -> t.Callable[..., t.Any]:\n        \"\"\"Return a sync function that will run the coroutine function.\n\n        .. code-block:: python\n\n            result = app.async_to_sync(func)(*args, **kwargs)\n\n        Override this method to change how the app converts async code\n        to be synchronously callable.\n\n        .. versionadded:: 2.0\n        \"\"\"\n        try:\n            from asgiref.sync import async_to_sync as asgiref_async_to_sync\n        except ImportError:\n            raise RuntimeError(\n                \"Install Flask with the 'async' extra in order to use async views.\"\n            ) from None\n\n        return asgiref_async_to_sync(func)",
+          "span_sha256": "sha256:1002a86f1377de8ba37e55484875a28ed505c577ad7e41cccaff1bd3837736ad"
+        },
+        {
+          "file": "pyproject.toml",
+          "start_line": 40,
+          "end_line": 40,
+          "text": "async = [\"asgiref>=3.2\"]",
+          "span_sha256": "sha256:b770f3cfdc0a38544302c169ba1936d4939e5b6df881323dba5bf292a2061e69"
+        }
+      ],
+      "drafted_by": "Claude Opus 5.5 (EIH drafting tool)",
+      "requested_by": "Avaneesh Kumar Verma",
+      "status_note": "drafted (LLM draft, not verified); span span-e662af7e59a5"
+    },
+    {
+      "item_id": "eih-swe-6264764902",
+      "kind": "new_task",
+      "split": "unassigned",
+      "repository": "fastapi/fastapi",
+      "commit_sha": "1c3e6918750ccb3f20ea260e9a4238ce2c0e5f63",
+      "sdlc_stage": "requirements",
+      "task_type": "requirement_understanding",
+      "complexity": "low",
+      "criticality": "low",
+      "query": "According to FastAPI's response-model documentation, why can a path operation annotated to return `Response` return a `RedirectResponse` or a `JSONResponse` without problems?",
+      "proposed_answer": "This simple case is handled automatically by FastAPI because the return type annotation is the class (or a subclass) of `Response`. Type-checking tools are also satisfied, because both `RedirectResponse` and `JSONResponse` are subclasses of `Response`, so the annotation is correct.",
+      "acceptable_alternatives": [
+        "Because the annotation is Response (or a subclass) FastAPI handles it, and RedirectResponse/JSONResponse are Response subclasses so the type is correct."
+      ],
+      "evidence": [
+        {
+          "file": "docs/en/docs/tutorial/response-model.md",
+          "start_line": 253,
+          "end_line": 263,
+          "text": "### Return a Response Directly\n\nThe most common case would be [returning a Response directly as explained later in the advanced docs](../advanced/response-directly.md){.internal-link target=_blank}.\n\n```Python hl_lines=\"8  10-11\"\n{!> ../../../docs_src/response_model/tutorial003_02.py!}\n```\n\nThis simple case is handled automatically by FastAPI because the return type annotation is the class (or a subclass) of `Response`.\n\nAnd tools will also be happy because both `RedirectResponse` and `JSONResponse` are subclasses of `Response`, so the type annotation is correct.",
+          "span_sha256": "sha256:0e6eec9658f3240a4968531cef80a71e79a0edce23838ff1965b6410a9ae681d"
+        }
+      ],
+      "drafted_by": "Claude Opus 5.5 (EIH drafting tool)",
+      "requested_by": "Avaneesh Kumar Verma",
+      "status_note": "drafted (LLM draft, not verified); span span-96ab7c8f3f20"
+    },
+    {
+      "item_id": "eih-swe-b7d72f5dc3",
+      "kind": "new_task",
+      "split": "unassigned",
+      "repository": "fastapi/fastapi",
+      "commit_sha": "1c3e6918750ccb3f20ea260e9a4238ce2c0e5f63",
+      "sdlc_stage": "architecture",
+      "task_type": "architecture_qa",
+      "complexity": "low",
+      "criticality": "low",
+      "query": "Which component maps does FastAPI's OpenAPI `Components` model (`fastapi/openapi/models.py`) define, and what may each entry be besides its own object type?",
+      "proposed_answer": "`schemas`, `responses`, `parameters`, `examples`, `requestBodies`, `headers`, `securitySchemes`, `links`, `callbacks` and `pathItems`. Each is an optional dict whose values may be either the object itself (e.g. `Schema`, `Response`, `Parameter`) or a `Reference`. `callbacks` values may additionally be `Any`, to allow specification extensions.",
+      "acceptable_alternatives": [
+        "Optional dicts for schemas, responses, parameters, examples, requestBodies, headers, securitySchemes, links, callbacks and pathItems; each value is the object or a Reference."
+      ],
+      "evidence": [
+        {
+          "file": "fastapi/openapi/models.py",
+          "start_line": 409,
+          "end_line": 420,
+          "text": "class Components(BaseModelWithConfig):\n    schemas: Optional[Dict[str, Union[Schema, Reference]]] = None\n    responses: Optional[Dict[str, Union[Response, Reference]]] = None\n    parameters: Optional[Dict[str, Union[Parameter, Reference]]] = None\n    examples: Optional[Dict[str, Union[Example, Reference]]] = None\n    requestBodies: Optional[Dict[str, Union[RequestBody, Reference]]] = None\n    headers: Optional[Dict[str, Union[Header, Reference]]] = None\n    securitySchemes: Optional[Dict[str, Union[SecurityScheme, Reference]]] = None\n    links: Optional[Dict[str, Union[Link, Reference]]] = None\n    # Using Any for Specification Extensions\n    callbacks: Optional[Dict[str, Union[Dict[str, PathItem], Reference, Any]]] = None\n    pathItems: Optional[Dict[str, Union[PathItem, Reference]]] = None",
+          "span_sha256": "sha256:fea7b652971e8b52a11b50523088d0f9d9bef7d98c7ed363e33939279836409a"
+        }
+      ],
+      "drafted_by": "Claude Opus 5.5 (EIH drafting tool)",
+      "requested_by": "Avaneesh Kumar Verma",
+      "status_note": "drafted (LLM draft, not verified); span span-87c7e2b8fce4"
+    },
+    {
+      "item_id": "eih-swe-5cf5f86be8",
+      "kind": "new_task",
+      "split": "unassigned",
+      "repository": "fastapi/fastapi",
+      "commit_sha": "1c3e6918750ccb3f20ea260e9a4238ce2c0e5f63",
+      "sdlc_stage": "architecture",
+      "task_type": "architecture_qa",
+      "complexity": "low",
+      "criticality": "low",
+      "query": "How does FastAPI's OpenAPI `APIKey` security-scheme model produce the OpenAPI keys `type` and `in`, and which other field does it require?",
+      "proposed_answer": "`APIKey` (a `SecurityBase` subclass) stores them in `type_` and `in_` with Pydantic aliases `\"type\"` and `\"in\"`, avoiding Python's built-in `type` and the keyword `in`. `type_` defaults to `SecuritySchemeType.apiKey`; `in_` (an `APIKeyIn`) has no default. It also requires `name`, the name of the header, query parameter or cookie.",
+      "acceptable_alternatives": [
+        "Fields type_ (alias 'type', default apiKey) and in_ (alias 'in'), plus a required name."
+      ],
+      "evidence": [
+        {
+          "file": "fastapi/openapi/models.py",
+          "start_line": 349,
+          "end_line": 352,
+          "text": "class APIKey(SecurityBase):\n    type_: SecuritySchemeType = Field(default=SecuritySchemeType.apiKey, alias=\"type\")\n    in_: APIKeyIn = Field(alias=\"in\")\n    name: str",
+          "span_sha256": "sha256:9bafafc70813264473b735a9a713d7a41f5b970ef6f9d5e2df5f235a41c6c700"
+        }
+      ],
+      "drafted_by": "Claude Opus 5.5 (EIH drafting tool)",
+      "requested_by": "Avaneesh Kumar Verma",
+      "status_note": "drafted (LLM draft, not verified); span span-c80497422796"
+    },
+    {
+      "item_id": "eih-swe-540e2ae52d",
+      "kind": "new_task",
+      "split": "unassigned",
+      "repository": "fastapi/fastapi",
+      "commit_sha": "1c3e6918750ccb3f20ea260e9a4238ce2c0e5f63",
+      "sdlc_stage": "development",
+      "task_type": "code_explanation",
+      "complexity": "low",
+      "criticality": "low",
+      "query": "What does the `route()` decorator on FastAPI's `APIRouter` do with the function it decorates?",
+      "proposed_answer": "`route(path, methods=None, name=None, include_in_schema=True)` returns a decorator that calls `self.add_route(path, func, methods=methods, name=name, include_in_schema=include_in_schema)` and then returns the function unchanged. Only those four settings are forwarded.",
+      "acceptable_alternatives": [
+        "It registers the function with self.add_route (path, methods, name, include_in_schema) and returns it unchanged."
+      ],
+      "evidence": [
+        {
+          "file": "fastapi/routing.py",
+          "start_line": 812,
+          "end_line": 829,
+          "text": "    def route(\n        self,\n        path: str,\n        methods: Optional[List[str]] = None,\n        name: Optional[str] = None,\n        include_in_schema: bool = True,\n    ) -> Callable[[DecoratedCallable], DecoratedCallable]:\n        def decorator(func: DecoratedCallable) -> DecoratedCallable:\n            self.add_route(\n                path,\n                func,\n                methods=methods,\n                name=name,\n                include_in_schema=include_in_schema,\n            )\n            return func\n\n        return decorator",
+          "span_sha256": "sha256:6f26fa7122699c48b6045aa91ec7d9bce7484a08882299e74b8f0455fb6ed0ce"
+        }
+      ],
+      "drafted_by": "Claude Opus 5.5 (EIH drafting tool)",
+      "requested_by": "Avaneesh Kumar Verma",
+      "status_note": "drafted (LLM draft, not verified); span span-45332c793d13"
+    },
+    {
+      "item_id": "eih-swe-7015830d56",
+      "kind": "new_task",
+      "split": "unassigned",
+      "repository": "fastapi/fastapi",
+      "commit_sha": "1c3e6918750ccb3f20ea260e9a4238ce2c0e5f63",
+      "sdlc_stage": "development",
+      "task_type": "code_explanation",
+      "complexity": "medium",
+      "criticality": "low",
+      "query": "How does FastAPI build the OpenAPI URL that its ReDoc page loads when the app runs behind a proxy with a root path?",
+      "proposed_answer": "Only when both `openapi_url` and `redoc_url` are set, FastAPI adds a `redoc_html` route at `redoc_url` (`include_in_schema=False`). The handler reads `root_path` from the request scope, strips a trailing '/', prefixes it to `app.openapi_url`, and returns `get_redoc_html(openapi_url=..., title=f\"{app.title} - ReDoc\")`.",
+      "acceptable_alternatives": [
+        "redoc_html prefixes the scope's root_path (trailing / stripped) to openapi_url and renders get_redoc_html with '<title> - ReDoc'."
+      ],
+      "evidence": [
+        {
+          "file": "fastapi/applications.py",
+          "start_line": 1040,
+          "end_line": 1049,
+          "text": "        if self.openapi_url and self.redoc_url:\n\n            async def redoc_html(req: Request) -> HTMLResponse:\n                root_path = req.scope.get(\"root_path\", \"\").rstrip(\"/\")\n                openapi_url = root_path + self.openapi_url\n                return get_redoc_html(\n                    openapi_url=openapi_url, title=f\"{self.title} - ReDoc\"\n                )\n\n            self.add_route(self.redoc_url, redoc_html, include_in_schema=False)",
+          "span_sha256": "sha256:fc3f53f3b7da780a3d6c4924914829de1fa8be3e7ebe23ef5830769e92f646d8"
+        }
+      ],
+      "drafted_by": "Claude Opus 5.5 (EIH drafting tool)",
+      "requested_by": "Avaneesh Kumar Verma",
+      "status_note": "drafted (LLM draft, not verified); span span-4648a8e115e0"
+    },
+    {
+      "item_id": "eih-swe-3e685e14d3",
+      "kind": "new_task",
+      "split": "unassigned",
+      "repository": "fastapi/fastapi",
+      "commit_sha": "1c3e6918750ccb3f20ea260e9a4238ce2c0e5f63",
+      "sdlc_stage": "testing",
+      "task_type": "test_explanation",
+      "complexity": "low",
+      "criticality": "low",
+      "query": "What does FastAPI's `test_path_param_gt_42` check, given the route it calls in `tests/main.py`?",
+      "proposed_answer": "It sends `GET /path/param-gt/42`. That route declares `item_id: float = Path(gt=3)` and returns `item_id`. 42 satisfies the greater-than-3 constraint, so the test expects status 200 and a JSON body equal to 42.",
+      "acceptable_alternatives": [
+        "The path parameter is a float with Path(gt=3); 42 is valid, so 200 and the value 42 are returned."
+      ],
+      "evidence": [
+        {
+          "file": "tests/test_path.py",
+          "start_line": 466,
+          "end_line": 469,
+          "text": "def test_path_param_gt_42():\n    response = client.get(\"/path/param-gt/42\")\n    assert response.status_code == 200\n    assert response.json() == 42",
+          "span_sha256": "sha256:c53ccd935da16f5ff29eb623783476ec5a320a7c03d9696953292871334fdb33"
+        },
+        {
+          "file": "tests/main.py",
+          "start_line": 71,
+          "end_line": 73,
+          "text": "@app.get(\"/path/param-gt/{item_id}\")\ndef get_path_param_gt(item_id: float = Path(gt=3)):\n    return item_id",
+          "span_sha256": "sha256:5fccc161fb2c70adea23237533ea0444dc667f0c9fde477db60e629f9aa49190"
+        }
+      ],
+      "drafted_by": "Claude Opus 5.5 (EIH drafting tool)",
+      "requested_by": "Avaneesh Kumar Verma",
+      "status_note": "drafted (LLM draft, not verified); span span-cdb627de5e33"
+    },
+    {
+      "item_id": "eih-swe-8c5cc0429e",
+      "kind": "new_task",
+      "split": "unassigned",
+      "repository": "fastapi/fastapi",
+      "commit_sha": "1c3e6918750ccb3f20ea260e9a4238ce2c0e5f63",
+      "sdlc_stage": "testing",
+      "task_type": "test_explanation",
+      "complexity": "medium",
+      "criticality": "low",
+      "query": "In FastAPI's `test_dependency_overrides.py`, what does `test_router_depends_q_foo_skip_100_limit_200` check, and where do the `params` values in the response come from?",
+      "proposed_answer": "It calls `GET /router-depends/?q=foo&skip=100&limit=200` on a route defined on an `APIRouter` (included in the app) whose parameter `commons` is `Depends(common_parameters)`. `common_parameters(q, skip=0, limit=100)` returns `{\"q\": q, \"skip\": skip, \"limit\": limit}`, so the query values replace the defaults, and the test expects 200 with `{\"in\": \"router-depends\", \"params\": {\"q\": \"foo\", \"skip\": 100, \"limit\": 200}}`. No override is active in this test.",
+      "acceptable_alternatives": [
+        "The router endpoint depends on common_parameters; q/skip/limit come from the query string, so params = {q: foo, skip: 100, limit: 200}."
+      ],
+      "evidence": [
+        {
+          "file": "tests/test_dependency_overrides.py",
+          "start_line": 13,
+          "end_line": 14,
+          "text": "async def common_parameters(q: str, skip: int = 0, limit: int = 100):\n    return {\"q\": q, \"skip\": skip, \"limit\": limit}",
+          "span_sha256": "sha256:2107c02251e2e2d4cce75ab208aafd7e89650baa082cec4c28c3e1e2f372fb0a"
+        },
+        {
+          "file": "tests/test_dependency_overrides.py",
+          "start_line": 27,
+          "end_line": 29,
+          "text": "@router.get(\"/router-depends/\")\nasync def router_depends(commons: dict = Depends(common_parameters)):\n    return {\"in\": \"router-depends\", \"params\": commons}",
+          "span_sha256": "sha256:88d7555ab39bac7c2b24932b7569322a865061e877ca8e770ccab641dcbf3b28"
+        },
+        {
+          "file": "tests/test_dependency_overrides.py",
+          "start_line": 37,
+          "end_line": 37,
+          "text": "app.include_router(router)",
+          "span_sha256": "sha256:44d858f19ae750b3ef174ac037ff178cfb030235a7a6b3921413a2fb15829eb5"
+        },
+        {
+          "file": "tests/test_dependency_overrides.py",
+          "start_line": 177,
+          "end_line": 183,
+          "text": "def test_router_depends_q_foo_skip_100_limit_200():\n    response = client.get(\"/router-depends/?q=foo&skip=100&limit=200\")\n    assert response.status_code == 200\n    assert response.json() == {\n        \"in\": \"router-depends\",\n        \"params\": {\"q\": \"foo\", \"skip\": 100, \"limit\": 200},\n    }",
+          "span_sha256": "sha256:61dcabd92739e0f22072e58d71d46273cd443a0b51b50c2131a7eb5fd17aae8b"
+        }
+      ],
+      "drafted_by": "Claude Opus 5.5 (EIH drafting tool)",
+      "requested_by": "Avaneesh Kumar Verma",
+      "status_note": "drafted (LLM draft, not verified); span span-51bca067a9d0"
+    },
+    {
+      "item_id": "eih-swe-681a690f44",
+      "kind": "new_task",
+      "split": "unassigned",
+      "repository": "fastapi/fastapi",
+      "commit_sha": "1c3e6918750ccb3f20ea260e9a4238ce2c0e5f63",
+      "sdlc_stage": "code_review",
+      "task_type": "review_assistance",
+      "complexity": "medium",
+      "criticality": "medium",
+      "query": "Review: a FastAPI app registers extra routes at runtime after `/openapi.json` has already been served once, and the new routes never appear in the schema. Why, based on `FastAPI.openapi()`, and how can it be fixed?",
+      "proposed_answer": "`openapi()` generates the schema only when `self.openapi_schema` is empty; it then stores it in `app.openapi_schema` and returns that cached dict on every later call. Routes added after the first call are therefore not included. Register all routes before the schema is first generated, or reset `app.openapi_schema = None` so the next call regenerates it.",
+      "acceptable_alternatives": [
+        "The schema is cached in app.openapi_schema on first call; reset it to None (or add routes earlier) to regenerate."
+      ],
+      "evidence": [
+        {
+          "file": "fastapi/applications.py",
+          "start_line": 966,
+          "end_line": 996,
+          "text": "    def openapi(self) -> Dict[str, Any]:\n        \"\"\"\n        Generate the OpenAPI schema of the application. This is called by FastAPI\n        internally.\n\n        The first time it is called it stores the result in the attribute\n        `app.openapi_schema`, and next times it is called, it just returns that same\n        result. To avoid the cost of generating the schema every time.\n\n        If you need to modify the generated OpenAPI schema, you could modify it.\n\n        Read more in the\n        [FastAPI docs for OpenAPI](https://fastapi.tiangolo.com/how-to/extending-openapi/).\n        \"\"\"\n        if not self.openapi_schema:\n            self.openapi_schema = get_openapi(\n                title=self.title,\n                version=self.version,\n                openapi_version=self.openapi_version,\n                summary=self.summary,\n                description=self.description,\n                terms_of_service=self.terms_of_service,\n                contact=self.contact,\n                license_info=self.license_info,\n                routes=self.routes,\n                webhooks=self.webhooks.routes,\n                tags=self.openapi_tags,\n                servers=self.servers,\n                separate_input_output_schemas=self.separate_input_output_schemas,\n            )\n        return self.openapi_schema",
+          "span_sha256": "sha256:a76e42ef8d7a478fb6f294db665f6b90fb5d01ed4457a16bbb0cfb6c81fee5d7"
+        }
+      ],
+      "drafted_by": "Claude Opus 5.5 (EIH drafting tool)",
+      "requested_by": "Avaneesh Kumar Verma",
+      "status_note": "drafted (LLM draft, not verified); span span-6c73cba72bee"
+    },
+    {
+      "item_id": "eih-swe-52d37a8df8",
+      "kind": "new_task",
+      "split": "unassigned",
+      "repository": "fastapi/fastapi",
+      "commit_sha": "1c3e6918750ccb3f20ea260e9a4238ce2c0e5f63",
+      "sdlc_stage": "code_review",
+      "task_type": "risk_identification",
+      "complexity": "medium",
+      "criticality": "low",
+      "query": "Review `serialize_sequence_value` in `fastapi/_compat.py` (Pydantic v2 branch). What is risky about how it checks the field's annotation?",
+      "proposed_answer": "It validates its input with `assert issubclass(origin_type, sequence_types)`. Assertions are stripped when Python runs with `-O`, so the check disappears; an unexpected annotation would then fail later at `sequence_annotation_to_type[origin_type]` with a `KeyError` instead of a clear error. An explicit check that raises (e.g. `TypeError`) would be more robust.",
+      "acceptable_alternatives": [
+        "It uses assert for input validation, which is removed under python -O; the dict lookup would then raise KeyError."
+      ],
+      "evidence": [
+        {
+          "file": "fastapi/_compat.py",
+          "start_line": 261,
+          "end_line": 266,
+          "text": "    def serialize_sequence_value(*, field: ModelField, value: Any) -> Sequence[Any]:\n        origin_type = (\n            get_origin(field.field_info.annotation) or field.field_info.annotation\n        )\n        assert issubclass(origin_type, sequence_types)  # type: ignore[arg-type]\n        return sequence_annotation_to_type[origin_type](value)  # type: ignore[no-any-return]",
+          "span_sha256": "sha256:857ac20cb8d9887dc3bbf45ab2e18535fbf9da0c166a88ae7276e5320e9e78e6"
+        }
+      ],
+      "drafted_by": "Claude Opus 5.5 (EIH drafting tool)",
+      "requested_by": "Avaneesh Kumar Verma",
+      "status_note": "drafted (LLM draft, not verified); span span-c53b4e553813"
+    },
+    {
+      "item_id": "eih-swe-66d90350ef",
+      "kind": "new_task",
+      "split": "unassigned",
+      "repository": "fastapi/fastapi",
+      "commit_sha": "1c3e6918750ccb3f20ea260e9a4238ce2c0e5f63",
+      "sdlc_stage": "maintenance",
+      "task_type": "error_analysis",
+      "complexity": "low",
+      "criticality": "medium",
+      "query": "A FastAPI endpoint protected by `APIKeyCookie(name=\"session\")` returns `403 {\"detail\": \"Not authenticated\"}`. What causes it, and how can the endpoint handle a missing key itself?",
+      "proposed_answer": "`APIKeyCookie.__call__` reads `request.cookies.get(\"session\")`. If the cookie is missing or empty and `auto_error` is `True` (the default), it raises `HTTPException(status_code=403, detail=\"Not authenticated\")`. Send the cookie, or create the scheme with `auto_error=False`, in which case it returns `None` and the endpoint can decide what to do.",
+      "acceptable_alternatives": [
+        "The cookie is missing and auto_error=True raises 403 Not authenticated; use auto_error=False to receive None instead."
+      ],
+      "evidence": [
+        {
+          "file": "fastapi/security/api_key.py",
+          "start_line": 265,
+          "end_line": 282,
+          "text": "        auto_error: Annotated[\n            bool,\n            Doc(\n                \"\"\"\n                By default, if the cookie is not provided, `APIKeyCookie` will\n                automatically cancel the request and send the client an error.\n\n                If `auto_error` is set to `False`, when the cookie is not available,\n                instead of erroring out, the dependency result will be `None`.\n\n                This is useful when you want to have optional authentication.\n\n                It is also useful when you want to have authentication that can be\n                provided in one of multiple optional ways (for example, in a cookie or\n                in an HTTP Bearer token).\n                \"\"\"\n            ),\n        ] = True,",
+          "span_sha256": "sha256:ea1635cff8da6d9ddbdf72c3953c904921cc5dbdc61c994b319e1fe068ddb6d2"
+        },
+        {
+          "file": "fastapi/security/api_key.py",
+          "start_line": 292,
+          "end_line": 301,
+          "text": "    async def __call__(self, request: Request) -> Optional[str]:\n        api_key = request.cookies.get(self.model.name)\n        if not api_key:\n            if self.auto_error:\n                raise HTTPException(\n                    status_code=HTTP_403_FORBIDDEN, detail=\"Not authenticated\"\n                )\n            else:\n                return None\n        return api_key",
+          "span_sha256": "sha256:080785135fef66857fccb8ace54db653ecd2870931e7925d041bfdb01ed683b4"
+        }
+      ],
+      "drafted_by": "Claude Opus 5.5 (EIH drafting tool)",
+      "requested_by": "Avaneesh Kumar Verma",
+      "status_note": "drafted (LLM draft, not verified); span span-bb7548f36217"
+    },
+    {
+      "item_id": "eih-swe-3916b06f71",
+      "kind": "new_task",
+      "split": "unassigned",
+      "repository": "fastapi/fastapi",
+      "commit_sha": "1c3e6918750ccb3f20ea260e9a4238ce2c0e5f63",
+      "sdlc_stage": "maintenance",
+      "task_type": "error_analysis",
+      "complexity": "medium",
+      "criticality": "medium",
+      "query": "Why does a FastAPI endpoint using `HTTPBearer()` respond `403 {\"detail\": \"Invalid authentication credentials\"}` to a request sent with `Authorization: Basic dXNlcjpwYXNz`?",
+      "proposed_answer": "`HTTPBearer.__call__` splits the `Authorization` header into scheme and credentials. Here both are present, but the scheme is not `bearer` (compared case-insensitively), so with `auto_error=True` it raises `HTTPException(403, \"Invalid authentication credentials\")`. A missing header or missing part would give `403 \"Not authenticated\"` instead. Send `Authorization: Bearer <token>`, or use `auto_error=False` to receive `None`.",
+      "acceptable_alternatives": [
+        "The scheme is Basic, not bearer, so HTTPBearer raises 403 Invalid authentication credentials; use a Bearer token."
+      ],
+      "evidence": [
+        {
+          "file": "fastapi/security/http.py",
+          "start_line": 301,
+          "end_line": 321,
+          "text": "    async def __call__(\n        self, request: Request\n    ) -> Optional[HTTPAuthorizationCredentials]:\n        authorization = request.headers.get(\"Authorization\")\n        scheme, credentials = get_authorization_scheme_param(authorization)\n        if not (authorization and scheme and credentials):\n            if self.auto_error:\n                raise HTTPException(\n                    status_code=HTTP_403_FORBIDDEN, detail=\"Not authenticated\"\n                )\n            else:\n                return None\n        if scheme.lower() != \"bearer\":\n            if self.auto_error:\n                raise HTTPException(\n                    status_code=HTTP_403_FORBIDDEN,\n                    detail=\"Invalid authentication credentials\",\n                )\n            else:\n                return None\n        return HTTPAuthorizationCredentials(scheme=scheme, credentials=credentials)",
+          "span_sha256": "sha256:2167f65a1029fa4d90438dfa2bdaf7e03945db88f598ce46fd231fec1e4ebafb"
+        }
+      ],
+      "drafted_by": "Claude Opus 5.5 (EIH drafting tool)",
+      "requested_by": "Avaneesh Kumar Verma",
+      "status_note": "drafted (LLM draft, not verified); span span-873c81060cde"
+    },
+    {
+      "item_id": "eih-swe-8a7774724d",
+      "kind": "new_task",
+      "split": "unassigned",
+      "repository": "psf/requests",
+      "commit_sha": "0e322af87745eff34caffe4df68456ebc20d9068",
+      "sdlc_stage": "requirements",
+      "task_type": "requirement_understanding",
+      "complexity": "low",
+      "criticality": "low",
+      "query": "What checklist does the Requests contributing guide require before a code change is submitted, and where must the pull request go?",
+      "proposed_answer": "1) Fork the repository on GitHub; 2) run the tests and confirm they pass (if they fail and you cannot diagnose why, file a bug report); 3) write tests that demonstrate the bug or feature and make sure they fail; 4) make the change; 5) run the entire test suite again, confirming all tests pass including the new ones; 6) send a GitHub Pull Request to the main repository's `main` branch, which is the expected way to collaborate.",
+      "acceptable_alternatives": [
+        "Fork, run tests, write failing tests, change, rerun the full suite, then open a PR against main."
+      ],
+      "evidence": [
+        {
+          "file": "docs/dev/contributing.rst",
+          "start_line": 67,
+          "end_line": 85,
+          "text": "Steps for Submitting Code\n~~~~~~~~~~~~~~~~~~~~~~~~~\n\nWhen contributing code, you'll want to follow this checklist:\n\n1. Fork the repository on GitHub.\n2. Run the tests to confirm they all pass on your system. If they don't, you'll\n   need to investigate why they fail. If you're unable to diagnose this\n   yourself, raise it as a bug report by following the guidelines in this\n   document: :ref:`bug-reports`.\n3. Write tests that demonstrate your bug or feature. Ensure that they fail.\n4. Make your change.\n5. Run the entire test suite again, confirming that all tests pass *including\n   the ones you just added*.\n6. Send a GitHub Pull Request to the main repository's ``main`` branch.\n   GitHub Pull Requests are the expected method of code collaboration on this\n   project.\n\nThe following sub-sections go into more detail on some of the points above.",
+          "span_sha256": "sha256:3a9da4236cee3695bcbe91f295ec4aad3a70775a9e68f152da55f0ecbb3a44b6"
+        }
+      ],
+      "drafted_by": "Claude Opus 5.5 (EIH drafting tool)",
+      "requested_by": "Avaneesh Kumar Verma",
+      "status_note": "drafted (LLM draft, not verified); span span-f44108355a4c"
+    },
+    {
+      "item_id": "eih-swe-a1c49fb1ca",
+      "kind": "new_task",
+      "split": "unassigned",
+      "repository": "psf/requests",
+      "commit_sha": "0e322af87745eff34caffe4df68456ebc20d9068",
+      "sdlc_stage": "requirements",
+      "task_type": "requirement_retrieval",
+      "complexity": "low",
+      "criticality": "low",
+      "query": "What does the Requests quickstart ask you to make sure of before you start with its examples?",
+      "proposed_answer": "That Requests is installed and that Requests is up-to-date (both linked to the installation and update instructions).",
+      "acceptable_alternatives": [
+        "Requests must be installed and up to date."
+      ],
+      "evidence": [
+        {
+          "file": "docs/user/quickstart.rst",
+          "start_line": 3,
+          "end_line": 17,
+          "text": "Quickstart\n==========\n\n.. module:: requests.models\n\nEager to get started? This page gives a good introduction in how to get started\nwith Requests.\n\nFirst, make sure that:\n\n* Requests is :ref:`installed <install>`\n* Requests is :ref:`up-to-date <updates>`\n\n\nLet's get started with some simple examples.",
+          "span_sha256": "sha256:48ac8194ef2285b784df5ed91d0df1be175f8238c7717fe5ba7831e327e2840b"
+        }
+      ],
+      "drafted_by": "Claude Opus 5.5 (EIH drafting tool)",
+      "requested_by": "Avaneesh Kumar Verma",
+      "status_note": "drafted (LLM draft, not verified); span span-3edf1c5edc67"
+    }
+  ]
+}

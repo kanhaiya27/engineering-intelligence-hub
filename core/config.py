@@ -272,6 +272,26 @@ class GraphStoreSettings(BaseSettings):
     )
 
 
+class OKFSettings(BaseSettings):
+    """Open Knowledge Format layer (application feature, WORK_PLAN C33).
+
+    Bundles live under `root` (one sub-directory per bundle). Proposals and the audit
+    trail live under `state_dir`, outside the bundles, so a bundle stays a plain OKF tree.
+    OKF concepts are indexed in their own Qdrant collection, never the research one.
+    """
+
+    root: Path = Field(default=PROJECT_ROOT / "okf_bundles", description="Directory holding OKF bundles")
+    state_dir: Path = Field(default=PROJECT_ROOT / "okf_bundles" / ".eih_state",
+                            description="Proposals + audit trail (not part of any bundle)")
+    collection_name: str = Field(default="eih_okf", description="Qdrant collection for OKF concepts")
+    default_bundle: str = Field(default="eih", description="Bundle the agent and UI use by default")
+    agent_actor_prefix: str = Field(default="eih_agent", description="OKF §7 actor prefix for the EIH agent")
+
+    model_config = SettingsConfigDict(
+        env_prefix="EIH_OKF_", env_file=ENV_FILE, env_file_encoding="utf-8", extra="ignore"
+    )
+
+
 class Settings(BaseSettings):
     """
     Top-level aggregated settings for Engineering Intelligence Hub.
@@ -296,7 +316,7 @@ class Settings(BaseSettings):
     machine_id: str = Field(
         default="unknown",
         description=(
-            "Which development machine produced a result (laptop-a | laptop-b), "
+            "Which machine produced a result (the single project laptop is laptop-a; WORK_PLAN C11), "
             "from EIH_MACHINE_ID. Recorded in every result file's provenance."
         ),
     )
@@ -320,6 +340,7 @@ class Settings(BaseSettings):
     secrets: LLMProviderSecrets = Field(default_factory=LLMProviderSecrets)
     vector_store: VectorStoreSettings = Field(default_factory=VectorStoreSettings)
     graph_store: GraphStoreSettings = Field(default_factory=GraphStoreSettings)
+    okf: OKFSettings = Field(default_factory=OKFSettings)
 
     model_config = SettingsConfigDict(
         env_prefix="EIH_",

@@ -37,15 +37,10 @@ in §5, it has not changed. Nothing is dropped without Avaneesh's decision.
 
 ## 2. Deadlines
 
-| Date | Deliverable |
-|---|---|
-| **25 Oct 2026** | Major implementation complete, experiments complete |
-| **15 Nov 2026** | Final paper, final code, final results, reproducibility docs |
-
-**Honest risk (not a plan change):** `PROJECT_REPORT.md` §11 sized the programme at ~18 weeks
-for three people; it is now one person on one laptop. All of it does not fit 25 Oct. What
-"experiments complete" means on 25 Oct is decision **D3** (§4); until it is decided, nothing
-is cut.
+**None (C31, 2026-10-06).** Avaneesh removed every deadline from the plan, including the
+25 Oct and 15 Nov dates that stood here. Work runs in the order of §3 and `docs/SCHEDULE.md`
+until it is done; nothing is cut to save time. Any date set outside this plan (university or
+supervisor) is not tracked here.
 
 ## 3. The work, in order (original phase numbers in brackets)
 
@@ -76,8 +71,10 @@ Status: ✅ done · 🟡 started · ⬜ not started. Each step is one branch and
 | 21 | Build EIH-Fresh (~150 post-cutoff questions, fingerprinted, frozen) and run it once | Phase 9 | ⬜ |
 | 22 | Final held-out test, once, N = 5; Pareto frontier; ablation deltas Δ(A→B)…Δ(D→E); CO₂e per successful task | Phase 10 | ⬜ |
 | 23 | Optional human study (8–12 participants) if ethics approval is obtained | Phase 11 | ⬜ optional |
-| 24 | Project website: overview, live demo, results dashboard (API contract v1 done) | added (C8) | 🟡 |
+| 24 | Project website: overview, live demo, results dashboard (API contract v1 done) | added (C8) | 🟡 `web/` app (chat, knowledge, review, results, status) and `/v1/trace` + `/v1/trace/stream` implemented 2026-11-23 |
 | 25 | Paper, written alongside from the first real results; reproducibility package | Phase 12 | ⬜ |
+| 24a | **OKF knowledge layer (app feature, C33)**: Open Knowledge Format producer, consumer, validator, explorer and human-agent proposal/approval workflow, synchronised to Qdrant and Neo4j. Not part of Systems A–E | added (C33) | 🟡 built and live-tested 2026-11-23 (`docs/okf.md`); awaiting Avaneesh's review |
+| R | **Post-SSD recovery (C32)**: tools, Ollama 0.35.1 + pinned models, Qdrant `eih_knowledge_v2` re-ingest, Neo4j access + graph rebuild, measurement rules re-checked on driver 621.01 | recovery | 🟡 all restored and verified 2026-11-23 except the driver-621.01 re-check of the measurement rules (branch `fix/post-ssd-recovery`) |
 
 Supporting corpora (spec §4): CommitBench (reference for our own commit layer), LogHub (log
 analysis), SWE-bench Multimodal (diagram track) — used as the spec describes, not as benchmarks.
@@ -86,16 +83,16 @@ analysis), SWE-bench Multimodal (diagram track) — used as the spec describes, 
 
 | # | Decision | Recommendation |
 |---|---|---|
-| D3 | What "experiments complete" means on 25 Oct (supervisor) | Steps 4–10 by 25 Oct; the rest with fixed November dates |
-| D4 | Large-AI-model baseline (spec §7.3) | The 7B at the largest context that fits (16K measured) + cited published figures |
-| D6 | Mode P scope (one person now) | Defects4J first; the rest in the order of step 19 as time allows |
-| D9 | This laptop's Qdrant is v1.13.2; `docker-compose.yml` pins v1.15.1 | Snapshot, then upgrade (needs OK: recreates the container) |
+| D3 | **Closed (C31): no deadlines.** What "experiments complete" meant on 25 Oct | — |
+| D4 | **Decided 2026-10-06 (C28).** Large-AI-model baseline (spec §7.3) | The 7B at the largest context that fits (16K measured) + cited published figures |
+| D6 | **Decided 2026-10-06 (C28).** Mode P scope (one person now) | Defects4J first; the rest in the order of step 19 as time allows |
+| D9 | **Done (Qdrant 1.15.1 running).** This laptop's Qdrant is v1.13.2; `docker-compose.yml` pins v1.15.1 | Snapshot, then upgrade (needs OK: recreates the container) |
 | D10 | Delete old merged / unused branches | After this plan is merged (needs OK) |
-| D12 | Blind labelling of the 24 test questions (one person can't be blind to their own system) | Label them before the systems are tuned, freeze the labels, record the date |
+| D12 | **Decided 2026-10-06:** two independent reviewers check the test tasks before any tuning (queued). Blind labelling of the 24 test questions (one person can't be blind to their own system) | Label them before the systems are tuned, freeze the labels, record the date |
 | D13 | The original documents disagree with each other: EIH-SWE "~300–450 tasks" (report §11) vs "400–500" (spec §1, locked); "28 repositories" (report §8.1) vs 26 in `datasets/registry.yaml` since it was first committed; "21 task types" (report §6.2) vs 22 + `unknown` in the code since the first commit | Treat the spec's locked 400–500 as binding; correct the two counts in the paper text |
-| D14 | Quality metric "completeness" (plan §9.2) has no evaluator yet (evidence coverage is the closest) | Add a completeness evaluator, or define coverage as completeness in the paper |
+| D14 | **Decided 2026-10-06 (C28).** Quality metric "completeness" (plan §9.2) has no evaluator yet (evidence coverage is the closest) | Add a completeness evaluator, or define coverage as completeness in the paper |
 | D15 | Citations [9] and [10] could not be found; [2]'s DOI is unconfirmed (`docs/CITATION_AUDIT.md`) | Supply the exact citations or remove them before submission |
-| D17 | Strategy score thresholds (0.50–0.70) are uncalibrated: 2–5 of 36 dev+val questions get zero evidence under C/D strategies (measured 2026-10-05) | Calibrate thresholds in step 7 on dev/val only; never per-task |
+| D17 | **Resolved 2026-10-06 (C26).** Strategy score thresholds (0.50–0.70) were uncalibrated: 2–5 of 36 dev+val questions get zero evidence under C/D strategies (measured 2026-10-05) | Calibrate thresholds in step 7 on dev/val only; never per-task |
 | D16 | System C's answer to dev task 010 differed between two runs (778 vs 292 tokens) at temperature 0, seed 42 | Calibration (3 trials per task) measures run-to-run variance before any claim |
 
 ## 5. Change register — every deviation from the original plan
@@ -124,6 +121,18 @@ analysis), SWE-bench Multimodal (diagram track) — used as the spec describes, 
 | C20 | 2026-10-05 | Every Mode Q trial is measured with one counter-only NVML window over the whole trial (retrieval, embedding, reranking, all generations); model loads are subtracted and reported separately but counted in CO₂e per successful task. The single-sample reranker estimate is no longer needed | fix (Step 1h) | Plan §2.2/§6.3: full-pipeline energy; retrieval energy was not measured |
 | C21 | 2026-10-05 | The manifest binds the retrieval/inference/models config hashes, the task, split and label files, the graph build report and (live) the collection point count and graph node/edge counts; real runs refuse any mismatch | fix (Step 1g) | Plan §7.2: everything not under study is frozen and hashed |
 | C22 | 2026-10-05 | RQ3 outcome measured independently of System E's gate: cited line spans vs the human-checked evidence spans (`evaluation/outcome.py`); refusals reported separately | fix (Step 1f) | The gate's own evaluators scored the outcome (circular) |
+| C23 | 2026-10-06 | System D = System C's exact retrieval (same strategy, retriever, cut-offs) **plus graph context on every task** (hop depth 2 unless the strategy or an escalation step sets more). Before, D used the graph only when the policy picked a graph strategy (3 of 36 dev/val tasks), so Δ(C→D) measured the policy. Decided before any test-split use; Mode R rerun on dev/val (`mode-r-devval-2026-10-06-A1`): D now adds graph context on 28/36 tasks | Avaneesh (A1) | Plan §7.1: each system adds exactly one capability |
+| C24 | 2026-10-06 | Primary success (for CO₂e per successful task and success rates) = correct (lexical F1 ≥ the task's threshold) **and** cites ≥ 1 labelled evidence span (`TrialResult.grounded_success`). The gate-based `quality_constrained_success` (60% System E's own signals) is reported as secondary | Avaneesh (A2) | Success must not mean "passed E's gate" |
+| C25 | 2026-10-06 | Task-classifier rules revised from the 24 dev tasks only (generation first; errors in tests = test-failure analysis; error diagnosis = MAINTENANCE since the benchmark has no operations stage; component explanations = ARCHITECTURE; config/utility lookups = requirement retrieval; non-production errors and non-security defects = MEDIUM criticality; writing code/tests +0.15 complexity). Agreement with the benchmark labels, all four fields: dev 3 to 12 of 24, val (untouched) 1 to 2 of 12; per field, val stage 5 to 7, type 7 to 8, complexity 6 to 6, criticality 6 to 6 (`experiments/results/classifier/`) | Step 2a | Plan C1: classification must be inferred; it was right on all four fields for 1 of 4 tasks checked |
+| C26 | 2026-10-06 | Score cut-offs (D17): in hybrid retrieval the cut-off now applies to the fused score only (it was also applied to the dense cosine and the BM25 score, so one-retriever hits needed e.g. 0.86 cosine); the fused cut-off of the 5 hybrid-family strategies is 0.25, the largest value that keeps every dev/val task's best labelled-relevant candidate (at the old 0.50-0.60, 13 of 28 tasks lost all labelled evidence). Dense-only (0.70) and sparse strategies unchanged: on dev/val their cut-offs never bind. Mode R after: 0 zero-evidence tasks for every system (C/D had 3); B 5.0, C/D 6.5 text chunks per task | Step 2b (dev/val only) | Zero evidence starved C/D but not B (confound for RQ1/RQ2) |
+| C27 | 2026-10-06 | EIH-Fresh = 50 tasks (spec Tier 3 said ~150) | Avaneesh (F1) | Review hours to 12 Oct do not fit 150 two-reviewer tasks |
+| C28 | 2026-10-06 | Decisions: D4 large-LLM baseline = the 7B at full context, plus published figures labelled "not measured here" and never compared as if run locally; D6 Mode P = Claude builds the harness, Avaneesh decides, Defects4J stratified subset by 20 Oct, rest after; D14 completeness reported as "completeness (proxy)" = evidence coverage; RQ6 repositories = google/gson (Java) + expressjs/express (JavaScript) from the registry; new EIH-SWE tasks get a fixed stratified 40/20/40 split (seed 42) assigned at approval (S1); sets locked by hash on 12 Oct, later approvals form new held-out sets never merged into the paper's test set | Avaneesh | Step 3 go |
+| C29 | 2026-10-06 | Correctness yardstick (M1) to be replaced by the measure that agrees best with 30-50 blind human ratings, chosen before any system comparison; threshold set on dev/val from the ratings; token F1 reported alongside. Applied in ONE change set with the verified audit fixes and label changes, then one dev/val rerun and re-freeze | Avaneesh | 0/648 trials passed the F1 threshold |
+| C30 | 2026-10-06 | The 12 Oct hash lock is removed (supersedes the lock part of C28 and the master prompt's "lock sets by hash on 12 Oct"). No lock file and no set fingerprints; `lock_sets` and `draft_tasks.py lock` are deleted. Tasks approved at any time before a set's final run join their split (all in set `eih-swe-v2`); there is no post-lock held-out set. Unchanged: the 40/20/40 split is still assigned by seed at approval, the test split, EIH-Fresh and external sets are still never used for tuning and each is run exactly once. Cost to validity, disclosed in the paper: there is no hash record showing the test set was fixed before its results existed | Avaneesh | Decided after Claude explained the trade-off (recommended moving the lock to ~16 Oct instead) |
+| C31 | 2026-10-06 | Every deadline removed from the plan: the 20 Oct target, 21-25 Oct buffer, 25 Oct experiments/paper, 15 Nov final, 9 Oct freeze date and 12 Oct reviewer date. Work runs in step order until done. G1 (GPU shortfall to 20 Oct) and D3 (meaning of 25 Oct) closed; every run keeps its full trials. Decisions whose reason was a date (C27 Fresh = 50; D6 Defects4J subset first) are unchanged until Avaneesh reopens them (ASK_ME F2, P2) | Avaneesh | Instruction of 2026-10-06 |
+
+| C32 | 2026-11-22 | Post-SSD-failure recovery (≈2026-11-01): Python, Git, Docker reinstalled; Qdrant data, Neo4j graph, Ollama + models and `C:\EIH_share` / `C:\EIH_backups` were lost and are rebuilt from the pinned registry and builders. `qdrant-client` pinned to 1.15.x to match the pinned server. NVIDIA driver is now 621.01 (rules were measured on 617.14) and must be re-checked before any measured run | fact / Avaneesh | Restore the state the plan assumes; nothing in the plan changes |
+| C33 | 2026-11-22 | **Addition:** Google's Open Knowledge Format (OKF, spec v0.2, reads v0.1) as an application feature (step 24a). Research title, RQs and the A–E ablation ladder are unchanged; OKF is not a research system | Avaneesh | Shared, portable knowledge layer between the user and the agent; nothing removed |
 
 ## 6. Routine
 

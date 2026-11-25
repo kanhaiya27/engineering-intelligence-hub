@@ -117,13 +117,12 @@ per repository before publication.
 
 ---
 
-## Timeline
+## Order of work
 
-| Milestone | Date |
-|---|---|
-| Repository selection finalised | September 2026 |
-| Initial 100 CANDIDATE tasks generated | September 2026 |
-| Human review of initial 100 tasks | October 2026 |
-| Full ~400 task CANDIDATE set | October 2026 |
-| Human-approved subset (~200 tasks) for official experiments | October 2026 |
-| Hidden test set frozen | November 2026 |
+No dates (WORK_PLAN C31). In order:
+1. Repository selection finalised
+2. Initial 100 CANDIDATE tasks generated
+3. Human review of initial 100 tasks
+4. Full ~400 task CANDIDATE set
+5. Human-approved subset for official experiments
+6. Hidden test set frozen

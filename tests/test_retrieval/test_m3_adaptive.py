@@ -493,19 +493,36 @@ class TestAdaptiveRetrievalPipeline:
         pipeline._graph_aug.retrieve.assert_not_called()
         assert result.metadata.get("experiment_mode") == ExperimentMode.SYSTEM_C
 
-    def test_system_d_can_use_graph_aug(self):
+    def _augment_passthrough(self, pipeline) -> None:
+        def augment(base, hop_depth, task_id="adhoc"):
+            base.metadata["augmented_with_hop"] = hop_depth
+            return base
+        pipeline._graph_aug.augment.side_effect = augment
+
+    def test_system_d_is_c_plus_graph_on_every_task(self):
+        """WORK_PLAN C23: D = C's exact retrieval + graph context, also on non-graph tasks."""
         pipeline = self._make_pipeline()
-        self._setup_mock_retriever(pipeline._graph_aug)
         self._setup_mock_retriever(pipeline._hybrid)
-        clf = _make_classification(task_type=TaskType.ARCHITECTURE_QA)
-        # graph_augmented strategy has include_graph_context=True
-        pipeline.retrieve(
-            query="What are the dependencies?",
-            classification=clf,
-            experiment_mode=ExperimentMode.SYSTEM_D,
-        )
-        # graph_aug should have been called for architecture tasks in SYSTEM_D
-        pipeline._graph_aug.retrieve.assert_called_once()
+        self._augment_passthrough(pipeline)
+        clf = _make_classification()  # resolves to a non-graph strategy
+        result = pipeline.retrieve(query="q", classification=clf, experiment_mode=ExperimentMode.SYSTEM_D)
+        sent = pipeline._hybrid.retrieve.call_args.kwargs["strategy"]
+        assert sent.include_graph_context is False  # base retrieval identical to C's
+        pipeline._graph_aug.augment.assert_called_once()
+        pipeline._graph_aug.retrieve.assert_not_called()
+        assert result.metadata["augmented_with_hop"] == 2
+        assert result.metadata["executed_strategy"]["include_graph_context"] is True
+
+    def test_system_d_base_retrieval_equals_system_c(self):
+        pipeline = self._make_pipeline()
+        self._setup_mock_retriever(pipeline._hybrid)
+        self._augment_passthrough(pipeline)
+        clf = _make_classification(task_type=TaskType.ARCHITECTURE_QA)  # a graph strategy
+        pipeline.retrieve(query="q", classification=clf, experiment_mode=ExperimentMode.SYSTEM_C)
+        c_strategy = pipeline._hybrid.retrieve.call_args.kwargs["strategy"]
+        pipeline.retrieve(query="q", classification=clf, experiment_mode=ExperimentMode.SYSTEM_D)
+        d_strategy = pipeline._hybrid.retrieve.call_args.kwargs["strategy"]
+        assert c_strategy == d_strategy
 
     def test_override_strategy_name_respected(self):
         pipeline = self._make_pipeline()
@@ -519,7 +536,7 @@ class TestAdaptiveRetrievalPipeline:
         )
         pipeline._policy = AdaptiveRetrievalPolicy(pipeline._registry)
         self._setup_mock_retriever(pipeline._dense)
-        self._setup_mock_retriever(pipeline._hybrid)
+        self._augment_passthrough(pipeline)
         clf = _make_classification()
         pipeline.retrieve(
             query="test",
@@ -527,21 +544,23 @@ class TestAdaptiveRetrievalPipeline:
             experiment_mode=ExperimentMode.SYSTEM_D,
             override_strategy_name="dense",
         )
-        # dense strategy has include_graph_context=False and mode=DENSE
-        # → should route to _dense, not _graph_aug
+        # dense base retrieval as in C, then graph context appended
         pipeline._dense.retrieve.assert_called_once()
+        pipeline._graph_aug.augment.assert_called_once()
         pipeline._graph_aug.retrieve.assert_not_called()
 
     def test_override_strategy_config_runs_as_given(self):
         # An unregistered config (e.g. an escalated rung) must reach the
-        # retriever unchanged, not be looked up by name.
+        # retriever unchanged (apart from the graph flag, which D applies itself).
         pipeline = self._make_pipeline()
-        self._setup_mock_retriever(pipeline._graph_aug)
+        self._setup_mock_retriever(pipeline._hybrid)
+        self._augment_passthrough(pipeline)
         esc = RetrievalStrategyConfig(
             strategy_name="hybrid_esc1_esc2_graph",
             mode=RetrievalMode.GRAPH_AUGMENTED,
             top_k=19,
             include_graph_context=True,
+            graph_hop_depth=3,
         )
         result = pipeline.retrieve(
             query="test",
@@ -549,8 +568,9 @@ class TestAdaptiveRetrievalPipeline:
             experiment_mode=ExperimentMode.SYSTEM_D,
             override_strategy=esc,
         )
-        sent = pipeline._graph_aug.retrieve.call_args.kwargs["strategy"]
-        assert sent is esc
+        sent = pipeline._hybrid.retrieve.call_args.kwargs["strategy"]
+        assert sent == esc.model_copy(update={"include_graph_context": False})
+        assert result.metadata["augmented_with_hop"] == 3
         assert result.metadata["resolved_strategy"] == "hybrid_esc1_esc2_graph"
         assert result.metadata["executed_strategy"]["top_k"] == 19
         assert result.metadata["executed_strategy"]["include_graph_context"] is True

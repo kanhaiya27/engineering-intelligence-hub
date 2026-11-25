@@ -1,0 +1,634 @@
+{
+  "batch_id": "labels-L1-02",
+  "created_at": "2026-10-06T01:16:43.325088+00:00",
+  "purpose": "label_review",
+  "assigned_to": [
+    "Aayan",
+    "Radhesh"
+  ],
+  "priority": 20,
+  "items": [
+    {
+      "item_id": "label-eih-phase1-rev-045",
+      "kind": "retrieval_label",
+      "split": "dev",
+      "repository": "pallets/flask",
+      "commit_sha": "c12a5d874c5a014495eb2db8a73f40037bc813ac",
+      "sdlc_stage": "code_review",
+      "task_type": "defect_detection",
+      "complexity": "medium",
+      "criticality": "medium",
+      "query": "Review this Flask route: `@app.route('/items', methods=['POST']) def add(): item = request.json['name']`. What defect occurs if invalid JSON or no payload is sent?",
+      "proposed_answer": "Defect: the route assumes a JSON body with a `name` key. With Flask 3.0 (Werkzeug >= 3.0), `request.json` on a non-JSON or missing body raises 415 Unsupported Media Type; invalid JSON gives 400 Bad Request (`Request.on_json_loading_failed`); a JSON body without `name` raises `KeyError` -> 500. Fix: `data = request.get_json(silent=True) or {}` and validate `data.get('name')`, returning 400 when it is missing.",
+      "acceptable_alternatives": [],
+      "evidence": [
+        {
+          "file": "src/flask/wrappers.py",
+          "start_line": 129,
+          "end_line": 136,
+          "text": "    def on_json_loading_failed(self, e: ValueError | None) -> t.Any:\n        try:\n            return super().on_json_loading_failed(e)\n        except BadRequest as e:\n            if current_app and current_app.debug:\n                raise\n\n            raise BadRequest() from e",
+          "span_sha256": "sha256:6c4dfe0da20a18bde02cc4c286d9d8fa8ea840abdad4e488e96f9373b2f1c8c6"
+        }
+      ],
+      "drafted_by": "laptop-b (Claude Opus 5.5 draft; requires human verification)",
+      "requested_by": null,
+      "status_note": "RETRIEVAL LABEL (L1): approve if these lines contain the evidence needed to answer and nothing essential is missing; fix = name the missing/wrong lines. The question/answer themselves are checked elsewhere."
+    },
+    {
+      "item_id": "label-eih-phase1-rev-048",
+      "kind": "retrieval_label",
+      "split": "dev",
+      "repository": "fastapi/fastapi",
+      "commit_sha": "1c3e6918750ccb3f20ea260e9a4238ce2c0e5f63",
+      "sdlc_stage": "code_review",
+      "task_type": "defect_detection",
+      "complexity": "low",
+      "criticality": "medium",
+      "query": "Review this FastAPI route: `@app.get('/items') def get_items(limit: int = 10, offset: int = 0): ...`. What happens if a client passes `limit=-5`?",
+      "proposed_answer": "Defect: Missing lower-bound validation. Without constraints, `limit=-5` is accepted as a valid integer, potentially causing negative database slicing errors. Fix: Use `limit: int = Query(default=10, ge=1, le=100)`.",
+      "acceptable_alternatives": [],
+      "evidence": [
+        {
+          "file": "docs/en/docs/tutorial/path-params-numeric-validations.md",
+          "start_line": 183,
+          "end_line": 208,
+          "text": "## Number validations: greater than or equal\n\nWith `Query` and `Path` (and others you'll see later) you can declare number constraints.\n\nHere, with `ge=1`, `item_id` will need to be an integer number \"`g`reater than or `e`qual\" to `1`.\n\n=== \"Python 3.9+\"\n\n    ```Python hl_lines=\"10\"\n    {!> ../../../docs_src/path_params_numeric_validations/tutorial004_an_py39.py!}\n    ```\n\n=== \"Python 3.8+\"\n\n    ```Python hl_lines=\"9\"\n    {!> ../../../docs_src/path_params_numeric_validations/tutorial004_an.py!}\n    ```\n\n=== \"Python 3.8+ non-Annotated\"\n\n    !!! tip\n        Prefer to use the `Annotated` version if possible.\n\n    ```Python hl_lines=\"8\"\n    {!> ../../../docs_src/path_params_numeric_validations/tutorial004.py!}\n    ```",
+          "span_sha256": "sha256:d779c71c46f6e4811bc95a05c5ed3ece135a09e2833408b038ff016a761dd010"
+        },
+        {
+          "file": "fastapi/param_functions.py",
+          "start_line": 339,
+          "end_line": 640,
+          "text": "def Query(  # noqa: N802\n    default: Annotated[\n        Any,\n        Doc(\n            \"\"\"\n            Default value if the parameter field is not set.\n            \"\"\"\n        ),\n    ] = Undefined,\n    *,\n    default_factory: Annotated[\n        Union[Callable[[], Any], None],\n        Doc(\n            \"\"\"\n            A callable to generate the default value.\n\n            This doesn't affect `Path` parameters as the value is always required.\n            The parameter is available only for compatibility.\n            \"\"\"\n        ),\n    ] = _Unset,\n    alias: Annotated[\n        Optional[str],\n        Doc(\n            \"\"\"\n            An alternative name for the parameter field.\n\n            This will be used to extract the data and for the generated OpenAPI.\n            It is particularly useful when you can't use the name you want because it\n            is a Python reserved keyword or similar.\n            \"\"\"\n        ),\n    ] = None,\n    alias_priority: Annotated[\n        Union[int, None],\n        Doc(\n            \"\"\"\n            Priority of the alias. This affects whether an alias generator is used.\n            \"\"\"\n        ),\n    ] = _Unset,\n    # TODO: update when deprecating Pydantic v1, import these types\n    # validation_alias: str | AliasPath | AliasChoices | None\n    validation_alias: Annotated[\n        Union[str, None],\n        Doc(\n            \"\"\"\n            'Whitelist' validation step. The parameter field will be the single one\n            allowed by the alias or set of aliases defined.\n            \"\"\"\n        ),\n    ] = None,\n    serialization_alias: Annotated[\n        Union[str, None],\n        Doc(\n            \"\"\"\n            'Blacklist' validation step. The vanilla parameter field will be the\n            single one of the alias' or set of aliases' fields and all the other\n            fields will be ignored at serialization time.\n            \"\"\"\n        ),\n    ] = None,\n    title: Annotated[\n        Optional[str],\n        Doc(\n            \"\"\"\n            Human-readable title.\n            \"\"\"\n        ),\n    ] = None,\n    description: Annotated[\n        Optional[str],\n        Doc(\n            \"\"\"\n            Human-readable description.\n            \"\"\"\n        ),\n    ] = None,\n    gt: Annotated[\n        Optional[float],\n        Doc(\n            \"\"\"\n            Greater than. If set, value must be greater than this. Only applicable to\n            numbers.\n            \"\"\"\n        ),\n    ] = None,\n    ge: Annotated[\n        Optional[float],\n        Doc(\n            \"\"\"\n            Greater than or equal. If set, value must be greater than or equal to\n            this. Only applicable to numbers.\n            \"\"\"\n        ),\n    ] = None,\n    lt: Annotated[\n        Optional[float],\n        Doc(\n            \"\"\"\n            Less than. If set, value must be less than this. Only applicable to numbers.\n            \"\"\"\n        ),\n    ] = None,\n    le: Annotated[\n        Optional[float],\n        Doc(\n            \"\"\"\n            Less than or equal. If set, value must be less than or equal to this.\n            Only applicable to numbers.\n            \"\"\"\n        ),\n    ] = None,\n    min_length: Annotated[\n        Optional[int],\n        Doc(\n            \"\"\"\n            Minimum length for strings.\n            \"\"\"\n        ),\n    ] = None,\n    max_length: Annotated[\n        Optional[int],\n        Doc(\n            \"\"\"\n            Maximum length for strings.\n            \"\"\"\n        ),\n    ] = None,\n    pattern: Annotated[\n        Optional[str],\n        Doc(\n            \"\"\"\n            RegEx pattern for strings.\n            \"\"\"\n        ),\n    ] = None,\n    regex: Annotated[\n        Optional[str],\n        Doc(\n            \"\"\"\n            RegEx pattern for strings.\n            \"\"\"\n        ),\n        deprecated(\n            \"Deprecated in FastAPI 0.100.0 and Pydantic v2, use `pattern` instead.\"\n        ),\n    ] = None,\n    discriminator: Annotated[\n        Union[str, None],\n        Doc(\n            \"\"\"\n            Parameter field name for discriminating the type in a tagged union.\n            \"\"\"\n        ),\n    ] = None,\n    strict: Annotated[\n        Union[bool, None],\n        Doc(\n            \"\"\"\n            If `True`, strict validation is applied to the field.\n            \"\"\"\n        ),\n    ] = _Unset,\n    multiple_of: Annotated[\n        Union[float, None],\n        Doc(\n            \"\"\"\n            Value must be a multiple of this. Only applicable to numbers.\n            \"\"\"\n        ),\n    ] = _Unset,\n    allow_inf_nan: Annotated[\n        Union[bool, None],\n        Doc(\n            \"\"\"\n            Allow `inf`, `-inf`, `nan`. Only applicable to numbers.\n            \"\"\"\n        ),\n    ] = _Unset,\n    max_digits: Annotated[\n        Union[int, None],\n        Doc(\n            \"\"\"\n            Maximum number of allow digits for strings.\n            \"\"\"\n        ),\n    ] = _Unset,\n    decimal_places: Annotated[\n        Union[int, None],\n        Doc(\n            \"\"\"\n            Maximum number of decimal places allowed for numbers.\n            \"\"\"\n        ),\n    ] = _Unset,\n    examples: Annotated[\n        Optional[List[Any]],\n        Doc(\n            \"\"\"\n            Example values for this field.\n            \"\"\"\n        ),\n    ] = None,\n    example: Annotated[\n        Optional[Any],\n        deprecated(\n            \"Deprecated in OpenAPI 3.1.0 that now uses JSON Schema 2020-12, \"\n            \"although still supported. Use examples instead.\"\n        ),\n    ] = _Unset,\n    openapi_examples: Annotated[\n        Optional[Dict[str, Example]],\n        Doc(\n            \"\"\"\n            OpenAPI-specific examples.\n\n            It will be added to the generated OpenAPI (e.g. visible at `/docs`).\n\n            Swagger UI (that provides the `/docs` interface) has better support for the\n            OpenAPI-specific examples than the JSON Schema `examples`, that's the main\n            use case for this.\n\n            Read more about it in the\n            [FastAPI docs for Declare Request Example Data](https://fastapi.tiangolo.com/tutorial/schema-extra-example/#using-the-openapi_examples-parameter).\n            \"\"\"\n        ),\n    ] = None,\n    deprecated: Annotated[\n        Union[deprecated, str, bool, None],\n        Doc(\n            \"\"\"\n            Mark this parameter field as deprecated.\n\n            It will affect the generated OpenAPI (e.g. visible at `/docs`).\n            \"\"\"\n        ),\n    ] = None,\n    include_in_schema: Annotated[\n        bool,\n        Doc(\n            \"\"\"\n            To include (or not) this parameter field in the generated OpenAPI.\n            You probably don't need it, but it's available.\n\n            This affects the generated OpenAPI (e.g. visible at `/docs`).\n            \"\"\"\n        ),\n    ] = True,\n    json_schema_extra: Annotated[\n        Union[Dict[str, Any], None],\n        Doc(\n            \"\"\"\n            Any additional JSON schema data.\n            \"\"\"\n        ),\n    ] = None,\n    **extra: Annotated[\n        Any,\n        Doc(\n            \"\"\"\n            Include extra fields used by the JSON Schema.\n            \"\"\"\n        ),\n        deprecated(\n            \"\"\"\n            The `extra` kwargs is deprecated. Use `json_schema_extra` instead.\n            \"\"\"\n        ),\n    ],\n) -> Any:\n    return params.Query(\n        default=default,\n        default_factory=default_factory,\n        alias=alias,\n        alias_priority=alias_priority,\n        validation_alias=validation_alias,\n        serialization_alias=serialization_alias,\n        title=title,\n        description=description,\n        gt=gt,\n        ge=ge,\n        lt=lt,\n        le=le,\n        min_length=min_length,\n        max_length=max_length,\n        pattern=pattern,\n        regex=regex,\n        discriminator=discriminator,\n        strict=strict,\n        multiple_of=multiple_of,\n        allow_inf_nan=allow_inf_nan,\n        max_digits=max_digits,\n        decimal_places=decimal_places,\n        example=example,\n        examples=examples,\n        openapi_examples=openapi_examples,\n        deprecated=deprecated,\n        include_in_schema=include_in_schema,\n        json_schema_extra=json_schema_extra,\n        **extra,\n    )",
+          "span_sha256": "sha256:c0d776b87bf0bd56270d02b039bde10911a47982bfeae3b8e1c1c4d232658c88"
+        }
+      ],
+      "drafted_by": "laptop-b (Claude Opus 5.5 draft; requires human verification)",
+      "requested_by": null,
+      "status_note": "RETRIEVAL LABEL (L1): approve if these lines contain the evidence needed to answer and nothing essential is missing; fix = name the missing/wrong lines. The question/answer themselves are checked elsewhere."
+    },
+    {
+      "item_id": "label-eih-phase1-test-034",
+      "kind": "retrieval_label",
+      "split": "dev",
+      "repository": "fastapi/fastapi",
+      "commit_sha": "1c3e6918750ccb3f20ea260e9a4238ce2c0e5f63",
+      "sdlc_stage": "testing",
+      "task_type": "test_generation",
+      "complexity": "medium",
+      "criticality": "medium",
+      "query": "Write a pytest test overriding a FastAPI dependency using `app.dependency_overrides`.",
+      "proposed_answer": "```python\nfrom fastapi import FastAPI, Depends\nfrom fastapi.testclient import TestClient\n\napp = FastAPI()\n\ndef get_db():\n    return 'real_db'\n\n@app.get('/data')\ndef read_data(db=Depends(get_db)):\n    return {'db': db}\n\nclient = TestClient(app)\n\ndef test_override_dependency():\n    def mock_get_db():\n        return 'mock_db'\n    \n    app.dependency_overrides[get_db] = mock_get_db\n    try:\n        response = client.get('/data')\n        assert response.json() == {'db': 'mock_db'}\n    finally:\n        app.dependency_overrides.clear()\n```",
+      "acceptable_alternatives": [],
+      "evidence": [
+        {
+          "file": "docs/en/docs/advanced/testing-dependencies.md",
+          "start_line": 23,
+          "end_line": 81,
+          "text": "### Use the `app.dependency_overrides` attribute\n\nFor these cases, your **FastAPI** application has an attribute `app.dependency_overrides`, it is a simple `dict`.\n\nTo override a dependency for testing, you put as a key the original dependency (a function), and as the value, your dependency override (another function).\n\nAnd then **FastAPI** will call that override instead of the original dependency.\n\n=== \"Python 3.10+\"\n\n    ```Python hl_lines=\"26-27  30\"\n    {!> ../../../docs_src/dependency_testing/tutorial001_an_py310.py!}\n    ```\n\n=== \"Python 3.9+\"\n\n    ```Python hl_lines=\"28-29  32\"\n    {!> ../../../docs_src/dependency_testing/tutorial001_an_py39.py!}\n    ```\n\n=== \"Python 3.8+\"\n\n    ```Python hl_lines=\"29-30  33\"\n    {!> ../../../docs_src/dependency_testing/tutorial001_an.py!}\n    ```\n\n=== \"Python 3.10+ non-Annotated\"\n\n    !!! tip\n        Prefer to use the `Annotated` version if possible.\n\n    ```Python hl_lines=\"24-25  28\"\n    {!> ../../../docs_src/dependency_testing/tutorial001_py310.py!}\n    ```\n\n=== \"Python 3.8+ non-Annotated\"\n\n    !!! tip\n        Prefer to use the `Annotated` version if possible.\n\n    ```Python hl_lines=\"28-29  32\"\n    {!> ../../../docs_src/dependency_testing/tutorial001.py!}\n    ```\n\n!!! tip\n    You can set a dependency override for a dependency used anywhere in your **FastAPI** application.\n\n    The original dependency could be used in a *path operation function*, a *path operation decorator* (when you don't use the return value), a `.include_router()` call, etc.\n\n    FastAPI will still be able to override it.\n\nThen you can reset your overrides (remove them) by setting `app.dependency_overrides` to be an empty `dict`:\n\n```Python\napp.dependency_overrides = {}\n```\n\n!!! tip\n    If you want to override a dependency only during some tests, you can set the override at the beginning of the test (inside the test function) and reset it at the end (at the end of the test function).",
+          "span_sha256": "sha256:6a0f236516c92b5cb08386d2275009bf13022df95c15574829e8f91d8e1fc2f8"
+        },
+        {
+          "file": "docs_src/dependency_testing/tutorial001.py",
+          "start_line": 1,
+          "end_line": 59,
+          "text": "from typing import Union\n\nfrom fastapi import Depends, FastAPI\nfrom fastapi.testclient import TestClient\n\napp = FastAPI()\n\n\nasync def common_parameters(\n    q: Union[str, None] = None, skip: int = 0, limit: int = 100\n):\n    return {\"q\": q, \"skip\": skip, \"limit\": limit}\n\n\n@app.get(\"/items/\")\nasync def read_items(commons: dict = Depends(common_parameters)):\n    return {\"message\": \"Hello Items!\", \"params\": commons}\n\n\n@app.get(\"/users/\")\nasync def read_users(commons: dict = Depends(common_parameters)):\n    return {\"message\": \"Hello Users!\", \"params\": commons}\n\n\nclient = TestClient(app)\n\n\nasync def override_dependency(q: Union[str, None] = None):\n    return {\"q\": q, \"skip\": 5, \"limit\": 10}\n\n\napp.dependency_overrides[common_parameters] = override_dependency\n\n\ndef test_override_in_items():\n    response = client.get(\"/items/\")\n    assert response.status_code == 200\n    assert response.json() == {\n        \"message\": \"Hello Items!\",\n        \"params\": {\"q\": None, \"skip\": 5, \"limit\": 10},\n    }\n\n\ndef test_override_in_items_with_q():\n    response = client.get(\"/items/?q=foo\")\n    assert response.status_code == 200\n    assert response.json() == {\n        \"message\": \"Hello Items!\",\n        \"params\": {\"q\": \"foo\", \"skip\": 5, \"limit\": 10},\n    }\n\n\ndef test_override_in_items_with_params():\n    response = client.get(\"/items/?q=foo&skip=100&limit=200\")\n    assert response.status_code == 200\n    assert response.json() == {\n        \"message\": \"Hello Items!\",\n        \"params\": {\"q\": \"foo\", \"skip\": 5, \"limit\": 10},\n    }",
+          "span_sha256": "sha256:1f68e832c1f3249739b3de503bb0088d81b56cd11dfedc5720a923ab92f85f55"
+        }
+      ],
+      "drafted_by": "laptop-b (Claude Opus 5.5 draft; requires human verification)",
+      "requested_by": null,
+      "status_note": "RETRIEVAL LABEL (L1): approve if these lines contain the evidence needed to answer and nothing essential is missing; fix = name the missing/wrong lines. The question/answer themselves are checked elsewhere."
+    },
+    {
+      "item_id": "label-eih-phase1-test-035",
+      "kind": "retrieval_label",
+      "split": "dev",
+      "repository": "pallets/flask",
+      "commit_sha": "c12a5d874c5a014495eb2db8a73f40037bc813ac",
+      "sdlc_stage": "testing",
+      "task_type": "test_failure_analysis",
+      "complexity": "medium",
+      "criticality": "medium",
+      "query": "Why does accessing `flask.current_app` outside of a request or app context raise `RuntimeError: Working outside of application context` in test suites?",
+      "proposed_answer": "`current_app` is a LocalProxy bound to `_cv_app.get()`. If no `AppContext` has been pushed onto the stack (via `with app.app_context():`), the proxy finds no active application and raises a `RuntimeError`.",
+      "acceptable_alternatives": [],
+      "evidence": [
+        {
+          "file": "src/flask/globals.py",
+          "start_line": 17,
+          "end_line": 33,
+          "text": "_no_app_msg = \"\"\"\\\nWorking outside of application context.\n\nThis typically means that you attempted to use functionality that needed\nthe current application. To solve this, set up an application context\nwith app.app_context(). See the documentation for more information.\\\n\"\"\"\n_cv_app: ContextVar[AppContext] = ContextVar(\"flask.app_ctx\")\napp_ctx: AppContext = LocalProxy(  # type: ignore[assignment]\n    _cv_app, unbound_message=_no_app_msg\n)\ncurrent_app: Flask = LocalProxy(  # type: ignore[assignment]\n    _cv_app, \"app\", unbound_message=_no_app_msg\n)\ng: _AppCtxGlobals = LocalProxy(  # type: ignore[assignment]\n    _cv_app, \"g\", unbound_message=_no_app_msg\n)",
+          "span_sha256": "sha256:d4706cb7c59a1476898b158e6f7ce1c107cac5efcec6b488047d231dff8c7278"
+        },
+        {
+          "file": "src/flask/ctx.py",
+          "start_line": 251,
+          "end_line": 254,
+          "text": "    def push(self) -> None:\n        \"\"\"Binds the app context to the current context.\"\"\"\n        self._cv_tokens.append(_cv_app.set(self))\n        appcontext_pushed.send(self.app, _async_wrapper=self.app.ensure_sync)",
+          "span_sha256": "sha256:0a7290bef03d414dc83ff32ea23eb48387810f35121d7a13c29c4d8a5c1ed304"
+        }
+      ],
+      "drafted_by": "laptop-b (Claude Opus 5.5 draft; requires human verification)",
+      "requested_by": null,
+      "status_note": "RETRIEVAL LABEL (L1): approve if these lines contain the evidence needed to answer and nothing essential is missing; fix = name the missing/wrong lines. The question/answer themselves are checked elsewhere."
+    },
+    {
+      "item_id": "label-eih-phase1-test-037",
+      "kind": "retrieval_label",
+      "split": "dev",
+      "repository": "pallets/flask",
+      "commit_sha": "c12a5d874c5a014495eb2db8a73f40037bc813ac",
+      "sdlc_stage": "testing",
+      "task_type": "test_generation",
+      "complexity": "medium",
+      "criticality": "medium",
+      "query": "Write a test checking that a Flask session variable persists across multiple requests when using `test_client()`.",
+      "proposed_answer": "```python\nfrom flask import Flask, session\n\napp = Flask(__name__)\napp.secret_key = 'test-secret'\n\n@app.route('/set')\ndef set_val():\n    session['user'] = 'alice'\n    return 'ok'\n\n@app.route('/get')\ndef get_val():\n    return session.get('user', 'none')\n\ndef test_session_persistence():\n    client = app.test_client()\n    client.get('/set')\n    res = client.get('/get')\n    assert res.data.decode('utf-8') == 'alice'\n```",
+      "acceptable_alternatives": [],
+      "evidence": [
+        {
+          "file": "docs/testing.rst",
+          "start_line": 202,
+          "end_line": 240,
+          "text": "Accessing and Modifying the Session\n-----------------------------------\n\nTo access Flask's context variables, mainly\n:data:`~flask.session`, use the client in a ``with`` statement.\nThe app and request context will remain active *after* making a request,\nuntil the ``with`` block ends.\n\n.. code-block:: python\n\n    from flask import session\n\n    def test_access_session(client):\n        with client:\n            client.post(\"/auth/login\", data={\"username\": \"flask\"})\n            # session is still accessible\n            assert session[\"user_id\"] == 1\n\n        # session is no longer accessible\n\nIf you want to access or set a value in the session *before* making a\nrequest, use the client's\n:meth:`~flask.testing.FlaskClient.session_transaction` method in a\n``with`` statement. It returns a session object, and will save the\nsession once the block ends.\n\n.. code-block:: python\n\n    from flask import session\n\n    def test_modify_session(client):\n        with client.session_transaction() as session:\n            # set a user id without going through the login route\n            session[\"user_id\"] = 1\n\n        # session is saved now\n\n        response = client.get(\"/users/me\")\n        assert response.json[\"username\"] == \"flask\"",
+          "span_sha256": "sha256:e8a789b4d217f41acb4b777f4e4549c9eb88c043695289efb1893812157bc5e9"
+        },
+        {
+          "file": "src/flask/testing.py",
+          "start_line": 135,
+          "end_line": 183,
+          "text": "    @contextmanager\n    def session_transaction(\n        self, *args: t.Any, **kwargs: t.Any\n    ) -> t.Iterator[SessionMixin]:\n        \"\"\"When used in combination with a ``with`` statement this opens a\n        session transaction.  This can be used to modify the session that\n        the test client uses.  Once the ``with`` block is left the session is\n        stored back.\n\n        ::\n\n            with client.session_transaction() as session:\n                session['value'] = 42\n\n        Internally this is implemented by going through a temporary test\n        request context and since session handling could depend on\n        request variables this function accepts the same arguments as\n        :meth:`~flask.Flask.test_request_context` which are directly\n        passed through.\n        \"\"\"\n        if self._cookies is None:\n            raise TypeError(\n                \"Cookies are disabled. Create a client with 'use_cookies=True'.\"\n            )\n\n        app = self.application\n        ctx = app.test_request_context(*args, **kwargs)\n        self._add_cookies_to_wsgi(ctx.request.environ)\n\n        with ctx:\n            sess = app.session_interface.open_session(app, ctx.request)\n\n        if sess is None:\n            raise RuntimeError(\"Session backend did not open a session.\")\n\n        yield sess\n        resp = app.response_class()\n\n        if app.session_interface.is_null_session(sess):\n            return\n\n        with ctx:\n            app.session_interface.save_session(app, sess, resp)\n\n        self._update_cookies_from_response(\n            ctx.request.host.partition(\":\")[0],\n            ctx.request.path,\n            resp.headers.getlist(\"Set-Cookie\"),\n        )",
+          "span_sha256": "sha256:f21bc35e658806737662b0cdaad18a1fd17c2a0f83b875b883219ea47b36c6ce"
+        }
+      ],
+      "drafted_by": "laptop-b (Claude Opus 5.5 draft; requires human verification)",
+      "requested_by": null,
+      "status_note": "RETRIEVAL LABEL (L1): approve if these lines contain the evidence needed to answer and nothing essential is missing; fix = name the missing/wrong lines. The question/answer themselves are checked elsewhere."
+    },
+    {
+      "item_id": "label-eih-phase1-test-038",
+      "kind": "retrieval_label",
+      "split": "dev",
+      "repository": "fastapi/fastapi",
+      "commit_sha": "1c3e6918750ccb3f20ea260e9a4238ce2c0e5f63",
+      "sdlc_stage": "testing",
+      "task_type": "test_generation",
+      "complexity": "high",
+      "criticality": "medium",
+      "query": "Write an asynchronous pytest test for a FastAPI async endpoint using `httpx.AsyncClient` and `ASGITransport`.",
+      "proposed_answer": "```python\nimport pytest\nimport httpx\nfrom fastapi import FastAPI\n\napp = FastAPI()\n\n@app.get('/async-hello')\nasync def async_hello():\n    return {'message': 'async world'}\n\n@pytest.mark.asyncio\nasync def test_async_endpoint():\n    transport = httpx.ASGITransport(app=app)\n    async with httpx.AsyncClient(transport=transport, base_url='http://test') as client:\n        response = await client.get('/async-hello')\n        assert response.status_code == 200\n        assert response.json() == {'message': 'async world'}\n```",
+      "acceptable_alternatives": [],
+      "evidence": [
+        {
+          "file": "docs/en/docs/advanced/async-tests.md",
+          "start_line": 21,
+          "end_line": 43,
+          "text": "## Example\n\nFor a simple example, let's consider a file structure similar to the one described in [Bigger Applications](../tutorial/bigger-applications.md){.internal-link target=_blank} and [Testing](../tutorial/testing.md){.internal-link target=_blank}:\n\n```\n.\n├── app\n│   ├── __init__.py\n│   ├── main.py\n│   └── test_main.py\n```\n\nThe file `main.py` would have:\n\n```Python\n{!../../../docs_src/async_tests/main.py!}\n```\n\nThe file `test_main.py` would have the tests for `main.py`, it could look like this now:\n\n```Python\n{!../../../docs_src/async_tests/test_main.py!}\n```",
+          "span_sha256": "sha256:5479ad273052c7ed4b44fe91690cd921bf6865aea289804a68eae00fb60ddad0"
+        },
+        {
+          "file": "docs_src/async_tests/test_main.py",
+          "start_line": 1,
+          "end_line": 12,
+          "text": "import pytest\nfrom httpx import AsyncClient\n\nfrom .main import app\n\n\n@pytest.mark.anyio\nasync def test_root():\n    async with AsyncClient(app=app, base_url=\"http://test\") as ac:\n        response = await ac.get(\"/\")\n    assert response.status_code == 200\n    assert response.json() == {\"message\": \"Tomato\"}",
+          "span_sha256": "sha256:205379d98fea86b16c5b4766de721510d5d44f2d080808725eeb08a06ff0fcad"
+        },
+        {
+          "file": "docs_src/async_tests/main.py",
+          "start_line": 1,
+          "end_line": 8,
+          "text": "from fastapi import FastAPI\n\napp = FastAPI()\n\n\n@app.get(\"/\")\nasync def root():\n    return {\"message\": \"Tomato\"}",
+          "span_sha256": "sha256:d8cecb01687e30ca39bc11b7f4bab7ca11248f94ed81352052d6307196293122"
+        }
+      ],
+      "drafted_by": "laptop-b (Claude Opus 5.5 draft; requires human verification)",
+      "requested_by": null,
+      "status_note": "RETRIEVAL LABEL (L1): approve if these lines contain the evidence needed to answer and nothing essential is missing; fix = name the missing/wrong lines. The question/answer themselves are checked elsewhere."
+    },
+    {
+      "item_id": "label-eih-phase1-code-011",
+      "kind": "retrieval_label",
+      "split": "val",
+      "repository": "pallets/flask",
+      "commit_sha": "c12a5d874c5a014495eb2db8a73f40037bc813ac",
+      "sdlc_stage": "architecture",
+      "task_type": "code_explanation",
+      "complexity": "medium",
+      "criticality": "medium",
+      "query": "Explain how the RequestContext.push() and pop() methods work in Flask's ctx.py.",
+      "proposed_answer": "In `src/flask/ctx.py`, `RequestContext.push()` pushes the request context onto the context stack (or sets it in ContextVar in modern Python), ensuring an AppContext is also active. It binds request globals (`request`, `session`). `pop()` executes teardown functions registered via `teardown_request` and resets context variables.",
+      "acceptable_alternatives": [],
+      "evidence": [
+        {
+          "file": "src/flask/ctx.py",
+          "start_line": 367,
+          "end_line": 394,
+          "text": "    def push(self) -> None:\n        # Before we push the request context we have to ensure that there\n        # is an application context.\n        app_ctx = _cv_app.get(None)\n\n        if app_ctx is None or app_ctx.app is not self.app:\n            app_ctx = self.app.app_context()\n            app_ctx.push()\n        else:\n            app_ctx = None\n\n        self._cv_tokens.append((_cv_request.set(self), app_ctx))\n\n        # Open the session at the moment that the request context is available.\n        # This allows a custom open_session method to use the request context.\n        # Only open a new session if this is the first time the request was\n        # pushed, otherwise stream_with_context loses the session.\n        if self.session is None:\n            session_interface = self.app.session_interface\n            self.session = session_interface.open_session(self.app, self.request)\n\n            if self.session is None:\n                self.session = session_interface.make_null_session(self.app)\n\n        # Match the request URL after loading the session, so that the\n        # session is available in custom URL converters.\n        if self.url_adapter is not None:\n            self.match_request()",
+          "span_sha256": "sha256:99d67d213a30639de2b172a88f2edc2e4fb2968dc27414d80e12021ce4cdca67"
+        },
+        {
+          "file": "src/flask/ctx.py",
+          "start_line": 396,
+          "end_line": 431,
+          "text": "    def pop(self, exc: BaseException | None = _sentinel) -> None:  # type: ignore\n        \"\"\"Pops the request context and unbinds it by doing that.  This will\n        also trigger the execution of functions registered by the\n        :meth:`~flask.Flask.teardown_request` decorator.\n\n        .. versionchanged:: 0.9\n           Added the `exc` argument.\n        \"\"\"\n        clear_request = len(self._cv_tokens) == 1\n\n        try:\n            if clear_request:\n                if exc is _sentinel:\n                    exc = sys.exc_info()[1]\n                self.app.do_teardown_request(exc)\n\n                request_close = getattr(self.request, \"close\", None)\n                if request_close is not None:\n                    request_close()\n        finally:\n            ctx = _cv_request.get()\n            token, app_ctx = self._cv_tokens.pop()\n            _cv_request.reset(token)\n\n            # get rid of circular dependencies at the end of the request\n            # so that we don't require the GC to be active.\n            if clear_request:\n                ctx.request.environ[\"werkzeug.request\"] = None\n\n            if app_ctx is not None:\n                app_ctx.pop(exc)\n\n            if ctx is not self:\n                raise AssertionError(\n                    f\"Popped wrong request context. ({ctx!r} instead of {self!r})\"\n                )",
+          "span_sha256": "sha256:e60cf05f9a42b47a99c38b2a4bddea608659fa902dc8bf2e93f1d1f00a279d81"
+        }
+      ],
+      "drafted_by": "laptop-b (Claude Opus 5.5 draft; requires human verification)",
+      "requested_by": null,
+      "status_note": "RETRIEVAL LABEL (L1): approve if these lines contain the evidence needed to answer and nothing essential is missing; fix = name the missing/wrong lines. The question/answer themselves are checked elsewhere."
+    },
+    {
+      "item_id": "label-eih-phase1-code-016",
+      "kind": "retrieval_label",
+      "split": "val",
+      "repository": "fastapi/fastapi",
+      "commit_sha": "1c3e6918750ccb3f20ea260e9a4238ce2c0e5f63",
+      "sdlc_stage": "architecture",
+      "task_type": "code_explanation",
+      "complexity": "low",
+      "criticality": "low",
+      "query": "How does FastAPI handle HTTPException vs Starlette HTTPException in fastapi/exceptions.py?",
+      "proposed_answer": "FastAPI subclassed `starlette.exceptions.HTTPException` to allow passing extra headers and arbitrary JSON-serializable `detail` objects, registering a default exception handler `http_exception_handler` that converts it into a JSONResponse with status code and detail payload.",
+      "acceptable_alternatives": [],
+      "evidence": [
+        {
+          "file": "fastapi/exceptions.py",
+          "start_line": 9,
+          "end_line": 65,
+          "text": "class HTTPException(StarletteHTTPException):\n    \"\"\"\n    An HTTP exception you can raise in your own code to show errors to the client.\n\n    This is for client errors, invalid authentication, invalid data, etc. Not for server\n    errors in your code.\n\n    Read more about it in the\n    [FastAPI docs for Handling Errors](https://fastapi.tiangolo.com/tutorial/handling-errors/).\n\n    ## Example\n\n    ```python\n    from fastapi import FastAPI, HTTPException\n\n    app = FastAPI()\n\n    items = {\"foo\": \"The Foo Wrestlers\"}\n\n\n    @app.get(\"/items/{item_id}\")\n    async def read_item(item_id: str):\n        if item_id not in items:\n            raise HTTPException(status_code=404, detail=\"Item not found\")\n        return {\"item\": items[item_id]}\n    ```\n    \"\"\"\n\n    def __init__(\n        self,\n        status_code: Annotated[\n            int,\n            Doc(\n                \"\"\"\n                HTTP status code to send to the client.\n                \"\"\"\n            ),\n        ],\n        detail: Annotated[\n            Any,\n            Doc(\n                \"\"\"\n                Any data to be sent to the client in the `detail` key of the JSON\n                response.\n                \"\"\"\n            ),\n        ] = None,\n        headers: Annotated[\n            Optional[Dict[str, str]],\n            Doc(\n                \"\"\"\n                Any headers to send to the client in the response.\n                \"\"\"\n            ),\n        ] = None,\n    ) -> None:\n        super().__init__(status_code=status_code, detail=detail, headers=headers)",
+          "span_sha256": "sha256:01e6ad4e67116f39317d836b2e77ada9c2956c530aa1a091b42b2f0052be5bd6"
+        },
+        {
+          "file": "fastapi/exception_handlers.py",
+          "start_line": 11,
+          "end_line": 17,
+          "text": "async def http_exception_handler(request: Request, exc: HTTPException) -> Response:\n    headers = getattr(exc, \"headers\", None)\n    if not is_body_allowed_for_status_code(exc.status_code):\n        return Response(status_code=exc.status_code, headers=headers)\n    return JSONResponse(\n        {\"detail\": exc.detail}, status_code=exc.status_code, headers=headers\n    )",
+          "span_sha256": "sha256:3721b6a94fb512fe9bb7d057372bb7783c2fd7ac76ebd3a73cde98ba099b7741"
+        },
+        {
+          "file": "docs/en/docs/tutorial/handling-errors.md",
+          "start_line": 22,
+          "end_line": 71,
+          "text": "## Use `HTTPException`\n\nTo return HTTP responses with errors to the client you use `HTTPException`.\n\n### Import `HTTPException`\n\n```Python hl_lines=\"1\"\n{!../../../docs_src/handling_errors/tutorial001.py!}\n```\n\n### Raise an `HTTPException` in your code\n\n`HTTPException` is a normal Python exception with additional data relevant for APIs.\n\nBecause it's a Python exception, you don't `return` it, you `raise` it.\n\nThis also means that if you are inside a utility function that you are calling inside of your *path operation function*, and you raise the `HTTPException` from inside of that utility function, it won't run the rest of the code in the *path operation function*, it will terminate that request right away and send the HTTP error from the `HTTPException` to the client.\n\nThe benefit of raising an exception over `return`ing a value will be more evident in the section about Dependencies and Security.\n\nIn this example, when the client requests an item by an ID that doesn't exist, raise an exception with a status code of `404`:\n\n```Python hl_lines=\"11\"\n{!../../../docs_src/handling_errors/tutorial001.py!}\n```\n\n### The resulting response\n\nIf the client requests `http://example.com/items/foo` (an `item_id` `\"foo\"`), that client will receive an HTTP status code of 200, and a JSON response of:\n\n```JSON\n{\n  \"item\": \"The Foo Wrestlers\"\n}\n```\n\nBut if the client requests `http://example.com/items/bar` (a non-existent `item_id` `\"bar\"`), that client will receive an HTTP status code of 404 (the \"not found\" error), and a JSON response of:\n\n```JSON\n{\n  \"detail\": \"Item not found\"\n}\n```\n\n!!! tip\n    When raising an `HTTPException`, you can pass any value that can be converted to JSON as the parameter `detail`, not only `str`.\n\n    You could pass a `dict`, a `list`, etc.\n\n    They are handled automatically by **FastAPI** and converted to JSON.",
+          "span_sha256": "sha256:d6be30211c5bc15448d78dfb3b5aeee4298ddf6a8c0801979aa9018366312247"
+        }
+      ],
+      "drafted_by": "laptop-b (Claude Opus 5.5 draft; requires human verification)",
+      "requested_by": null,
+      "status_note": "RETRIEVAL LABEL (L1): approve if these lines contain the evidence needed to answer and nothing essential is missing; fix = name the missing/wrong lines. The question/answer themselves are checked elsewhere."
+    },
+    {
+      "item_id": "label-eih-phase1-dev-021",
+      "kind": "retrieval_label",
+      "split": "val",
+      "repository": "pallets/flask",
+      "commit_sha": "c12a5d874c5a014495eb2db8a73f40037bc813ac",
+      "sdlc_stage": "development",
+      "task_type": "code_generation",
+      "complexity": "low",
+      "criticality": "low",
+      "query": "Write a minimal Flask application factory function `create_app` that initializes a Flask app, sets config, and registers a health check route returning JSON.",
+      "proposed_answer": "```python\nfrom flask import Flask, jsonify\n\ndef create_app(test_config=None) -> Flask:\n    app = Flask(__name__)\n    if test_config:\n        app.config.update(test_config)\n\n    @app.route('/health')\n    def health():\n        return jsonify({'status': 'healthy'})\n\n    return app\n```",
+      "acceptable_alternatives": [],
+      "evidence": [
+        {
+          "file": "docs/tutorial/factory.rst",
+          "start_line": 23,
+          "end_line": 122,
+          "text": "The Application Factory\n-----------------------\n\nIt's time to start coding! Create the ``flaskr`` directory and add the\n``__init__.py`` file. The ``__init__.py`` serves double duty: it will\ncontain the application factory, and it tells Python that the ``flaskr``\ndirectory should be treated as a package.\n\n.. code-block:: none\n\n    $ mkdir flaskr\n\n.. code-block:: python\n    :caption: ``flaskr/__init__.py``\n\n    import os\n\n    from flask import Flask\n\n\n    def create_app(test_config=None):\n        # create and configure the app\n        app = Flask(__name__, instance_relative_config=True)\n        app.config.from_mapping(\n            SECRET_KEY='dev',\n            DATABASE=os.path.join(app.instance_path, 'flaskr.sqlite'),\n        )\n\n        if test_config is None:\n            # load the instance config, if it exists, when not testing\n            app.config.from_pyfile('config.py', silent=True)\n        else:\n            # load the test config if passed in\n            app.config.from_mapping(test_config)\n\n        # ensure the instance folder exists\n        try:\n            os.makedirs(app.instance_path)\n        except OSError:\n            pass\n\n        # a simple page that says hello\n        @app.route('/hello')\n        def hello():\n            return 'Hello, World!'\n\n        return app\n\n``create_app`` is the application factory function. You'll add to it\nlater in the tutorial, but it already does a lot.\n\n#.  ``app = Flask(__name__, instance_relative_config=True)`` creates the\n    :class:`Flask` instance.\n\n    *   ``__name__`` is the name of the current Python module. The app\n        needs to know where it's located to set up some paths, and\n        ``__name__`` is a convenient way to tell it that.\n\n    *   ``instance_relative_config=True`` tells the app that\n        configuration files are relative to the\n        :ref:`instance folder <instance-folders>`. The instance folder\n        is located outside the ``flaskr`` package and can hold local\n        data that shouldn't be committed to version control, such as\n        configuration secrets and the database file.\n\n#.  :meth:`app.config.from_mapping() <Config.from_mapping>` sets\n    some default configuration that the app will use:\n\n    *   :data:`SECRET_KEY` is used by Flask and extensions to keep data\n        safe. It's set to ``'dev'`` to provide a convenient value\n        during development, but it should be overridden with a random\n        value when deploying.\n\n    *   ``DATABASE`` is the path where the SQLite database file will be\n        saved. It's under\n        :attr:`app.instance_path <Flask.instance_path>`, which is the\n        path that Flask has chosen for the instance folder. You'll learn\n        more about the database in the next section.\n\n#.  :meth:`app.config.from_pyfile() <Config.from_pyfile>` overrides\n    the default configuration with values taken from the ``config.py``\n    file in the instance folder if it exists. For example, when\n    deploying, this can be used to set a real ``SECRET_KEY``.\n\n    *   ``test_config`` can also be passed to the factory, and will be\n        used instead of the instance configuration. This is so the tests\n        you'll write later in the tutorial can be configured\n        independently of any development values you have configured.\n\n#.  :func:`os.makedirs` ensures that\n    :attr:`app.instance_path <Flask.instance_path>` exists. Flask\n    doesn't create the instance folder automatically, but it needs to be\n    created because your project will create the SQLite database file\n    there.\n\n#.  :meth:`@app.route() <Flask.route>` creates a simple route so you can\n    see the application working before getting into the rest of the\n    tutorial. It creates a connection between the URL ``/hello`` and a\n    function that returns a response, the string ``'Hello, World!'`` in\n    this case.",
+          "span_sha256": "sha256:0876913c994cbe8f9937994d3bc053ef0345cba1cc2d970d8c82aea4932214c1"
+        }
+      ],
+      "drafted_by": "laptop-b (Claude Opus 5.5 draft; requires human verification)",
+      "requested_by": null,
+      "status_note": "RETRIEVAL LABEL (L1): approve if these lines contain the evidence needed to answer and nothing essential is missing; fix = name the missing/wrong lines. The question/answer themselves are checked elsewhere."
+    },
+    {
+      "item_id": "label-eih-phase1-dev-026",
+      "kind": "retrieval_label",
+      "split": "val",
+      "repository": "fastapi/fastapi",
+      "commit_sha": "1c3e6918750ccb3f20ea260e9a4238ce2c0e5f63",
+      "sdlc_stage": "development",
+      "task_type": "code_generation",
+      "complexity": "medium",
+      "criticality": "medium",
+      "query": "Write a FastAPI endpoint demonstrating `Query` validation with `min_length`, `max_length`, and `regex`.",
+      "proposed_answer": "```python\nfrom fastapi import FastAPI, Query\n\napp = FastAPI()\n\n@app.get('/search/')\nasync def search(\n    q: str = Query(\n        ...,\n        min_length=3,\n        max_length=50,\n        pattern=r'^[a-zA-Z0-9_-]+$',\n        description='Search query term'\n    )\n):\n    return {'q': q}\n```",
+      "acceptable_alternatives": [],
+      "evidence": [
+        {
+          "file": "docs/en/docs/tutorial/query-params-str-validations.md",
+          "start_line": 238,
+          "end_line": 276,
+          "text": "## Add more validations\n\nYou can also add a parameter `min_length`:\n\n=== \"Python 3.10+\"\n\n    ```Python hl_lines=\"10\"\n    {!> ../../../docs_src/query_params_str_validations/tutorial003_an_py310.py!}\n    ```\n\n=== \"Python 3.9+\"\n\n    ```Python hl_lines=\"10\"\n    {!> ../../../docs_src/query_params_str_validations/tutorial003_an_py39.py!}\n    ```\n\n=== \"Python 3.8+\"\n\n    ```Python hl_lines=\"11\"\n    {!> ../../../docs_src/query_params_str_validations/tutorial003_an.py!}\n    ```\n\n=== \"Python 3.10+ non-Annotated\"\n\n    !!! tip\n        Prefer to use the `Annotated` version if possible.\n\n    ```Python hl_lines=\"7\"\n    {!> ../../../docs_src/query_params_str_validations/tutorial003_py310.py!}\n    ```\n\n=== \"Python 3.8+ non-Annotated\"\n\n    !!! tip\n        Prefer to use the `Annotated` version if possible.\n\n    ```Python hl_lines=\"10\"\n    {!> ../../../docs_src/query_params_str_validations/tutorial003.py!}\n    ```",
+          "span_sha256": "sha256:c0eb219686f920ae1858227fafdd53ccbfa5a3aab862bcfae9ebb8c9ff6a699c"
+        },
+        {
+          "file": "docs/en/docs/tutorial/query-params-str-validations.md",
+          "start_line": 278,
+          "end_line": 340,
+          "text": "## Add regular expressions\n\nYou can define a <abbr title=\"A regular expression, regex or regexp is a sequence of characters that define a search pattern for strings.\">regular expression</abbr> `pattern` that the parameter should match:\n\n=== \"Python 3.10+\"\n\n    ```Python hl_lines=\"11\"\n    {!> ../../../docs_src/query_params_str_validations/tutorial004_an_py310.py!}\n    ```\n\n=== \"Python 3.9+\"\n\n    ```Python hl_lines=\"11\"\n    {!> ../../../docs_src/query_params_str_validations/tutorial004_an_py39.py!}\n    ```\n\n=== \"Python 3.8+\"\n\n    ```Python hl_lines=\"12\"\n    {!> ../../../docs_src/query_params_str_validations/tutorial004_an.py!}\n    ```\n\n=== \"Python 3.10+ non-Annotated\"\n\n    !!! tip\n        Prefer to use the `Annotated` version if possible.\n\n    ```Python hl_lines=\"9\"\n    {!> ../../../docs_src/query_params_str_validations/tutorial004_py310.py!}\n    ```\n\n=== \"Python 3.8+ non-Annotated\"\n\n    !!! tip\n        Prefer to use the `Annotated` version if possible.\n\n    ```Python hl_lines=\"11\"\n    {!> ../../../docs_src/query_params_str_validations/tutorial004.py!}\n    ```\n\nThis specific regular expression pattern checks that the received parameter value:\n\n* `^`: starts with the following characters, doesn't have characters before.\n* `fixedquery`: has the exact value `fixedquery`.\n* `$`: ends there, doesn't have any more characters after `fixedquery`.\n\nIf you feel lost with all these **\"regular expression\"** ideas, don't worry. They are a hard topic for many people. You can still do a lot of stuff without needing regular expressions yet.\n\nBut whenever you need them and go and learn them, know that you can already use them directly in **FastAPI**.\n\n### Pydantic v1 `regex` instead of `pattern`\n\nBefore Pydantic version 2 and before FastAPI 0.100.0, the parameter was called `regex` instead of `pattern`, but it's now deprecated.\n\nYou could still see some code using it:\n\n=== \"Python 3.10+ Pydantic v1\"\n\n    ```Python hl_lines=\"11\"\n    {!> ../../../docs_src/query_params_str_validations/tutorial004_an_py310_regex.py!}\n    ```\n\nBut know that this is deprecated and it should be updated to use the new parameter `pattern`. 🤓",
+          "span_sha256": "sha256:c7845feea22c25fb2b7726dd2b9b900e1fa9bd9206adc5ee79d21e7dad945599"
+        },
+        {
+          "file": "docs_src/query_params_str_validations/tutorial004.py",
+          "start_line": 1,
+          "end_line": 17,
+          "text": "from typing import Union\n\nfrom fastapi import FastAPI, Query\n\napp = FastAPI()\n\n\n@app.get(\"/items/\")\nasync def read_items(\n    q: Union[str, None] = Query(\n        default=None, min_length=3, max_length=50, pattern=\"^fixedquery$\"\n    ),\n):\n    results = {\"items\": [{\"item_id\": \"Foo\"}, {\"item_id\": \"Bar\"}]}\n    if q:\n        results.update({\"q\": q})\n    return results",
+          "span_sha256": "sha256:76feab1c9b619f6b83d6980246467202545fd37a614a9bb694a620a584a71605"
+        },
+        {
+          "file": "fastapi/param_functions.py",
+          "start_line": 339,
+          "end_line": 640,
+          "text": "def Query(  # noqa: N802\n    default: Annotated[\n        Any,\n        Doc(\n            \"\"\"\n            Default value if the parameter field is not set.\n            \"\"\"\n        ),\n    ] = Undefined,\n    *,\n    default_factory: Annotated[\n        Union[Callable[[], Any], None],\n        Doc(\n            \"\"\"\n            A callable to generate the default value.\n\n            This doesn't affect `Path` parameters as the value is always required.\n            The parameter is available only for compatibility.\n            \"\"\"\n        ),\n    ] = _Unset,\n    alias: Annotated[\n        Optional[str],\n        Doc(\n            \"\"\"\n            An alternative name for the parameter field.\n\n            This will be used to extract the data and for the generated OpenAPI.\n            It is particularly useful when you can't use the name you want because it\n            is a Python reserved keyword or similar.\n            \"\"\"\n        ),\n    ] = None,\n    alias_priority: Annotated[\n        Union[int, None],\n        Doc(\n            \"\"\"\n            Priority of the alias. This affects whether an alias generator is used.\n            \"\"\"\n        ),\n    ] = _Unset,\n    # TODO: update when deprecating Pydantic v1, import these types\n    # validation_alias: str | AliasPath | AliasChoices | None\n    validation_alias: Annotated[\n        Union[str, None],\n        Doc(\n            \"\"\"\n            'Whitelist' validation step. The parameter field will be the single one\n            allowed by the alias or set of aliases defined.\n            \"\"\"\n        ),\n    ] = None,\n    serialization_alias: Annotated[\n        Union[str, None],\n        Doc(\n            \"\"\"\n            'Blacklist' validation step. The vanilla parameter field will be the\n            single one of the alias' or set of aliases' fields and all the other\n            fields will be ignored at serialization time.\n            \"\"\"\n        ),\n    ] = None,\n    title: Annotated[\n        Optional[str],\n        Doc(\n            \"\"\"\n            Human-readable title.\n            \"\"\"\n        ),\n    ] = None,\n    description: Annotated[\n        Optional[str],\n        Doc(\n            \"\"\"\n            Human-readable description.\n            \"\"\"\n        ),\n    ] = None,\n    gt: Annotated[\n        Optional[float],\n        Doc(\n            \"\"\"\n            Greater than. If set, value must be greater than this. Only applicable to\n            numbers.\n            \"\"\"\n        ),\n    ] = None,\n    ge: Annotated[\n        Optional[float],\n        Doc(\n            \"\"\"\n            Greater than or equal. If set, value must be greater than or equal to\n            this. Only applicable to numbers.\n            \"\"\"\n        ),\n    ] = None,\n    lt: Annotated[\n        Optional[float],\n        Doc(\n            \"\"\"\n            Less than. If set, value must be less than this. Only applicable to numbers.\n            \"\"\"\n        ),\n    ] = None,\n    le: Annotated[\n        Optional[float],\n        Doc(\n            \"\"\"\n            Less than or equal. If set, value must be less than or equal to this.\n            Only applicable to numbers.\n            \"\"\"\n        ),\n    ] = None,\n    min_length: Annotated[\n        Optional[int],\n        Doc(\n            \"\"\"\n            Minimum length for strings.\n            \"\"\"\n        ),\n    ] = None,\n    max_length: Annotated[\n        Optional[int],\n        Doc(\n            \"\"\"\n            Maximum length for strings.\n            \"\"\"\n        ),\n    ] = None,\n    pattern: Annotated[\n        Optional[str],\n        Doc(\n            \"\"\"\n            RegEx pattern for strings.\n            \"\"\"\n        ),\n    ] = None,\n    regex: Annotated[\n        Optional[str],\n        Doc(\n            \"\"\"\n            RegEx pattern for strings.\n            \"\"\"\n        ),\n        deprecated(\n            \"Deprecated in FastAPI 0.100.0 and Pydantic v2, use `pattern` instead.\"\n        ),\n    ] = None,\n    discriminator: Annotated[\n        Union[str, None],\n        Doc(\n            \"\"\"\n            Parameter field name for discriminating the type in a tagged union.\n            \"\"\"\n        ),\n    ] = None,\n    strict: Annotated[\n        Union[bool, None],\n        Doc(\n            \"\"\"\n            If `True`, strict validation is applied to the field.\n            \"\"\"\n        ),\n    ] = _Unset,\n    multiple_of: Annotated[\n        Union[float, None],\n        Doc(\n            \"\"\"\n            Value must be a multiple of this. Only applicable to numbers.\n            \"\"\"\n        ),\n    ] = _Unset,\n    allow_inf_nan: Annotated[\n        Union[bool, None],\n        Doc(\n            \"\"\"\n            Allow `inf`, `-inf`, `nan`. Only applicable to numbers.\n            \"\"\"\n        ),\n    ] = _Unset,\n    max_digits: Annotated[\n        Union[int, None],\n        Doc(\n            \"\"\"\n            Maximum number of allow digits for strings.\n            \"\"\"\n        ),\n    ] = _Unset,\n    decimal_places: Annotated[\n        Union[int, None],\n        Doc(\n            \"\"\"\n            Maximum number of decimal places allowed for numbers.\n            \"\"\"\n        ),\n    ] = _Unset,\n    examples: Annotated[\n        Optional[List[Any]],\n        Doc(\n            \"\"\"\n            Example values for this field.\n            \"\"\"\n        ),\n    ] = None,\n    example: Annotated[\n        Optional[Any],\n        deprecated(\n            \"Deprecated in OpenAPI 3.1.0 that now uses JSON Schema 2020-12, \"\n            \"although still supported. Use examples instead.\"\n        ),\n    ] = _Unset,\n    openapi_examples: Annotated[\n        Optional[Dict[str, Example]],\n        Doc(\n            \"\"\"\n            OpenAPI-specific examples.\n\n            It will be added to the generated OpenAPI (e.g. visible at `/docs`).\n\n            Swagger UI (that provides the `/docs` interface) has better support for the\n            OpenAPI-specific examples than the JSON Schema `examples`, that's the main\n            use case for this.\n\n            Read more about it in the\n            [FastAPI docs for Declare Request Example Data](https://fastapi.tiangolo.com/tutorial/schema-extra-example/#using-the-openapi_examples-parameter).\n            \"\"\"\n        ),\n    ] = None,\n    deprecated: Annotated[\n        Union[deprecated, str, bool, None],\n        Doc(\n            \"\"\"\n            Mark this parameter field as deprecated.\n\n            It will affect the generated OpenAPI (e.g. visible at `/docs`).\n            \"\"\"\n        ),\n    ] = None,\n    include_in_schema: Annotated[\n        bool,\n        Doc(\n            \"\"\"\n            To include (or not) this parameter field in the generated OpenAPI.\n            You probably don't need it, but it's available.\n\n            This affects the generated OpenAPI (e.g. visible at `/docs`).\n            \"\"\"\n        ),\n    ] = True,\n    json_schema_extra: Annotated[\n        Union[Dict[str, Any], None],\n        Doc(\n            \"\"\"\n            Any additional JSON schema data.\n            \"\"\"\n        ),\n    ] = None,\n    **extra: Annotated[\n        Any,\n        Doc(\n            \"\"\"\n            Include extra fields used by the JSON Schema.\n            \"\"\"\n        ),\n        deprecated(\n            \"\"\"\n            The `extra` kwargs is deprecated. Use `json_schema_extra` instead.\n            \"\"\"\n        ),\n    ],\n) -> Any:\n    return params.Query(\n        default=default,\n        default_factory=default_factory,\n        alias=alias,\n        alias_priority=alias_priority,\n        validation_alias=validation_alias,\n        serialization_alias=serialization_alias,\n        title=title,\n        description=description,\n        gt=gt,\n        ge=ge,\n        lt=lt,\n        le=le,\n        min_length=min_length,\n        max_length=max_length,\n        pattern=pattern,\n        regex=regex,\n        discriminator=discriminator,\n        strict=strict,\n        multiple_of=multiple_of,\n        allow_inf_nan=allow_inf_nan,\n        max_digits=max_digits,\n        decimal_places=decimal_places,\n        example=example,\n        examples=examples,\n        openapi_examples=openapi_examples,\n        deprecated=deprecated,\n        include_in_schema=include_in_schema,\n        json_schema_extra=json_schema_extra,\n        **extra,\n    )",
+          "span_sha256": "sha256:c0d776b87bf0bd56270d02b039bde10911a47982bfeae3b8e1c1c4d232658c88"
+        }
+      ],
+      "drafted_by": "laptop-b (Claude Opus 5.5 draft; requires human verification)",
+      "requested_by": null,
+      "status_note": "RETRIEVAL LABEL (L1): approve if these lines contain the evidence needed to answer and nothing essential is missing; fix = name the missing/wrong lines. The question/answer themselves are checked elsewhere."
+    },
+    {
+      "item_id": "label-eih-phase1-ops-052",
+      "kind": "retrieval_label",
+      "split": "val",
+      "repository": "fastapi/fastapi",
+      "commit_sha": "1c3e6918750ccb3f20ea260e9a4238ce2c0e5f63",
+      "sdlc_stage": "maintenance",
+      "task_type": "error_analysis",
+      "complexity": "medium",
+      "criticality": "high",
+      "query": "Diagnose this FastAPI startup error: `AssertionError: Cannot specify `Depends` in `Annotated` and default value together for 'db'`.",
+      "proposed_answer": "It is raised by `analyze_param` in `fastapi/dependencies/utils.py` (assertion at L368-371) when one parameter declares its dependency twice: inside `Annotated[..., Depends(x)]` and as a default value `= Depends(y)`. Fix: declare the dependency once, either in `Annotated` or as the default value.",
+      "acceptable_alternatives": [],
+      "evidence": [
+        {
+          "file": "fastapi/dependencies/utils.py",
+          "start_line": 368,
+          "end_line": 371,
+          "text": "        assert depends is None, (\n            \"Cannot specify `Depends` in `Annotated` and default value\"\n            f\" together for {param_name!r}\"\n        )",
+          "span_sha256": "sha256:975cca9383fc35d5ce7b5b7402feb9472f1350cd4000137671cecb93923b2424"
+        },
+        {
+          "file": "fastapi/dependencies/utils.py",
+          "start_line": 317,
+          "end_line": 453,
+          "text": "def analyze_param(\n    *,\n    param_name: str,\n    annotation: Any,\n    value: Any,\n    is_path_param: bool,\n) -> Tuple[Any, Optional[params.Depends], Optional[ModelField]]:\n    field_info = None\n    depends = None\n    type_annotation: Any = Any\n    use_annotation: Any = Any\n    if annotation is not inspect.Signature.empty:\n        use_annotation = annotation\n        type_annotation = annotation\n    if get_origin(use_annotation) is Annotated:\n        annotated_args = get_args(annotation)\n        type_annotation = annotated_args[0]\n        fastapi_annotations = [\n            arg\n            for arg in annotated_args[1:]\n            if isinstance(arg, (FieldInfo, params.Depends))\n        ]\n        fastapi_specific_annotations = [\n            arg\n            for arg in fastapi_annotations\n            if isinstance(arg, (params.Param, params.Body, params.Depends))\n        ]\n        if fastapi_specific_annotations:\n            fastapi_annotation: Union[\n                FieldInfo, params.Depends, None\n            ] = fastapi_specific_annotations[-1]\n        else:\n            fastapi_annotation = None\n        if isinstance(fastapi_annotation, FieldInfo):\n            # Copy `field_info` because we mutate `field_info.default` below.\n            field_info = copy_field_info(\n                field_info=fastapi_annotation, annotation=use_annotation\n            )\n            assert field_info.default is Undefined or field_info.default is Required, (\n                f\"`{field_info.__class__.__name__}` default value cannot be set in\"\n                f\" `Annotated` for {param_name!r}. Set the default value with `=` instead.\"\n            )\n            if value is not inspect.Signature.empty:\n                assert not is_path_param, \"Path parameters cannot have default values\"\n                field_info.default = value\n            else:\n                field_info.default = Required\n        elif isinstance(fastapi_annotation, params.Depends):\n            depends = fastapi_annotation\n\n    if isinstance(value, params.Depends):\n        assert depends is None, (\n            \"Cannot specify `Depends` in `Annotated` and default value\"\n            f\" together for {param_name!r}\"\n        )\n        assert field_info is None, (\n            \"Cannot specify a FastAPI annotation in `Annotated` and `Depends` as a\"\n            f\" default value together for {param_name!r}\"\n        )\n        depends = value\n    elif isinstance(value, FieldInfo):\n        assert field_info is None, (\n            \"Cannot specify FastAPI annotations in `Annotated` and default value\"\n            f\" together for {param_name!r}\"\n        )\n        field_info = value\n        if PYDANTIC_V2:\n            field_info.annotation = type_annotation\n\n    if depends is not None and depends.dependency is None:\n        # Copy `depends` before mutating it\n        depends = copy(depends)\n        depends.dependency = type_annotation\n\n    if lenient_issubclass(\n        type_annotation,\n        (\n            Request,\n            WebSocket,\n            HTTPConnection,\n            Response,\n            StarletteBackgroundTasks,\n            SecurityScopes,\n        ),\n    ):\n        assert depends is None, f\"Cannot specify `Depends` for type {type_annotation!r}\"\n        assert (\n            field_info is None\n        ), f\"Cannot specify FastAPI annotation for type {type_annotation!r}\"\n    elif field_info is None and depends is None:\n        default_value = value if value is not inspect.Signature.empty else Required\n        if is_path_param:\n            # We might check here that `default_value is Required`, but the fact is that the same\n            # parameter might sometimes be a path parameter and sometimes not. See\n            # `tests/test_infer_param_optionality.py` for an example.\n            field_info = params.Path(annotation=use_annotation)\n        elif is_uploadfile_or_nonable_uploadfile_annotation(\n            type_annotation\n        ) or is_uploadfile_sequence_annotation(type_annotation):\n            field_info = params.File(annotation=use_annotation, default=default_value)\n        elif not field_annotation_is_scalar(annotation=type_annotation):\n            field_info = params.Body(annotation=use_annotation, default=default_value)\n        else:\n            field_info = params.Query(annotation=use_annotation, default=default_value)\n\n    field = None\n    if field_info is not None:\n        if is_path_param:\n            assert isinstance(field_info, params.Path), (\n                f\"Cannot use `{field_info.__class__.__name__}` for path param\"\n                f\" {param_name!r}\"\n            )\n        elif (\n            isinstance(field_info, params.Param)\n            and getattr(field_info, \"in_\", None) is None\n        ):\n            field_info.in_ = params.ParamTypes.query\n        use_annotation_from_field_info = get_annotation_from_field_info(\n            use_annotation,\n            field_info,\n            param_name,\n        )\n        if not field_info.alias and getattr(field_info, \"convert_underscores\", None):\n            alias = param_name.replace(\"_\", \"-\")\n        else:\n            alias = field_info.alias or param_name\n        field_info.alias = alias\n        field = create_response_field(\n            name=param_name,\n            type_=use_annotation_from_field_info,\n            default=field_info.default,\n            alias=alias,\n            required=field_info.default in (Required, Undefined),\n            field_info=field_info,\n        )\n\n    return type_annotation, depends, field",
+          "span_sha256": "sha256:302150d7c149a29b354d6bbe5f1564bb1d9fe3ffeed0900c8e8f92a2d00e25fd"
+        }
+      ],
+      "drafted_by": "laptop-b (Claude Opus 5.5 draft; requires human verification)",
+      "requested_by": null,
+      "status_note": "RETRIEVAL LABEL (L1): approve if these lines contain the evidence needed to answer and nothing essential is missing; fix = name the missing/wrong lines. The question/answer themselves are checked elsewhere."
+    },
+    {
+      "item_id": "label-eih-phase1-ops-053",
+      "kind": "retrieval_label",
+      "split": "val",
+      "repository": "pallets/flask",
+      "commit_sha": "c12a5d874c5a014495eb2db8a73f40037bc813ac",
+      "sdlc_stage": "maintenance",
+      "task_type": "change_understanding",
+      "complexity": "low",
+      "criticality": "medium",
+      "query": "Which Flask version removed `json.JSONEncoder` / `JSONDecoder` and the app's `json_encoder` / `json_decoder` attributes, and what replaced them?",
+      "proposed_answer": "They were deprecated in Flask 2.2.0 and removed in Flask 2.3.0. JSON behaviour is now customised through the `app.json` provider interface (`DefaultJSONProvider`) instead of custom encoder/decoder classes.",
+      "acceptable_alternatives": [],
+      "evidence": [
+        {
+          "file": "CHANGES.rst",
+          "start_line": 78,
+          "end_line": 129,
+          "text": "Version 2.3.0\n-------------\n\nReleased 2023-04-25\n\n-   Drop support for Python 3.7. :pr:`5072`\n-   Update minimum requirements to the latest versions: Werkzeug>=2.3.0, Jinja2>3.1.2,\n    itsdangerous>=2.1.2, click>=8.1.3.\n-   Remove previously deprecated code. :pr:`4995`\n\n    -   The ``push`` and ``pop`` methods of the deprecated ``_app_ctx_stack`` and\n        ``_request_ctx_stack`` objects are removed. ``top`` still exists to give\n        extensions more time to update, but it will be removed.\n    -   The ``FLASK_ENV`` environment variable, ``ENV`` config key, and ``app.env``\n        property are removed.\n    -   The ``session_cookie_name``, ``send_file_max_age_default``, ``use_x_sendfile``,\n        ``propagate_exceptions``, and ``templates_auto_reload`` properties on ``app``\n        are removed.\n    -   The ``JSON_AS_ASCII``, ``JSON_SORT_KEYS``, ``JSONIFY_MIMETYPE``, and\n        ``JSONIFY_PRETTYPRINT_REGULAR`` config keys are removed.\n    -   The ``app.before_first_request`` and ``bp.before_app_first_request`` decorators\n        are removed.\n    -   ``json_encoder`` and ``json_decoder`` attributes on app and blueprint, and the\n        corresponding ``json.JSONEncoder`` and ``JSONDecoder`` classes, are removed.\n    -   The ``json.htmlsafe_dumps`` and ``htmlsafe_dump`` functions are removed.\n    -   Calling setup methods on blueprints after registration is an error instead of a\n        warning. :pr:`4997`\n\n-   Importing ``escape`` and ``Markup`` from ``flask`` is deprecated. Import them\n    directly from ``markupsafe`` instead. :pr:`4996`\n-   The ``app.got_first_request`` property is deprecated. :pr:`4997`\n-   The ``locked_cached_property`` decorator is deprecated. Use a lock inside the\n    decorated function if locking is needed. :issue:`4993`\n-   Signals are always available. ``blinker>=1.6.2`` is a required dependency. The\n    ``signals_available`` attribute is deprecated. :issue:`5056`\n-   Signals support ``async`` subscriber functions. :pr:`5049`\n-   Remove uses of locks that could cause requests to block each other very briefly.\n    :issue:`4993`\n-   Use modern packaging metadata with ``pyproject.toml`` instead of ``setup.cfg``.\n    :pr:`4947`\n-   Ensure subdomains are applied with nested blueprints. :issue:`4834`\n-   ``config.from_file`` can use ``text=False`` to indicate that the parser wants a\n    binary file instead. :issue:`4989`\n-   If a blueprint is created with an empty name it raises a ``ValueError``.\n    :issue:`5010`\n-   ``SESSION_COOKIE_DOMAIN`` does not fall back to ``SERVER_NAME``. The default is not\n    to set the domain, which modern browsers interpret as an exact match rather than\n    a subdomain match. Warnings about ``localhost`` and IP addresses are also removed.\n    :issue:`5051`\n-   The ``routes`` command shows each rule's ``subdomain`` or ``host`` when domain\n    matching is in use. :issue:`5004`\n-   Use postponed evaluation of annotations. :pr:`5071`",
+          "span_sha256": "sha256:843687744eea8506890d13ef14f1d421be1c940769f1bd250032724c9612fae3"
+        },
+        {
+          "file": "CHANGES.rst",
+          "start_line": 232,
+          "end_line": 235,
+          "text": "-   Setting custom ``json_encoder`` and ``json_decoder`` classes on the\n    app or a blueprint, and the corresponding ``json.JSONEncoder`` and\n    ``JSONDecoder`` classes, are deprecated. JSON behavior can now be\n    overridden using the ``app.json`` provider interface. :pr:`4692`",
+          "span_sha256": "sha256:cbaa0a95d7e85552cbb7e575dfde1ea6c08434f7dc01a5b90b24d235c93e91bb"
+        }
+      ],
+      "drafted_by": "laptop-b (Claude Opus 5.5 draft; requires human verification)",
+      "requested_by": null,
+      "status_note": "RETRIEVAL LABEL (L1): approve if these lines contain the evidence needed to answer and nothing essential is missing; fix = name the missing/wrong lines. The question/answer themselves are checked elsewhere."
+    },
+    {
+      "item_id": "label-eih-phase1-req-002",
+      "kind": "retrieval_label",
+      "split": "val",
+      "repository": "fastapi/fastapi",
+      "commit_sha": "1c3e6918750ccb3f20ea260e9a4238ce2c0e5f63",
+      "sdlc_stage": "requirements",
+      "task_type": "requirement_understanding",
+      "complexity": "low",
+      "criticality": "medium",
+      "query": "What are FastAPI's requirements for automatic OpenAPI documentation generation?",
+      "proposed_answer": "FastAPI requires standard Python type hints, Pydantic models for request/response payloads, and route decorators (@app.get, @app.post) to automatically build OpenAPI schemas and interactive Swagger UI/ReDoc endpoints at /docs and /redoc.",
+      "acceptable_alternatives": [],
+      "evidence": [
+        {
+          "file": "docs/en/docs/features.md",
+          "start_line": 12,
+          "end_line": 17,
+          "text": "### Based on open standards\n\n* <a href=\"https://github.com/OAI/OpenAPI-Specification\" class=\"external-link\" target=\"_blank\"><strong>OpenAPI</strong></a> for API creation, including declarations of <abbr title=\"also known as: endpoints, routes\">path</abbr> <abbr title=\"also known as HTTP methods, as POST, GET, PUT, DELETE\">operations</abbr>, parameters, body requests, security, etc.\n* Automatic data model documentation with <a href=\"https://json-schema.org/\" class=\"external-link\" target=\"_blank\"><strong>JSON Schema</strong></a> (as OpenAPI itself is based on JSON Schema).\n* Designed around these standards, after a meticulous study. Instead of an afterthought layer on top.\n* This also allows using automatic **client code generation** in many languages.",
+          "span_sha256": "sha256:08f594bc5c3b0b5bc5686a5de756938fca4d87d6776260ed94092e56e5565234"
+        },
+        {
+          "file": "docs/en/docs/features.md",
+          "start_line": 19,
+          "end_line": 29,
+          "text": "### Automatic docs\n\nInteractive API documentation and exploration web user interfaces. As the framework is based on OpenAPI, there are multiple options, 2 included by default.\n\n* <a href=\"https://github.com/swagger-api/swagger-ui\" class=\"external-link\" target=\"_blank\"><strong>Swagger UI</strong></a>, with interactive exploration, call and test your API directly from the browser.\n\n![Swagger UI interaction](https://fastapi.tiangolo.com/img/index/index-03-swagger-02.png)\n\n* Alternative API documentation with <a href=\"https://github.com/Rebilly/ReDoc\" class=\"external-link\" target=\"_blank\"><strong>ReDoc</strong></a>.\n\n![ReDoc](https://fastapi.tiangolo.com/img/index/index-06-redoc-02.png)",
+          "span_sha256": "sha256:b64e7ebed48aa0ff9c720a9e2a9210e4df6e576febba38996674a47caeecdd76"
+        }
+      ],
+      "drafted_by": "laptop-b (Claude Opus 5.5 draft; requires human verification)",
+      "requested_by": null,
+      "status_note": "RETRIEVAL LABEL (L1): approve if these lines contain the evidence needed to answer and nothing essential is missing; fix = name the missing/wrong lines. The question/answer themselves are checked elsewhere."
+    },
+    {
+      "item_id": "label-eih-phase1-req-003",
+      "kind": "retrieval_label",
+      "split": "val",
+      "repository": "pallets/flask",
+      "commit_sha": "c12a5d874c5a014495eb2db8a73f40037bc813ac",
+      "sdlc_stage": "requirements",
+      "task_type": "architecture_qa",
+      "complexity": "medium",
+      "criticality": "high",
+      "query": "How does Flask structure Blueprint registration and what are the architectural requirements for url_prefix?",
+      "proposed_answer": "Blueprints in Flask represent modular slices of an application. When registering a blueprint via app.register_blueprint(bp, url_prefix=...), the url_prefix prepends to all endpoints defined in the blueprint. Blueprints can also declare their own default url_prefix during initialization.",
+      "acceptable_alternatives": [],
+      "evidence": [
+        {
+          "file": "docs/blueprints.rst",
+          "start_line": 84,
+          "end_line": 121,
+          "text": "Registering Blueprints\n----------------------\n\nSo how do you register that blueprint?  Like this::\n\n    from flask import Flask\n    from yourapplication.simple_page import simple_page\n\n    app = Flask(__name__)\n    app.register_blueprint(simple_page)\n\nIf you check the rules registered on the application, you will find\nthese::\n\n    >>> app.url_map\n    Map([<Rule '/static/<filename>' (HEAD, OPTIONS, GET) -> static>,\n     <Rule '/<page>' (HEAD, OPTIONS, GET) -> simple_page.show>,\n     <Rule '/' (HEAD, OPTIONS, GET) -> simple_page.show>])\n\nThe first one is obviously from the application itself for the static\nfiles.  The other two are for the `show` function of the ``simple_page``\nblueprint.  As you can see, they are also prefixed with the name of the\nblueprint and separated by a dot (``.``).\n\nBlueprints however can also be mounted at different locations::\n\n    app.register_blueprint(simple_page, url_prefix='/pages')\n\nAnd sure enough, these are the generated rules::\n\n    >>> app.url_map\n    Map([<Rule '/static/<filename>' (HEAD, OPTIONS, GET) -> static>,\n     <Rule '/pages/<page>' (HEAD, OPTIONS, GET) -> simple_page.show>,\n     <Rule '/pages/' (HEAD, OPTIONS, GET) -> simple_page.show>])\n\nOn top of that you can register blueprints multiple times though not every\nblueprint might respond properly to that.  In fact it depends on how the\nblueprint is implemented if it can be mounted more than once.",
+          "span_sha256": "sha256:8e0de0223c08fb255a2651dadf7b06eeecae0877e886c91b522ff42fcb1c282b"
+        },
+        {
+          "file": "src/flask/sansio/blueprints.py",
+          "start_line": 41,
+          "end_line": 85,
+          "text": "    def __init__(\n        self,\n        blueprint: Blueprint,\n        app: App,\n        options: t.Any,\n        first_registration: bool,\n    ) -> None:\n        #: a reference to the current application\n        self.app = app\n\n        #: a reference to the blueprint that created this setup state.\n        self.blueprint = blueprint\n\n        #: a dictionary with all options that were passed to the\n        #: :meth:`~flask.Flask.register_blueprint` method.\n        self.options = options\n\n        #: as blueprints can be registered multiple times with the\n        #: application and not everything wants to be registered\n        #: multiple times on it, this attribute can be used to figure\n        #: out if the blueprint was registered in the past already.\n        self.first_registration = first_registration\n\n        subdomain = self.options.get(\"subdomain\")\n        if subdomain is None:\n            subdomain = self.blueprint.subdomain\n\n        #: The subdomain that the blueprint should be active for, ``None``\n        #: otherwise.\n        self.subdomain = subdomain\n\n        url_prefix = self.options.get(\"url_prefix\")\n        if url_prefix is None:\n            url_prefix = self.blueprint.url_prefix\n        #: The prefix that should be used for all URLs defined on the\n        #: blueprint.\n        self.url_prefix = url_prefix\n\n        self.name = self.options.get(\"name\", blueprint.name)\n        self.name_prefix = self.options.get(\"name_prefix\", \"\")\n\n        #: A dictionary with URL defaults that is added to each and every\n        #: URL that was defined with the blueprint.\n        self.url_defaults = dict(self.blueprint.url_values_defaults)\n        self.url_defaults.update(self.options.get(\"url_defaults\", ()))",
+          "span_sha256": "sha256:5e0bbb932c04cb0b743a8a0455968e52470f1d21be9c44316ee2f0319d638798"
+        },
+        {
+          "file": "src/flask/sansio/blueprints.py",
+          "start_line": 273,
+          "end_line": 377,
+          "text": "    def register(self, app: App, options: dict[str, t.Any]) -> None:\n        \"\"\"Called by :meth:`Flask.register_blueprint` to register all\n        views and callbacks registered on the blueprint with the\n        application. Creates a :class:`.BlueprintSetupState` and calls\n        each :meth:`record` callback with it.\n\n        :param app: The application this blueprint is being registered\n            with.\n        :param options: Keyword arguments forwarded from\n            :meth:`~Flask.register_blueprint`.\n\n        .. versionchanged:: 2.3\n            Nested blueprints now correctly apply subdomains.\n\n        .. versionchanged:: 2.1\n            Registering the same blueprint with the same name multiple\n            times is an error.\n\n        .. versionchanged:: 2.0.1\n            Nested blueprints are registered with their dotted name.\n            This allows different blueprints with the same name to be\n            nested at different locations.\n\n        .. versionchanged:: 2.0.1\n            The ``name`` option can be used to change the (pre-dotted)\n            name the blueprint is registered with. This allows the same\n            blueprint to be registered multiple times with unique names\n            for ``url_for``.\n        \"\"\"\n        name_prefix = options.get(\"name_prefix\", \"\")\n        self_name = options.get(\"name\", self.name)\n        name = f\"{name_prefix}.{self_name}\".lstrip(\".\")\n\n        if name in app.blueprints:\n            bp_desc = \"this\" if app.blueprints[name] is self else \"a different\"\n            existing_at = f\" '{name}'\" if self_name != name else \"\"\n\n            raise ValueError(\n                f\"The name '{self_name}' is already registered for\"\n                f\" {bp_desc} blueprint{existing_at}. Use 'name=' to\"\n                f\" provide a unique name.\"\n            )\n\n        first_bp_registration = not any(bp is self for bp in app.blueprints.values())\n        first_name_registration = name not in app.blueprints\n\n        app.blueprints[name] = self\n        self._got_registered_once = True\n        state = self.make_setup_state(app, options, first_bp_registration)\n\n        if self.has_static_folder:\n            state.add_url_rule(\n                f\"{self.static_url_path}/<path:filename>\",\n                view_func=self.send_static_file,  # type: ignore[attr-defined]\n                endpoint=\"static\",\n            )\n\n        # Merge blueprint data into parent.\n        if first_bp_registration or first_name_registration:\n            self._merge_blueprint_funcs(app, name)\n\n        for deferred in self.deferred_functions:\n            deferred(state)\n\n        cli_resolved_group = options.get(\"cli_group\", self.cli_group)\n\n        if self.cli.commands:\n            if cli_resolved_group is None:\n                app.cli.commands.update(self.cli.commands)\n            elif cli_resolved_group is _sentinel:\n                self.cli.name = name\n                app.cli.add_command(self.cli)\n            else:\n                self.cli.name = cli_resolved_group\n                app.cli.add_command(self.cli)\n\n        for blueprint, bp_options in self._blueprints:\n            bp_options = bp_options.copy()\n            bp_url_prefix = bp_options.get(\"url_prefix\")\n            bp_subdomain = bp_options.get(\"subdomain\")\n\n            if bp_subdomain is None:\n                bp_subdomain = blueprint.subdomain\n\n            if state.subdomain is not None and bp_subdomain is not None:\n                bp_options[\"subdomain\"] = bp_subdomain + \".\" + state.subdomain\n            elif bp_subdomain is not None:\n                bp_options[\"subdomain\"] = bp_subdomain\n            elif state.subdomain is not None:\n                bp_options[\"subdomain\"] = state.subdomain\n\n            if bp_url_prefix is None:\n                bp_url_prefix = blueprint.url_prefix\n\n            if state.url_prefix is not None and bp_url_prefix is not None:\n                bp_options[\"url_prefix\"] = (\n                    state.url_prefix.rstrip(\"/\") + \"/\" + bp_url_prefix.lstrip(\"/\")\n                )\n            elif bp_url_prefix is not None:\n                bp_options[\"url_prefix\"] = bp_url_prefix\n            elif state.url_prefix is not None:\n                bp_options[\"url_prefix\"] = state.url_prefix\n\n            bp_options[\"name_prefix\"] = name\n            blueprint.register(app, bp_options)",
+          "span_sha256": "sha256:3676a7f7900a0cb948ed7f50a256176cc1c3397ba3da68a1544fce82631e36f3"
+        },
+        {
+          "file": "src/flask/sansio/app.py",
+          "start_line": 569,
+          "end_line": 595,
+          "text": "    @setupmethod\n    def register_blueprint(self, blueprint: Blueprint, **options: t.Any) -> None:\n        \"\"\"Register a :class:`~flask.Blueprint` on the application. Keyword\n        arguments passed to this method will override the defaults set on the\n        blueprint.\n\n        Calls the blueprint's :meth:`~flask.Blueprint.register` method after\n        recording the blueprint in the application's :attr:`blueprints`.\n\n        :param blueprint: The blueprint to register.\n        :param url_prefix: Blueprint routes will be prefixed with this.\n        :param subdomain: Blueprint routes will match on this subdomain.\n        :param url_defaults: Blueprint routes will use these default values for\n            view arguments.\n        :param options: Additional keyword arguments are passed to\n            :class:`~flask.blueprints.BlueprintSetupState`. They can be\n            accessed in :meth:`~flask.Blueprint.record` callbacks.\n\n        .. versionchanged:: 2.0.1\n            The ``name`` option can be used to change the (pre-dotted)\n            name the blueprint is registered with. This allows the same\n            blueprint to be registered multiple times with unique names\n            for ``url_for``.\n\n        .. versionadded:: 0.7\n        \"\"\"\n        blueprint.register(self, options)",
+          "span_sha256": "sha256:1438a52cebaef43ae4ab20fa56242a8654b0d3425cefbb1186e6be71fd5e4ec6"
+        }
+      ],
+      "drafted_by": "laptop-b (Claude Opus 5.5 draft; requires human verification)",
+      "requested_by": null,
+      "status_note": "RETRIEVAL LABEL (L1): approve if these lines contain the evidence needed to answer and nothing essential is missing; fix = name the missing/wrong lines. The question/answer themselves are checked elsewhere."
+    },
+    {
+      "item_id": "label-eih-phase1-rev-046",
+      "kind": "retrieval_label",
+      "split": "val",
+      "repository": "fastapi/fastapi",
+      "commit_sha": "1c3e6918750ccb3f20ea260e9a4238ce2c0e5f63",
+      "sdlc_stage": "code_review",
+      "task_type": "defect_detection",
+      "complexity": "medium",
+      "criticality": "high",
+      "query": "Review this FastAPI endpoint: `@app.get('/heavy') async def heavy_calc(): time.sleep(10); return {'status': 'done'}`. What performance defect exists?",
+      "proposed_answer": "Defect: Event loop blocking. Calling blocking synchronous functions (`time.sleep(10)` or synchronous I/O) inside an `async def` route blocks the entire asyncio event loop thread, preventing all other concurrent requests from progressing. Fix: Use `await asyncio.sleep(10)` or define the endpoint as a synchronous `def heavy_calc()` so FastAPI offloads it to a threadpool worker.",
+      "acceptable_alternatives": [],
+      "evidence": [
+        {
+          "file": "docs/en/docs/async.md",
+          "start_line": 5,
+          "end_line": 52,
+          "text": "## In a hurry?\n\n<abbr title=\"too long; didn't read\"><strong>TL;DR:</strong></abbr>\n\nIf you are using third party libraries that tell you to call them with `await`, like:\n\n```Python\nresults = await some_library()\n```\n\nThen, declare your *path operation functions* with `async def` like:\n\n```Python hl_lines=\"2\"\n@app.get('/')\nasync def read_results():\n    results = await some_library()\n    return results\n```\n\n!!! note\n    You can only use `await` inside of functions created with `async def`.\n\n---\n\nIf you are using a third party library that communicates with something (a database, an API, the file system, etc.) and doesn't have support for using `await`, (this is currently the case for most database libraries), then declare your *path operation functions* as normally, with just `def`, like:\n\n```Python hl_lines=\"2\"\n@app.get('/')\ndef results():\n    results = some_library()\n    return results\n```\n\n---\n\nIf your application (somehow) doesn't have to communicate with anything else and wait for it to respond, use `async def`.\n\n---\n\nIf you just don't know, use normal `def`.\n\n---\n\n**Note**: You can mix `def` and `async def` in your *path operation functions* as much as you need and define each one using the best option for you. FastAPI will do the right thing with them.\n\nAnyway, in any of the cases above, FastAPI will still work asynchronously and be extremely fast.\n\nBut by following the steps above, it will be able to do some performance optimizations.",
+          "span_sha256": "sha256:a689c4238019f01b407d43a9036b3ea5c91fc43a96da3776eb91e5c5f14864a2"
+        }
+      ],
+      "drafted_by": "laptop-b (Claude Opus 5.5 draft; requires human verification)",
+      "requested_by": null,
+      "status_note": "RETRIEVAL LABEL (L1): approve if these lines contain the evidence needed to answer and nothing essential is missing; fix = name the missing/wrong lines. The question/answer themselves are checked elsewhere."
+    },
+    {
+      "item_id": "label-eih-phase1-rev-047",
+      "kind": "retrieval_label",
+      "split": "val",
+      "repository": "pallets/flask",
+      "commit_sha": "c12a5d874c5a014495eb2db8a73f40037bc813ac",
+      "sdlc_stage": "code_review",
+      "task_type": "risk_identification",
+      "complexity": "medium",
+      "criticality": "high",
+      "query": "What security risk occurs if Flask's `SECRET_KEY` is hardcoded as `'dev'` in production deployments?",
+      "proposed_answer": "Risk: Session forgery and cryptographic tampering. Anyone knowing the `SECRET_KEY` can forge signed session cookies, hijack user sessions, bypass authentication, and tamper with session data.",
+      "acceptable_alternatives": [],
+      "evidence": [
+        {
+          "file": "docs/config.rst",
+          "start_line": 114,
+          "end_line": 126,
+          "text": ".. py:data:: SECRET_KEY\n\n    A secret key that will be used for securely signing the session cookie\n    and can be used for any other security related needs by extensions or your\n    application. It should be a long random ``bytes`` or ``str``. For\n    example, copy the output of this to your config::\n\n        $ python -c 'import secrets; print(secrets.token_hex())'\n        '192b9bdd22ab9ed4d12e236c78afcb9a393ec15f71bbf5dc987d54727823bcbf'\n\n    **Do not reveal the secret key when posting questions or committing code.**\n\n    Default: ``None``",
+          "span_sha256": "sha256:0debeb5550ea75c612fe7f7da32f0598fc89953ec16fc80cd802f152ff29868d"
+        },
+        {
+          "file": "src/flask/sessions.py",
+          "start_line": 307,
+          "end_line": 318,
+          "text": "    def get_signing_serializer(self, app: Flask) -> URLSafeTimedSerializer | None:\n        if not app.secret_key:\n            return None\n        signer_kwargs = dict(\n            key_derivation=self.key_derivation, digest_method=self.digest_method\n        )\n        return URLSafeTimedSerializer(\n            app.secret_key,\n            salt=self.salt,\n            serializer=self.serializer,\n            signer_kwargs=signer_kwargs,\n        )",
+          "span_sha256": "sha256:9ce8ebd5db5d3045bc562412faff530263f9bc18cb101e2ca1e8e0b2487a7ad5"
+        }
+      ],
+      "drafted_by": "laptop-b (Claude Opus 5.5 draft; requires human verification)",
+      "requested_by": null,
+      "status_note": "RETRIEVAL LABEL (L1): approve if these lines contain the evidence needed to answer and nothing essential is missing; fix = name the missing/wrong lines. The question/answer themselves are checked elsewhere."
+    },
+    {
+      "item_id": "label-eih-phase1-test-032",
+      "kind": "retrieval_label",
+      "split": "val",
+      "repository": "fastapi/fastapi",
+      "commit_sha": "1c3e6918750ccb3f20ea260e9a4238ce2c0e5f63",
+      "sdlc_stage": "testing",
+      "task_type": "test_generation",
+      "complexity": "low",
+      "criticality": "medium",
+      "query": "Write a pytest unit test for a FastAPI application using Starlette's `TestClient` verifying POST `/items/`.",
+      "proposed_answer": "```python\nfrom fastapi import FastAPI\nfrom fastapi.testclient import TestClient\nfrom pydantic import BaseModel\n\napp = FastAPI()\nclass Item(BaseModel):\n    name: str\n\n@app.post('/items/')\ndef create_item(item: Item):\n    return item\n\nclient = TestClient(app)\n\ndef test_create_item():\n    response = client.post('/items/', json={'name': 'Widget'})\n    assert response.status_code == 200\n    assert response.json() == {'name': 'Widget'}\n```",
+      "acceptable_alternatives": [],
+      "evidence": [
+        {
+          "file": "fastapi/testclient.py",
+          "start_line": 1,
+          "end_line": 1,
+          "text": "from starlette.testclient import TestClient as TestClient  # noqa",
+          "span_sha256": "sha256:ffe3e81fe1af4d6428f11302a2ce4d1b256855d26829a1d4ecbfbbf9eeac202b"
+        },
+        {
+          "file": "docs/en/docs/tutorial/testing.md",
+          "start_line": 9,
+          "end_line": 43,
+          "text": "## Using `TestClient`\n\n!!! info\n    To use `TestClient`, first install <a href=\"https://www.python-httpx.org\" class=\"external-link\" target=\"_blank\">`httpx`</a>.\n\n    E.g. `pip install httpx`.\n\nImport `TestClient`.\n\nCreate a `TestClient` by passing your **FastAPI** application to it.\n\nCreate functions with a name that starts with `test_` (this is standard `pytest` conventions).\n\nUse the `TestClient` object the same way as you do with `httpx`.\n\nWrite simple `assert` statements with the standard Python expressions that you need to check (again, standard `pytest`).\n\n```Python hl_lines=\"2  12  15-18\"\n{!../../../docs_src/app_testing/tutorial001.py!}\n```\n\n!!! tip\n    Notice that the testing functions are normal `def`, not `async def`.\n\n    And the calls to the client are also normal calls, not using `await`.\n\n    This allows you to use `pytest` directly without complications.\n\n!!! note \"Technical Details\"\n    You could also use `from starlette.testclient import TestClient`.\n\n    **FastAPI** provides the same `starlette.testclient` as `fastapi.testclient` just as a convenience for you, the developer. But it comes directly from Starlette.\n\n!!! tip\n    If you want to call `async` functions in your tests apart from sending requests to your FastAPI application (e.g. asynchronous database functions), have a look at the [Async Tests](../advanced/async-tests.md){.internal-link target=_blank} in the advanced tutorial.",
+          "span_sha256": "sha256:c88a3cbc010248708f93851436933936380260d613cdbf4030f59dc2c938548e"
+        }
+      ],
+      "drafted_by": "laptop-b (Claude Opus 5.5 draft; requires human verification)",
+      "requested_by": null,
+      "status_note": "RETRIEVAL LABEL (L1): approve if these lines contain the evidence needed to answer and nothing essential is missing; fix = name the missing/wrong lines. The question/answer themselves are checked elsewhere."
+    },
+    {
+      "item_id": "label-eih-phase1-test-033",
+      "kind": "retrieval_label",
+      "split": "val",
+      "repository": "pallets/flask",
+      "commit_sha": "c12a5d874c5a014495eb2db8a73f40037bc813ac",
+      "sdlc_stage": "testing",
+      "task_type": "test_explanation",
+      "complexity": "medium",
+      "criticality": "low",
+      "query": "Explain how `app.test_cli_runner()` in Flask allows testing Click CLI commands.",
+      "proposed_answer": "In `src/flask/testing.py`, `FlaskCliRunner` extends Click's `CliRunner` by automatically setting up the application context before executing CLI command callbacks, enabling assertions on stdout, stderr, and exit codes.",
+      "acceptable_alternatives": [],
+      "evidence": [
+        {
+          "file": "src/flask/testing.py",
+          "start_line": 265,
+          "end_line": 298,
+          "text": "class FlaskCliRunner(CliRunner):\n    \"\"\"A :class:`~click.testing.CliRunner` for testing a Flask app's\n    CLI commands. Typically created using\n    :meth:`~flask.Flask.test_cli_runner`. See :ref:`testing-cli`.\n    \"\"\"\n\n    def __init__(self, app: Flask, **kwargs: t.Any) -> None:\n        self.app = app\n        super().__init__(**kwargs)\n\n    def invoke(  # type: ignore\n        self, cli: t.Any = None, args: t.Any = None, **kwargs: t.Any\n    ) -> t.Any:\n        \"\"\"Invokes a CLI command in an isolated environment. See\n        :meth:`CliRunner.invoke <click.testing.CliRunner.invoke>` for\n        full method documentation. See :ref:`testing-cli` for examples.\n\n        If the ``obj`` argument is not given, passes an instance of\n        :class:`~flask.cli.ScriptInfo` that knows how to load the Flask\n        app being tested.\n\n        :param cli: Command object to invoke. Default is the app's\n            :attr:`~flask.app.Flask.cli` group.\n        :param args: List of strings to invoke the command with.\n\n        :return: a :class:`~click.testing.Result` object.\n        \"\"\"\n        if cli is None:\n            cli = self.app.cli\n\n        if \"obj\" not in kwargs:\n            kwargs[\"obj\"] = ScriptInfo(create_app=lambda: self.app)\n\n        return super().invoke(cli, args, **kwargs)",
+          "span_sha256": "sha256:67a01fd2e85727d2f5d36bd27079de4e4f07ede134f6eaeaed38093e7d6a891d"
+        },
+        {
+          "file": "src/flask/app.py",
+          "start_line": 690,
+          "end_line": 705,
+          "text": "    def test_cli_runner(self, **kwargs: t.Any) -> FlaskCliRunner:\n        \"\"\"Create a CLI runner for testing CLI commands.\n        See :ref:`testing-cli`.\n\n        Returns an instance of :attr:`test_cli_runner_class`, by default\n        :class:`~flask.testing.FlaskCliRunner`. The Flask app object is\n        passed as the first argument.\n\n        .. versionadded:: 1.0\n        \"\"\"\n        cls = self.test_cli_runner_class\n\n        if cls is None:\n            from .testing import FlaskCliRunner as cls\n\n        return cls(self, **kwargs)  # type: ignore",
+          "span_sha256": "sha256:281c04d53b81544da3f62da63e29550804b4a45d785e519a36879982d0835cc8"
+        },
+        {
+          "file": "docs/testing.rst",
+          "start_line": 245,
+          "end_line": 272,
+          "text": "Running Commands with the CLI Runner\n------------------------------------\n\nFlask provides :meth:`~flask.Flask.test_cli_runner` to create a\n:class:`~flask.testing.FlaskCliRunner`, which runs CLI commands in\nisolation and captures the output in a :class:`~click.testing.Result`\nobject. Flask's runner extends :doc:`Click's runner <click:testing>`,\nsee those docs for additional information.\n\nUse the runner's :meth:`~flask.testing.FlaskCliRunner.invoke` method to\ncall commands in the same way they would be called with the ``flask``\ncommand from the command line.\n\n.. code-block:: python\n\n    import click\n\n    @app.cli.command(\"hello\")\n    @click.option(\"--name\", default=\"World\")\n    def hello_command(name):\n        click.echo(f\"Hello, {name}!\")\n\n    def test_hello_command(runner):\n        result = runner.invoke(args=\"hello\")\n        assert \"World\" in result.output\n\n        result = runner.invoke(args=[\"hello\", \"--name\", \"Flask\"])\n        assert \"Flask\" in result.output",
+          "span_sha256": "sha256:6ac37bf6de7c69fb87d618d8a9694538c2c6905324ebcec0a615517133954333"
+        }
+      ],
+      "drafted_by": "laptop-b (Claude Opus 5.5 draft; requires human verification)",
+      "requested_by": null,
+      "status_note": "RETRIEVAL LABEL (L1): approve if these lines contain the evidence needed to answer and nothing essential is missing; fix = name the missing/wrong lines. The question/answer themselves are checked elsewhere."
+    }
+  ]
+}

@@ -82,6 +82,19 @@ experiments/results/**/*.npz
 !experiments/results/.gitkeep
 # Small, provenance-stamped measurement results are versioned with the code.
 !experiments/results/phase1/**/*.json
+!experiments/results/graph_build/**/*.json
+!experiments/results/mode_r/**/*.json
+!experiments/results/retrieval_energy/**/*.json
+!experiments/results/classifier/**/*.json
+!experiments/results/thresholds/**/*.json
+!experiments/results/determinism/**/*.json
+!experiments/results/variance/**/*.json
+!experiments/results/power/**/*.json
+!experiments/results/routing_effect/**/*.json
+!experiments/results/queue/**/summary.json
+!experiments/results/queue/**/run.json
+!experiments/results/queue/machine_A/modeq-*/results.jsonl
+!experiments/results/queue/machine_A/modeq-*/plan.jsonl
 
 # --- Datasets (large files — exclude raw, keep registry/schema) ---
 datasets/**/*.jsonl
@@ -182,3 +195,8 @@ Thumbs.db
 
 # --- Review queue: per-reviewer local timers (decisions themselves are committed) ---
 benchmark/data/review/.sessions/
+
+# --- OKF bundles and their proposal/audit state (WORK_PLAN C33) ---
+# Bundles are data: generated ones are rebuilt by scripts/okf_produce.py; hand-edited
+# bundles should be kept in their own git repository (OKF spec §3 recommends one).
+okf_bundles/

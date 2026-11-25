@@ -139,7 +139,7 @@ Measurement and validity fixes on `restore-original-plan` (real classifier for C
 §9.1 tiers, CPU estimate, §9.2 latency breakdown, RQ4 routed system). Knowledge graph built
 (own builder, AST + Git history; 37,066 nodes / 58,982 edges in Neo4j; `python -m scripts.build_graph
 --wave 1 --reset`). **No real System A–E
-comparison has been run yet.** Deadlines: experiments complete 25 Oct 2026; final 15 Nov 2026.
+comparison has been run yet.** No deadlines (WORK_PLAN C31).
 
 ## Measurement rules learned the hard way (Laptop A, RTX 4050, driver 617.14)
 
@@ -157,5 +157,12 @@ comparison has been run yet.** Deadlines: experiments complete 25 Oct 2026; fina
   6,141 MiB with encoders); at 16K VRAM is full; from 20K the driver silently pages to
   system RAM (5–7× slower, 4–7× the energy) while Ollama still reports "100% on GPU".
   See `experiments/results/phase1/machine_A/long_context_probe.md`.
+- **Driver 621.01 re-check (2026-11-23, after the SSD failure; `experiments/results/phase1/machine_A/driver_621.01/`):**
+  with a CUDA context held (Ollama, P8) idle = 5.0 W; polling power adds +7 to +13 W and polling
+  the counter every 50 ms reads 404 W, so "counter at start and end only, never poll" holds and
+  matters more. **No CUDA context: idle is now 9.2 W in P0 (was 27–31 W on 617.14)**; any
+  "net of idle" figure must use a baseline measured on 621.01. Long-context probe repeated
+  (`driver_621.01/long_context/`): 12K fits (peak 5,908 MiB, 13.5 s, 756 J warm), 16K fills VRAM,
+  20K pages to RAM (87 s, 3,361 J): the same as on 617.14, so the C4 run settings stand.
 - Long runs: work up to 90 °C; above that, cool to 65 °C and repeat the measurement.
 - The laptop throttles at 84–87 °C; long runs need cooldowns and logged temperatures.

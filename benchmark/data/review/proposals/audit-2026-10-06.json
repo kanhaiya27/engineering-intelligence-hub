@@ -1,0 +1,76 @@
+{
+  "source": "docs/BENCHMARK_AUDIT.md (Step 2d, 2026-10-06)",
+  "rule": "Proposals only. Nothing is applied before a human approves it against the pinned code. No system result was used to write any of them.",
+  "proposals": {
+    "eih-phase1-code-015": {
+      "ground_truth": "`flask.url_for` (helpers.py) delegates to `current_app.url_for`. That method takes the URL adapter of the active request or app context (built from `url_map`), applies URL defaults (`inject_url_defaults`) and calls `url_adapter.build(endpoint, values, method=_method, url_scheme=_scheme, force_external=_external)`. Arguments after `endpoint` are keyword-only; values not used by the rule become query-string arguments; `_anchor` is appended as `#anchor`; build errors go to `handle_url_build_error`.",
+      "acceptable_alternatives": ["helpers.url_for calls current_app.url_for, which builds the URL with the context's URL adapter (url_adapter.build) after applying URL defaults; extra keyword values become the query string."],
+      "evidence": [["src/flask/helpers.py", 176, 227], ["src/flask/app.py", 966, 1090]],
+      "why": "Answer said url_for calls url_map.bind_to_environ/bind itself and takes positional values; the pinned code delegates to current_app.url_for and takes keyword-only values. Evidence L180-260 did not match the function."
+    },
+    "eih-phase1-code-016": {
+      "ground_truth": "FastAPI's `HTTPException` subclasses Starlette's `HTTPException`; it accepts any JSON-serialisable `detail` and optional `headers`, which it passes to Starlette's constructor. FastAPI registers `http_exception_handler` for Starlette's `HTTPException` class, so both FastAPI and Starlette HTTP exceptions become a JSON `{\"detail\": ...}` response with the status code and headers (no body when the status code does not allow one).",
+      "acceptable_alternatives": ["FastAPI's HTTPException extends Starlette's (any JSON detail, optional headers) and one default handler registered for Starlette's HTTPException returns {'detail': ...} as JSON."],
+      "evidence": [["fastapi/exceptions.py", 9, 65], ["fastapi/exception_handlers.py", 11, 17], ["fastapi/applications.py", 948, 950], ["docs/en/docs/tutorial/handling-errors.md", 22, 71]],
+      "why": "'Subclassed to allow passing extra headers' is not supported: FastAPI passes headers straight to Starlette's __init__ (exceptions.py L65). Evidence L1-35 was the docstring only."
+    },
+    "eih-phase1-dev-023": {
+      "ground_truth": "```python\nimport click\nfrom flask import current_app\nfrom flask.cli import AppGroup, with_appcontext\n\ndb_cli = AppGroup('db_cli', help='Database management commands.')\n\n@db_cli.command('init_db')\n@with_appcontext\ndef init_db():\n    click.echo(f'Initialized database for {current_app.name}')\n```\n`AppGroup.command` already wraps each callback in `with_appcontext`, so the explicit decorator is optional (harmless).",
+      "acceptable_alternatives": ["AppGroup('db_cli') with @db_cli.command('init_db'); with_appcontext is applied by AppGroup.command (explicit @with_appcontext optional)."],
+      "evidence": [["src/flask/cli.py", 366, 388], ["src/flask/cli.py", 391, 413]],
+      "why": "Question asks for group db_cli and command init_db; answer registered 'db' and 'init'. Evidence L400-460 missed with_appcontext."
+    },
+    "eih-phase1-dev-026": {
+      "ground_truth": "```python\nfrom fastapi import FastAPI, Query\n\napp = FastAPI()\n\n@app.get('/search/')\nasync def search(q: str = Query(..., min_length=3, max_length=50, pattern=r'^[a-zA-Z0-9_-]+$')):\n    return {'q': q}\n```\nAt this FastAPI version the `regex` argument is deprecated (\"Deprecated in FastAPI 0.100.0 and Pydantic v2, use `pattern` instead.\"); use `pattern`.",
+      "acceptable_alternatives": ["Query(..., min_length=3, max_length=50, pattern=...) ; regex= is deprecated since 0.100.0 in favour of pattern."],
+      "evidence": [["docs/en/docs/tutorial/query-params-str-validations.md", 238, 276], ["docs/en/docs/tutorial/query-params-str-validations.md", 278, 340], ["docs_src/query_params_str_validations/tutorial004.py", 1, 17], ["fastapi/params.py", 44, 50]],
+      "why": "Question asks for regex; at the pinned version regex is deprecated (params.py L45-50) and the answer silently used pattern."
+    },
+    "eih-phase1-ops-054": {
+      "ground_truth": "From 0.100.0 FastAPI supports both Pydantic v1 and v2: its requirement is `pydantic>=1.7.4,!=1.8,!=1.8.1,!=2.0.0,!=2.0.1,!=2.1.0,<3.0.0`, and internal compatibility code in `fastapi._compat` detects the installed version (`PYDANTIC_V2 = PYDANTIC_VERSION.startswith(\"2.\")`) and switches implementation. The 0.100.0 release notes state the focus was compatibility with Pydantic v1 and v2.",
+      "acceptable_alternatives": ["0.100.0 widened the requirement to pydantic >=1.7.4 ... <3.0.0 (both v1 and v2, excluding a few versions) with fastapi._compat switching on PYDANTIC_V2."],
+      "evidence": [["pyproject.toml", 45, 45], ["fastapi/_compat.py", 28, 29], ["docs/en/docs/release-notes.md", 1021, 1038]],
+      "why": "The question asks how the requirements changed; the answer did not state them."
+    },
+    "eih-phase1-ops-059": {
+      "query": "How does `flask.wrappers.Request` extend Werkzeug's `Request` class?",
+      "ground_truth": "`flask.wrappers.Request` subclasses Werkzeug's `Request` (it is not a replacement). It adds `url_rule`, `view_args` and `routing_exception` from URL matching; `max_content_length` read from the app's `MAX_CONTENT_LENGTH` config; `endpoint`, `blueprint` and `blueprints` derived from the matched rule; a debug-aware `_load_form_data`; and `on_json_loading_failed`, which raises `BadRequest`. It sets `json_module` to Flask's `json`. `get_json` itself comes from Werkzeug.",
+      "acceptable_alternatives": ["Flask's Request subclasses Werkzeug's Request adding url_rule/view_args/routing_exception, max_content_length from config, endpoint/blueprint(s), and JSON error handling; get_json is Werkzeug's."],
+      "evidence": [["src/flask/wrappers.py", 18, 136]],
+      "why": "Premise 'replace' is wrong (subclass); get_json is Werkzeug's, not added by Flask."
+    },
+    "eih-phase1-test-038": {
+      "query": "Write an asynchronous pytest test for a FastAPI async endpoint using `httpx.AsyncClient`, following the approach in FastAPI's async testing docs.",
+      "ground_truth": "```python\nimport pytest\nfrom httpx import AsyncClient\n\nfrom .main import app\n\n@pytest.mark.anyio\nasync def test_root():\n    async with AsyncClient(app=app, base_url='http://test') as ac:\n        response = await ac.get('/')\n    assert response.status_code == 200\n    assert response.json() == {'message': 'Tomato'}\n```",
+      "acceptable_alternatives": ["@pytest.mark.anyio async test using httpx.AsyncClient(app=app, base_url='http://test') (or transport=httpx.ASGITransport(app=app)) and awaiting client.get."],
+      "evidence": [["docs/en/docs/advanced/async-tests.md", 21, 43], ["docs_src/async_tests/test_main.py", 1, 12], ["docs_src/async_tests/main.py", 1, 8]],
+      "why": "The answer's ASGITransport + pytest.mark.asyncio appear nowhere in the pinned corpus; aligned to the pinned docs (ASGITransport kept as an acceptable alternative)."
+    },
+    "eih-phase1-req-002": {
+      "query": "Which open standards does FastAPI build on to generate API documentation automatically, and which documentation interfaces does it serve by default?",
+      "ground_truth": "FastAPI generates an OpenAPI schema (with JSON Schema for data models) from the path operations and type declarations, and serves two interactive documentation UIs by default: Swagger UI at `/docs` and ReDoc at `/redoc`.",
+      "acceptable_alternatives": ["OpenAPI + JSON Schema; Swagger UI at /docs and ReDoc at /redoc by default."],
+      "evidence": [["docs/en/docs/features.md", 12, 29], ["fastapi/applications.py", 399, 446]],
+      "why": "The original question ('requirements for automatic OpenAPI documentation') was vague and the answer overstated that Pydantic models are required."
+    },
+    "eih-phase1-ops-058": {
+      "query": "Diagnose this FastAPI error: `RuntimeError: Form data requires \"python-multipart\" to be installed.`",
+      "evidence": [["fastapi/dependencies/utils.py", 67, 71], ["fastapi/dependencies/utils.py", 82, 100], ["docs/en/docs/tutorial/request-forms.md", 5, 8]],
+      "why": "The question quoted the error without the quotation marks of the real message (utils.py L67-71); evidence had no line numbers."
+    },
+    "eih-phase1-rev-046": {
+      "evidence": [["docs/en/docs/async.md", 5, 52], ["docs/en/docs/async.md", 404, 404]],
+      "why": "Evidence had no line numbers; L404 supports the fix (def endpoints run in a threadpool)."
+    },
+    "eih-phase1-code-017": {"evidence": "label", "why": "Cited L300-370; exact spans L299-330 and L333-372."},
+    "eih-phase1-rev-043": {"evidence": "label", "why": "Cited templating.py L120-160; render_template_string is L153-162."},
+    "eih-phase1-rev-047": {"evidence": "label", "why": "Cited sessions.py L30-70 (session classes, not signing)."},
+    "eih-phase1-req-005": {"evidence": "label", "why": "Cited config.py L20-50 (the Config class, not DEBUG)."},
+    "eih-phase1-req-010": {"evidence": "label", "why": "Cited oauth2.py L40-90 (partial)."},
+    "eih-phase1-dev-021": {"evidence": "label", "why": "Evidence had no line numbers (L3)."},
+    "eih-phase1-dev-028": {"evidence": "label", "why": "Evidence had no line numbers (L3)."},
+    "eih-phase1-dev-030": {"evidence": "label", "why": "Evidence had no line numbers (L3)."},
+    "eih-phase1-req-008": {"evidence": "label", "why": "Evidence had no line numbers (L3)."},
+    "eih-phase1-test-034": {"evidence": "label", "why": "Evidence had no line numbers (L3)."}
+  }
+}

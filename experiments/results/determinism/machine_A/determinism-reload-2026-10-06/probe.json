@@ -1,0 +1,70 @@
+{
+  "created_utc": "2026-10-05T19:27:27.682141+00:00",
+  "system": "baseline_a",
+  "task": "eih-phase1-req-008",
+  "model": "qwen2.5-coder:7b",
+  "runs": [
+    {
+      "tag": "warm",
+      "sha": "b67cebbd88f6aaf2",
+      "output_tokens": 452,
+      "input_tokens": 145,
+      "cold_start": false
+    },
+    {
+      "tag": "warm",
+      "sha": "b67cebbd88f6aaf2",
+      "output_tokens": 452,
+      "input_tokens": 145,
+      "cold_start": false
+    },
+    {
+      "tag": "warm",
+      "sha": "b67cebbd88f6aaf2",
+      "output_tokens": 452,
+      "input_tokens": 145,
+      "cold_start": false
+    },
+    {
+      "tag": "reloaded",
+      "sha": "2c59699cf231bbd5",
+      "output_tokens": 444,
+      "input_tokens": 145,
+      "cold_start": true
+    },
+    {
+      "tag": "reloaded",
+      "sha": "2c59699cf231bbd5",
+      "output_tokens": 444,
+      "input_tokens": 145,
+      "cold_start": true
+    },
+    {
+      "tag": "reloaded",
+      "sha": "2c59699cf231bbd5",
+      "output_tokens": 444,
+      "input_tokens": 145,
+      "cold_start": true
+    },
+    {
+      "tag": "limit_1024",
+      "sha": "14394a5667282f2b",
+      "output_tokens": 445,
+      "input_tokens": 145,
+      "cold_start": false
+    },
+    {
+      "tag": "limit_1024",
+      "sha": "14394a5667282f2b",
+      "output_tokens": 445,
+      "input_tokens": 145,
+      "cold_start": false
+    }
+  ],
+  "distinct_answers_by_condition": {
+    "warm": 1,
+    "reloaded": 1,
+    "limit_1024": 1
+  },
+  "distinct_answers_overall": 3
+}

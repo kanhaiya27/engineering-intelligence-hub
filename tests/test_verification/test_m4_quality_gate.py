@@ -469,6 +469,13 @@ class TestEscalationExecutes:
 
         for attr in ("_dense", "_sparse", "_hybrid", "_graph_aug"):
             setattr(pipeline, attr, recorder(attr))
+        self.augments = []
+
+        def augment(base, hop_depth, task_id="adhoc"):
+            # System D (C23): C's retrieval, then graph context appended
+            self.augments.append(hop_depth)
+            return base
+        pipeline._graph_aug.augment.side_effect = augment
         return pipeline, calls
 
     def _run(self, experiment_mode):
@@ -499,12 +506,14 @@ class TestEscalationExecutes:
 
         base, esc1, esc2, esc_max = (strategy for _, strategy in calls)
         assert esc1.top_k > base.top_k
-        assert esc2.include_graph_context is True
         assert esc_max.enable_reranking is True
         assert esc_max.reranker_type == "cross_encoder"
         assert esc_max.top_k == 30
-        # Graph rungs go to the graph-augmented retriever in System D.
-        assert [name for name, _ in calls][2:] == ["_graph_aug", "_graph_aug"]
+        # System D (C23): every attempt runs C's retrieval (the graph flag is applied by D itself,
+        # never by the base retriever) and appends graph context; the escalation's hop depth reaches it.
+        assert all(name != "_graph_aug" for name, _ in calls)
+        assert all(strategy.include_graph_context is False for _, strategy in calls)
+        assert len(self.augments) == 4 and self.augments[-1] == 3
 
         # What is recorded per attempt is what was executed.
         history = response.verification_details["attempt_history"]
@@ -513,6 +522,7 @@ class TestEscalationExecutes:
             assert record["strategy_executed"]["strategy_name"] == strategy.strategy_name
             assert record["strategy_executed"]["top_k"] == strategy.top_k
         assert history[3]["strategy_executed"]["enable_reranking"] is True
+        assert all(h["strategy_executed"]["include_graph_context"] is True for h in history)
 
     def test_system_c_escalation_widens_without_graph(self):
         from retrieval.adaptive import ExperimentMode

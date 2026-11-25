@@ -183,3 +183,22 @@ def test_cli_refuses_test_tasks_outside_correctness_pass(tmp_path, monkeypatch):
     rc = cli.main(["--root", str(tmp_path), "import-existing", "--batch", "x", "--ids", test_id,
                    "--drafted-by", "unknown"])
     assert rc == 2 and not (tmp_path / "queue").exists()
+
+
+def test_correctness_pass_queues_tasks_whose_evidence_cannot_be_shown(monkeypatch):
+    import benchmark.review as rv
+    import experiments.m5.manifest as mf
+
+    def broken(*a, **k):
+        raise ReviewError("pallets/flask:x.py has 10 lines; evidence ends at 99")
+
+    monkeypatch.setattr(rv, "snippet", broken)
+    monkeypatch.setattr(mf, "wave1_repository_pins", lambda: {"pallets/flask": "c" * 40})
+    task = {"task_id": "t9", "repository": "pallets/flask", "sdlc_stage": "testing", "task_type": "test_generation",
+            "query": "Q", "ground_truth": "A",
+            "source_evidence": [{"file_path": "x.py", "line_start": 90, "line_end": 99}]}
+    with pytest.raises(ReviewError):
+        rv.item_from_task(task, "test", "lead_researcher")
+    item = rv.item_from_task(task, "test", "lead_researcher", allow_evidence_defects=True)
+    assert item.evidence == [] and item.status_note.startswith("EVIDENCE DEFECT")
+    assert item.required_reviews == 2

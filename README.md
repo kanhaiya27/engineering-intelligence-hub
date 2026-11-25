@@ -124,34 +124,50 @@ Methodology and measured status: [docs/PROJECT_REPORT.md](docs/PROJECT_REPORT.md
 
 ---
 
-## Six-Month Deadlines
+## Milestones
 
-| Date | Deliverable |
+| Deliverable | Status |
 |---|---|
-| **25 August 2026** | Research PPT (title, literature review, novelty, architecture, expected output type) |
-| **15 September 2026** | Research paper draft, baseline system working, initial benchmark, evaluation framework |
-| **25 October 2026** | Major implementation complete, experiments complete, updated research |
-| **15 November 2026** | Final paper, final code, final experiments, final results, reproducibility docs |
+| Research PPT (title, literature review, novelty, architecture, expected output type) | Done |
+| Research paper draft, baseline system working, initial benchmark, evaluation framework | Done |
+| Major implementation complete, experiments complete, updated research | In progress |
+| Final paper, final code, final experiments, final results, reproducibility docs | Not started |
+
+No deadlines are tracked in this repository (WORK_PLAN C31).
 
 ---
 
 ## Quick Start (Windows, PowerShell)
 
-Restoring the Qdrant snapshot on a fresh machine: see [docs/archive/SETUP_LAPTOP_B.md](docs/archive/SETUP_LAPTOP_B.md).
+Requirements on the machine: Python 3.11 (`.venv311`), Docker Desktop, Ollama **0.35.1**
+(run the server with `ollama serve`; the tray app auto-updates), Node.js LTS (web UI only).
 
 ```powershell
 cd C:\Projects\Majors\engineering-intelligence-hub
 .\.venv311\Scripts\Activate.ps1
 
-# Databases (Docker Desktop running). On Laptop A use `docker start eih-qdrant eih-neo4j`
-# until its Qdrant volume is upgraded — see PROGRESS-A.md.
-docker compose up -d
+# Everything at once: Qdrant + Neo4j, Ollama server, API (:8000) and web UI (:5173)
+powershell -ExecutionPolicy Bypass -File scripts\start_eih.ps1
 
-python -m pytest                               # 200+ tests; 2 need Qdrant running
-python -m scripts.ingest_corpus --wave 1       # (re)build the corpus into Qdrant
-python -m scripts.phase1_vram_study            # measured VRAM / throughput / energy study
-uvicorn apps.api.main:app --reload --port 8000 # http://localhost:8000/docs
+# Or step by step
+docker compose up -d                           # Qdrant :6333, Neo4j :7474/:7687 (localhost only)
+python -m pytest                               # full suite; some tests need Qdrant/Neo4j/Ollama
+python -m scripts.ingest_corpus --wave 1       # (re)build the corpus into Qdrant (53,905 chunks)
+python -m scripts.build_graph --wave 1 --reset # (re)build the engineering graph (37,066 / 58,982)
+python -m scripts.okf_produce produce          # OKF knowledge bundle okf_bundles/eih (docs/okf.md)
+uvicorn apps.api.main:app --port 8000          # http://127.0.0.1:8000/docs
+cd web; npm install; npm run dev               # http://127.0.0.1:5173
 ```
+
+The web application has five pages:
+
+- **Chat**: OKF-grounded answers with code evidence, citations, history and measurements.
+- **Knowledge**: the OKF explorer and editor.
+- **Review**: agent proposals waiting for human approval.
+- **Results**: measured result files only.
+- **Status**: service checks.
+
+The research harness (`experiments/`) does not go through the web app.
 
 ---
 
@@ -168,8 +184,10 @@ uvicorn apps.api.main:app --reload --port 8000 # http://localhost:8000/docs
 | LLMs | **Local only**, via Ollama: Qwen2.5-Coder 1.5B / 3B / 7B (Q4_K_M, pinned by digest in CLAUDE.md) |
 | Energy / carbon | NVML energy counter (MEASURED); region-aware CO₂e (India grid, 713 gCO₂e/kWh) |
 | Logging | Loguru (structured JSONL) |
-| GPUs | Laptop A: RTX 4050 6 GB (headline results) · Laptop B: RTX 5050 8 GB (development) |
+| GPU | Laptop A: RTX 4050 6 GB (the only machine producing results since C11) |
 | Containers | Docker + Docker Compose |
+| Knowledge layer | Open Knowledge Format (OKF v0.2) bundles, human-approved agent proposals ([docs/okf.md](docs/okf.md)) |
+| Web UI | React 19 + TypeScript + Vite, TanStack Query, React Router, Recharts, react-force-graph |
 | Experiments | JSONL logs + pandas/DuckDB analysis |
 
 ---

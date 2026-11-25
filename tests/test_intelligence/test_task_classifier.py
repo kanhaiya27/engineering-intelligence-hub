@@ -82,7 +82,9 @@ def test_classify_production_incident(classifier):
     )
     res = classifier.classify(req)
 
-    assert res.sdlc_stage == SDLCStage.OPERATIONS
+    # Error diagnosis is MAINTENANCE: the benchmark's six SDLC stages have no "operations"
+    # (Step 2a rule revision, WORK_PLAN C25). "production" keeps it HIGH criticality.
+    assert res.sdlc_stage == SDLCStage.MAINTENANCE
     assert res.task_type == TaskType.ERROR_ANALYSIS
     assert res.criticality in {CriticalityLevel.HIGH, CriticalityLevel.CRITICAL}
 
@@ -101,3 +103,23 @@ def test_classify_user_hints_and_threshold_override(classifier):
     assert res.task_type == TaskType.REPOSITORY_ASSISTANCE
     assert res.quality_threshold == 0.95
     assert "overridden" in res.reasoning.lower()
+
+
+def test_imperative_error_handler_request_is_code_generation(classifier):
+    res = classifier.classify(EngTaskRequest(task_id="t", query="Write a custom JSON error handler for 404 errors."))
+    assert (res.sdlc_stage, res.task_type) == (SDLCStage.DEVELOPMENT, TaskType.CODE_GENERATION)
+
+
+def test_write_pytest_test_is_test_generation(classifier):
+    res = classifier.classify(EngTaskRequest(task_id="t", query="Write an asynchronous pytest test for an endpoint."))
+    assert (res.sdlc_stage, res.task_type) == (SDLCStage.TESTING, TaskType.TEST_GENERATION)
+
+
+def test_error_in_test_suite_is_test_failure_analysis(classifier):
+    res = classifier.classify(EngTaskRequest(task_id="t", query="Why does this raise RuntimeError in test suites?"))
+    assert (res.sdlc_stage, res.task_type) == (SDLCStage.TESTING, TaskType.TEST_FAILURE_ANALYSIS)
+
+
+def test_non_production_error_is_medium_criticality(classifier):
+    res = classifier.classify(EngTaskRequest(task_id="t", query="Diagnose this error: RuntimeError: x"))
+    assert res.criticality == CriticalityLevel.MEDIUM

@@ -1,0 +1,189 @@
+{
+  "created_utc": "2026-10-06T01:38:56.068215+00:00",
+  "runs": [
+    "modeq-val-2c-2026-10-06",
+    "modeq-dev-2c-2026-10-06"
+  ],
+  "sizes": {
+    "pilot test today": 24,
+    "+150 approved": 84,
+    "+300 approved": 144,
+    "+390 approved": 180
+  },
+  "note": "task_correctness is plain token F1, which M1 will replace; its MDE shows scale only. Binary MDEs use a floor of 1/36 discordant share when none was observed.",
+  "rows": [
+    {
+      "rq": "RQ1",
+      "comparison": "B vs C",
+      "metric": "task_correctness",
+      "kind": "continuous",
+      "tasks_devval": 36,
+      "sd_paired_diff": 0.03924105167658359,
+      "observed_mean_diff_devval": 0.008104629629629639,
+      "mde": {
+        "pilot test today": 0.02296345170776364,
+        "+150 approved": 0.012274481244025784,
+        "+300 approved": 0.009374789902843982,
+        "+390 approved": 0.008385066999015115
+      },
+      "mde_per_stage_rq5": {
+        "pilot test today": 0.05624873941706388,
+        "+150 approved": 0.030066215905225662,
+        "+300 approved": 0.02296345170776364,
+        "+390 approved": 0.02053913560663725
+      }
+    },
+    {
+      "rq": "RQ1",
+      "comparison": "B vs C",
+      "metric": "answer_supported",
+      "kind": "binary",
+      "tasks_devval": 33,
+      "discordant_share": 0.12121212121212122,
+      "rate_a_devval": 0.09090909090909091,
+      "rate_b_devval": 0.15151515151515152,
+      "mde": {
+        "pilot test today": null,
+        "+150 approved": 0.10493664468913468,
+        "+300 approved": 0.08061857230466292,
+        "+390 approved": 0.07222590683398922
+      },
+      "mde_per_stage_rq5": {
+        "pilot test today": null,
+        "+150 approved": null,
+        "+300 approved": null,
+        "+390 approved": null
+      }
+    },
+    {
+      "rq": "RQ2",
+      "comparison": "C vs D",
+      "metric": "task_correctness",
+      "kind": "continuous",
+      "tasks_devval": 36,
+      "sd_paired_diff": 0.05127728672656931,
+      "observed_mean_diff_devval": 0.007507407407407401,
+      "mde": {
+        "pilot test today": 0.03000693016985012,
+        "+150 approved": 0.01603937884634708,
+        "+300 approved": 0.012250277943909827,
+        "+390 approved": 0.01095698169033949
+      },
+      "mde_per_stage_rq5": {
+        "pilot test today": 0.07350166766345896,
+        "+150 approved": 0.03928829396474065,
+        "+300 approved": 0.03000693016985012,
+        "+390 approved": 0.02683901426234967
+      }
+    },
+    {
+      "rq": "RQ2",
+      "comparison": "C vs D",
+      "metric": "answer_supported",
+      "kind": "binary",
+      "tasks_devval": 36,
+      "discordant_share": 0.2222222222222222,
+      "rate_a_devval": 0.1388888888888889,
+      "rate_b_devval": 0.19444444444444445,
+      "mde": {
+        "pilot test today": null,
+        "+150 approved": 0.1420848885846947,
+        "+300 approved": 0.10915806292166709,
+        "+390 approved": 0.0977943401548312
+      },
+      "mde_per_stage_rq5": {
+        "pilot test today": null,
+        "+150 approved": null,
+        "+300 approved": null,
+        "+390 approved": null
+      }
+    },
+    {
+      "rq": "RQ3",
+      "comparison": "D vs E",
+      "metric": "answer_supported",
+      "kind": "binary",
+      "tasks_devval": 30,
+      "discordant_share": 0.03333333333333333,
+      "rate_a_devval": 0.23333333333333334,
+      "rate_b_devval": 0.2,
+      "mde": {
+        "pilot test today": null,
+        "+150 approved": null,
+        "+300 approved": null,
+        "+390 approved": null
+      },
+      "mde_per_stage_rq5": {
+        "pilot test today": null,
+        "+150 approved": null,
+        "+300 approved": null,
+        "+390 approved": null
+      }
+    },
+    {
+      "rq": "RQ3",
+      "comparison": "D vs E",
+      "metric": "is_grounded_refusal",
+      "kind": "binary",
+      "tasks_devval": 36,
+      "discordant_share": 0.2222222222222222,
+      "rate_a_devval": 0.0,
+      "rate_b_devval": 0.2222222222222222,
+      "mde": {
+        "pilot test today": null,
+        "+150 approved": 0.1420848885846947,
+        "+300 approved": 0.10915806292166709,
+        "+390 approved": 0.0977943401548312
+      },
+      "mde_per_stage_rq5": {
+        "pilot test today": null,
+        "+150 approved": null,
+        "+300 approved": null,
+        "+390 approved": null
+      }
+    },
+    {
+      "rq": "RQ4",
+      "comparison": "E vs E+routing",
+      "metric": "gpu_energy_joules",
+      "kind": "continuous",
+      "tasks_devval": 36,
+      "sd_paired_diff": 1144.8356298465326,
+      "observed_mean_diff_devval": -93.26176851851854,
+      "mde": {
+        "pilot test today": 669.9457984964185,
+        "+150 approved": 358.10109224032726,
+        "+300 approved": 273.50422693961053,
+        "+390 approved": 244.62961742819934
+      },
+      "mde_per_stage_rq5": {
+        "pilot test today": 1641.025361637663,
+        "+150 approved": 877.1649523221345,
+        "+300 approved": 669.9457984964185,
+        "+390 approved": 599.2177386713473
+      }
+    },
+    {
+      "rq": "RQ4",
+      "comparison": "E vs E+routing",
+      "metric": "answer_supported",
+      "kind": "binary",
+      "tasks_devval": 27,
+      "discordant_share": 0.1111111111111111,
+      "rate_a_devval": 0.18518518518518517,
+      "rate_b_devval": 0.07407407407407407,
+      "mde": {
+        "pilot test today": null,
+        "+150 approved": 0.10046918822237269,
+        "+300 approved": 0.07718640651309865,
+        "+390 approved": 0.06915104108514501
+      },
+      "mde_per_stage_rq5": {
+        "pilot test today": null,
+        "+150 approved": null,
+        "+300 approved": null,
+        "+390 approved": null
+      }
+    }
+  ]
+}

@@ -1,0 +1,90 @@
+{
+  "study": "phase1_nvml_observer_probe",
+  "provenance": {
+    "recorded_at_utc": "2026-11-22T20:22:03+00:00",
+    "machine_id": "laptop-a",
+    "platform": "Windows-10-10.0.26300-SP0",
+    "python": "3.11.9",
+    "gpu": {
+      "name": "NVIDIA GeForce RTX 4050 Laptop GPU",
+      "driver": "621.01",
+      "vram_total_mib": 6141,
+      "power_default_limit_w": 80.0,
+      "power_max_limit_w": 140.0,
+      "compute_capability": "8.9"
+    },
+    "torch": {
+      "torch": "2.6.0+cu124",
+      "cuda": "12.4",
+      "cudnn": 90100,
+      "cuda_available": true
+    },
+    "ollama": null,
+    "git": {
+      "sha": "ff4cc425f4671ce5debba4693db7e39a39dad11f",
+      "branch": "fix/post-ssd-recovery",
+      "dirty": true
+    },
+    "sustainability_config": {
+      "carbon_region": "custom",
+      "carbon_intensity_gco2_per_kwh": 713.0,
+      "cpu_tdp_watts": 45.0,
+      "gpu_tdp_watts": 80.0
+    }
+  },
+  "config": {
+    "reps": 3,
+    "window_s": 3.0,
+    "gpu_state": "idle, no workload"
+  },
+  "counter_mean_power_w": {
+    "no_queries": {
+      "mean_w": 4.9834038801952465,
+      "values_w": [
+        2.699113774983652,
+        5.732298677691628,
+        6.518799187910457
+      ]
+    },
+    "power_every_50ms": {
+      "mean_w": 12.197831381108315,
+      "values_w": [
+        12.187735076714471,
+        10.425779692200942,
+        13.979979374409536
+      ]
+    },
+    "power_every_250ms": {
+      "mean_w": 18.332548706031794,
+      "values_w": [
+        15.686277638448388,
+        19.24848311197697,
+        20.062885367670024
+      ]
+    },
+    "mem_temp_clock_every_250ms": {
+      "mean_w": 13.235502200655,
+      "values_w": [
+        14.894110902536847,
+        18.943572413323054,
+        5.8688232861051
+      ]
+    },
+    "throttle_every_250ms": {
+      "mean_w": 9.529979527274199,
+      "values_w": [
+        20.20983440389653,
+        2.8735160179183463,
+        5.506588160007721
+      ]
+    },
+    "counter_every_50ms": {
+      "mean_w": 404.3727466591084,
+      "values_w": [
+        410.70652720212405,
+        398.84314680110896,
+        403.5685659740922
+      ]
+    }
+  }
+}

@@ -1,0 +1,538 @@
+{
+  "created_utc": "2026-10-06T01:39:31.284448+00:00",
+  "tasks": 36,
+  "dev": {
+    "tasks": 24,
+    "same_start_tier": 16,
+    "pairs": {
+      "qwen2.5-coder:3b -> qwen2.5-coder:3b": 9,
+      "qwen2.5-coder:1.5b -> qwen2.5-coder:1.5b": 5,
+      "qwen2.5-coder:3b -> qwen2.5-coder:1.5b": 1,
+      "qwen2.5-coder:7b -> qwen2.5-coder:7b": 2,
+      "qwen2.5-coder:1.5b -> qwen2.5-coder:3b": 2,
+      "qwen2.5-coder:7b -> qwen2.5-coder:1.5b": 1,
+      "qwen2.5-coder:3b -> qwen2.5-coder:7b": 3,
+      "qwen2.5-coder:7b -> qwen2.5-coder:3b": 1
+    }
+  },
+  "val": {
+    "tasks": 12,
+    "same_start_tier": 6,
+    "pairs": {
+      "qwen2.5-coder:3b -> qwen2.5-coder:1.5b": 2,
+      "qwen2.5-coder:1.5b -> qwen2.5-coder:1.5b": 3,
+      "qwen2.5-coder:1.5b -> qwen2.5-coder:7b": 1,
+      "qwen2.5-coder:3b -> qwen2.5-coder:3b": 1,
+      "qwen2.5-coder:7b -> qwen2.5-coder:3b": 1,
+      "qwen2.5-coder:7b -> qwen2.5-coder:7b": 2,
+      "qwen2.5-coder:7b -> qwen2.5-coder:1.5b": 1,
+      "qwen2.5-coder:1.5b -> qwen2.5-coder:3b": 1
+    }
+  },
+  "rows": [
+    {
+      "task_id": "eih-phase1-code-011",
+      "split": "val",
+      "predicted": {
+        "complexity": "low",
+        "criticality": "medium"
+      },
+      "label": {
+        "complexity": "medium",
+        "criticality": "medium"
+      },
+      "model_from_classifier": "qwen2.5-coder:1.5b",
+      "model_from_labels": "qwen2.5-coder:3b"
+    },
+    {
+      "task_id": "eih-phase1-code-014",
+      "split": "dev",
+      "predicted": {
+        "complexity": "medium",
+        "criticality": "low"
+      },
+      "label": {
+        "complexity": "medium",
+        "criticality": "medium"
+      },
+      "model_from_classifier": "qwen2.5-coder:3b",
+      "model_from_labels": "qwen2.5-coder:3b"
+    },
+    {
+      "task_id": "eih-phase1-code-015",
+      "split": "dev",
+      "predicted": {
+        "complexity": "low",
+        "criticality": "medium"
+      },
+      "label": {
+        "complexity": "low",
+        "criticality": "low"
+      },
+      "model_from_classifier": "qwen2.5-coder:1.5b",
+      "model_from_labels": "qwen2.5-coder:1.5b"
+    },
+    {
+      "task_id": "eih-phase1-code-016",
+      "split": "val",
+      "predicted": {
+        "complexity": "low",
+        "criticality": "medium"
+      },
+      "label": {
+        "complexity": "low",
+        "criticality": "low"
+      },
+      "model_from_classifier": "qwen2.5-coder:1.5b",
+      "model_from_labels": "qwen2.5-coder:1.5b"
+    },
+    {
+      "task_id": "eih-phase1-code-017",
+      "split": "dev",
+      "predicted": {
+        "complexity": "medium",
+        "criticality": "medium"
+      },
+      "label": {
+        "complexity": "medium",
+        "criticality": "medium"
+      },
+      "model_from_classifier": "qwen2.5-coder:3b",
+      "model_from_labels": "qwen2.5-coder:3b"
+    },
+    {
+      "task_id": "eih-phase1-code-018",
+      "split": "dev",
+      "predicted": {
+        "complexity": "low",
+        "criticality": "medium"
+      },
+      "label": {
+        "complexity": "medium",
+        "criticality": "medium"
+      },
+      "model_from_classifier": "qwen2.5-coder:1.5b",
+      "model_from_labels": "qwen2.5-coder:3b"
+    },
+    {
+      "task_id": "eih-phase1-dev-021",
+      "split": "val",
+      "predicted": {
+        "complexity": "high",
+        "criticality": "medium"
+      },
+      "label": {
+        "complexity": "low",
+        "criticality": "low"
+      },
+      "model_from_classifier": "qwen2.5-coder:7b",
+      "model_from_labels": "qwen2.5-coder:1.5b"
+    },
+    {
+      "task_id": "eih-phase1-dev-023",
+      "split": "dev",
+      "predicted": {
+        "complexity": "medium",
+        "criticality": "medium"
+      },
+      "label": {
+        "complexity": "medium",
+        "criticality": "medium"
+      },
+      "model_from_classifier": "qwen2.5-coder:3b",
+      "model_from_labels": "qwen2.5-coder:3b"
+    },
+    {
+      "task_id": "eih-phase1-dev-025",
+      "split": "dev",
+      "predicted": {
+        "complexity": "medium",
+        "criticality": "medium"
+      },
+      "label": {
+        "complexity": "medium",
+        "criticality": "medium"
+      },
+      "model_from_classifier": "qwen2.5-coder:3b",
+      "model_from_labels": "qwen2.5-coder:3b"
+    },
+    {
+      "task_id": "eih-phase1-dev-026",
+      "split": "val",
+      "predicted": {
+        "complexity": "medium",
+        "criticality": "medium"
+      },
+      "label": {
+        "complexity": "medium",
+        "criticality": "medium"
+      },
+      "model_from_classifier": "qwen2.5-coder:3b",
+      "model_from_labels": "qwen2.5-coder:3b"
+    },
+    {
+      "task_id": "eih-phase1-dev-028",
+      "split": "dev",
+      "predicted": {
+        "complexity": "medium",
+        "criticality": "medium"
+      },
+      "label": {
+        "complexity": "medium",
+        "criticality": "medium"
+      },
+      "model_from_classifier": "qwen2.5-coder:3b",
+      "model_from_labels": "qwen2.5-coder:3b"
+    },
+    {
+      "task_id": "eih-phase1-dev-030",
+      "split": "dev",
+      "predicted": {
+        "complexity": "medium",
+        "criticality": "medium"
+      },
+      "label": {
+        "complexity": "medium",
+        "criticality": "medium"
+      },
+      "model_from_classifier": "qwen2.5-coder:3b",
+      "model_from_labels": "qwen2.5-coder:3b"
+    },
+    {
+      "task_id": "eih-phase1-ops-051",
+      "split": "dev",
+      "predicted": {
+        "complexity": "high",
+        "criticality": "high"
+      },
+      "label": {
+        "complexity": "medium",
+        "criticality": "high"
+      },
+      "model_from_classifier": "qwen2.5-coder:7b",
+      "model_from_labels": "qwen2.5-coder:7b"
+    },
+    {
+      "task_id": "eih-phase1-ops-052",
+      "split": "val",
+      "predicted": {
+        "complexity": "medium",
+        "criticality": "medium"
+      },
+      "label": {
+        "complexity": "medium",
+        "criticality": "high"
+      },
+      "model_from_classifier": "qwen2.5-coder:3b",
+      "model_from_labels": "qwen2.5-coder:7b"
+    },
+    {
+      "task_id": "eih-phase1-ops-053",
+      "split": "val",
+      "predicted": {
+        "complexity": "low",
+        "criticality": "medium"
+      },
+      "label": {
+        "complexity": "low",
+        "criticality": "medium"
+      },
+      "model_from_classifier": "qwen2.5-coder:1.5b",
+      "model_from_labels": "qwen2.5-coder:1.5b"
+    },
+    {
+      "task_id": "eih-phase1-ops-054",
+      "split": "dev",
+      "predicted": {
+        "complexity": "medium",
+        "criticality": "low"
+      },
+      "label": {
+        "complexity": "low",
+        "criticality": "medium"
+      },
+      "model_from_classifier": "qwen2.5-coder:3b",
+      "model_from_labels": "qwen2.5-coder:1.5b"
+    },
+    {
+      "task_id": "eih-phase1-ops-058",
+      "split": "dev",
+      "predicted": {
+        "complexity": "medium",
+        "criticality": "medium"
+      },
+      "label": {
+        "complexity": "medium",
+        "criticality": "medium"
+      },
+      "model_from_classifier": "qwen2.5-coder:3b",
+      "model_from_labels": "qwen2.5-coder:3b"
+    },
+    {
+      "task_id": "eih-phase1-ops-059",
+      "split": "dev",
+      "predicted": {
+        "complexity": "low",
+        "criticality": "low"
+      },
+      "label": {
+        "complexity": "low",
+        "criticality": "low"
+      },
+      "model_from_classifier": "qwen2.5-coder:1.5b",
+      "model_from_labels": "qwen2.5-coder:1.5b"
+    },
+    {
+      "task_id": "eih-phase1-req-002",
+      "split": "val",
+      "predicted": {
+        "complexity": "low",
+        "criticality": "medium"
+      },
+      "label": {
+        "complexity": "low",
+        "criticality": "medium"
+      },
+      "model_from_classifier": "qwen2.5-coder:1.5b",
+      "model_from_labels": "qwen2.5-coder:1.5b"
+    },
+    {
+      "task_id": "eih-phase1-req-003",
+      "split": "val",
+      "predicted": {
+        "complexity": "medium",
+        "criticality": "high"
+      },
+      "label": {
+        "complexity": "medium",
+        "criticality": "high"
+      },
+      "model_from_classifier": "qwen2.5-coder:7b",
+      "model_from_labels": "qwen2.5-coder:7b"
+    },
+    {
+      "task_id": "eih-phase1-req-005",
+      "split": "dev",
+      "predicted": {
+        "complexity": "low",
+        "criticality": "low"
+      },
+      "label": {
+        "complexity": "low",
+        "criticality": "low"
+      },
+      "model_from_classifier": "qwen2.5-coder:1.5b",
+      "model_from_labels": "qwen2.5-coder:1.5b"
+    },
+    {
+      "task_id": "eih-phase1-req-008",
+      "split": "dev",
+      "predicted": {
+        "complexity": "low",
+        "criticality": "medium"
+      },
+      "label": {
+        "complexity": "low",
+        "criticality": "medium"
+      },
+      "model_from_classifier": "qwen2.5-coder:1.5b",
+      "model_from_labels": "qwen2.5-coder:1.5b"
+    },
+    {
+      "task_id": "eih-phase1-req-009",
+      "split": "dev",
+      "predicted": {
+        "complexity": "low",
+        "criticality": "medium"
+      },
+      "label": {
+        "complexity": "high",
+        "criticality": "high"
+      },
+      "model_from_classifier": "qwen2.5-coder:1.5b",
+      "model_from_labels": "qwen2.5-coder:7b"
+    },
+    {
+      "task_id": "eih-phase1-req-010",
+      "split": "dev",
+      "predicted": {
+        "complexity": "medium",
+        "criticality": "high"
+      },
+      "label": {
+        "complexity": "medium",
+        "criticality": "medium"
+      },
+      "model_from_classifier": "qwen2.5-coder:7b",
+      "model_from_labels": "qwen2.5-coder:3b"
+    },
+    {
+      "task_id": "eih-phase1-rev-043",
+      "split": "dev",
+      "predicted": {
+        "complexity": "low",
+        "criticality": "critical"
+      },
+      "label": {
+        "complexity": "medium",
+        "criticality": "high"
+      },
+      "model_from_classifier": "qwen2.5-coder:7b",
+      "model_from_labels": "qwen2.5-coder:7b"
+    },
+    {
+      "task_id": "eih-phase1-rev-044",
+      "split": "dev",
+      "predicted": {
+        "complexity": "low",
+        "criticality": "low"
+      },
+      "label": {
+        "complexity": "low",
+        "criticality": "low"
+      },
+      "model_from_classifier": "qwen2.5-coder:1.5b",
+      "model_from_labels": "qwen2.5-coder:1.5b"
+    },
+    {
+      "task_id": "eih-phase1-rev-045",
+      "split": "dev",
+      "predicted": {
+        "complexity": "medium",
+        "criticality": "medium"
+      },
+      "label": {
+        "complexity": "medium",
+        "criticality": "medium"
+      },
+      "model_from_classifier": "qwen2.5-coder:3b",
+      "model_from_labels": "qwen2.5-coder:3b"
+    },
+    {
+      "task_id": "eih-phase1-rev-046",
+      "split": "val",
+      "predicted": {
+        "complexity": "low",
+        "criticality": "medium"
+      },
+      "label": {
+        "complexity": "medium",
+        "criticality": "high"
+      },
+      "model_from_classifier": "qwen2.5-coder:1.5b",
+      "model_from_labels": "qwen2.5-coder:7b"
+    },
+    {
+      "task_id": "eih-phase1-rev-047",
+      "split": "val",
+      "predicted": {
+        "complexity": "low",
+        "criticality": "critical"
+      },
+      "label": {
+        "complexity": "medium",
+        "criticality": "high"
+      },
+      "model_from_classifier": "qwen2.5-coder:7b",
+      "model_from_labels": "qwen2.5-coder:7b"
+    },
+    {
+      "task_id": "eih-phase1-rev-048",
+      "split": "dev",
+      "predicted": {
+        "complexity": "medium",
+        "criticality": "medium"
+      },
+      "label": {
+        "complexity": "low",
+        "criticality": "medium"
+      },
+      "model_from_classifier": "qwen2.5-coder:3b",
+      "model_from_labels": "qwen2.5-coder:1.5b"
+    },
+    {
+      "task_id": "eih-phase1-test-032",
+      "split": "val",
+      "predicted": {
+        "complexity": "medium",
+        "criticality": "medium"
+      },
+      "label": {
+        "complexity": "low",
+        "criticality": "medium"
+      },
+      "model_from_classifier": "qwen2.5-coder:3b",
+      "model_from_labels": "qwen2.5-coder:1.5b"
+    },
+    {
+      "task_id": "eih-phase1-test-033",
+      "split": "val",
+      "predicted": {
+        "complexity": "low",
+        "criticality": "medium"
+      },
+      "label": {
+        "complexity": "medium",
+        "criticality": "low"
+      },
+      "model_from_classifier": "qwen2.5-coder:1.5b",
+      "model_from_labels": "qwen2.5-coder:3b"
+    },
+    {
+      "task_id": "eih-phase1-test-034",
+      "split": "dev",
+      "predicted": {
+        "complexity": "high",
+        "criticality": "medium"
+      },
+      "label": {
+        "complexity": "medium",
+        "criticality": "medium"
+      },
+      "model_from_classifier": "qwen2.5-coder:7b",
+      "model_from_labels": "qwen2.5-coder:3b"
+    },
+    {
+      "task_id": "eih-phase1-test-035",
+      "split": "dev",
+      "predicted": {
+        "complexity": "high",
+        "criticality": "medium"
+      },
+      "label": {
+        "complexity": "medium",
+        "criticality": "medium"
+      },
+      "model_from_classifier": "qwen2.5-coder:7b",
+      "model_from_labels": "qwen2.5-coder:3b"
+    },
+    {
+      "task_id": "eih-phase1-test-037",
+      "split": "dev",
+      "predicted": {
+        "complexity": "medium",
+        "criticality": "medium"
+      },
+      "label": {
+        "complexity": "medium",
+        "criticality": "medium"
+      },
+      "model_from_classifier": "qwen2.5-coder:3b",
+      "model_from_labels": "qwen2.5-coder:3b"
+    },
+    {
+      "task_id": "eih-phase1-test-038",
+      "split": "dev",
+      "predicted": {
+        "complexity": "medium",
+        "criticality": "medium"
+      },
+      "label": {
+        "complexity": "high",
+        "criticality": "medium"
+      },
+      "model_from_classifier": "qwen2.5-coder:3b",
+      "model_from_labels": "qwen2.5-coder:7b"
+    }
+  ]
+}

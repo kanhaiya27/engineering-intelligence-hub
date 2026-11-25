@@ -8,6 +8,191 @@ measured (with numbers only if actually measured), what is blocked.
 
 ---
 
+## 2026-11-23 (night) — Driver 621.01 re-check finished, Pipeline page, end-to-end tests · branch `fix/post-ssd-recovery`
+
+**Done**
+- One machine only (Avaneesh, 2026-11-23): present-tense two-laptop wording removed from `.env.example`,
+  `core/config.py`, `docs/API_CONTRACT.md`, `docs/RETRIEVAL_LABELS.md`. `machine_id` stays `laptop-a`
+  (stamped into every result and the manifest; renaming it would break comparisons). History unchanged.
+- Web: **Pipeline** page (System A–E trace via `/v1/trace/stream`, stage by stage; untrusted text plain).
+- Playwright end-to-end tests (`web/e2e`, real API + UI on ports 8010/5180, isolated OKF root and
+  collection `eih_okf_e2e`, cleaned up after): status, browsing Google's acme_retail bundle, a human edit
+  with attribution, and an agent proposal approved in the browser.
+- `test_api_ingest_and_retrieve_file` left a collection `eih_api_test_coll` in the live Qdrant after every
+  run; it now deletes it (the leftover held 1 test chunk; removed).
+
+**Measured (driver 621.01, new files under `experiments/results/phase1/machine_A/driver_621.01/`)**
+- Idle with **no** CUDA context: 9.2 W (P0), was 27–31 W on 617.14. Power polling at 50 ms: 64.2 W.
+- Long-context probe, 7B forced on GPU, encoders resident: 12K peak 5,908 MiB, warm 13.5 s, 756 J;
+  16K saturated VRAM, 17.3 s, 930 J; 20K pages to RAM: 87.3 s, 3,361 J, prefill 242 tok/s. Same pattern
+  as 617.14 (5,906 MiB / 12.7 s / 763 J; 90.4 s / 3,215 J at 20K): the C4 run settings stand.
+- Tests: web unit 7 passed; end-to-end 5 passed; Python 490 passed, 0 failed, 0 skipped (rerun at this commit).
+
+**Next**: WORK_PLAN step 16 (tree-sitter chunking) must leave the frozen wave-1 chunking byte-identical:
+plan = new languages only, wave-1 re-chunk compared chunk by chunk before anything is merged.
+**Blocked on Avaneesh**: step 6 label review, C29 blind ratings (M1 key lost), ASK_ME items (R3, R5, L2, F2,
+P2, D10, D13, C-9/C-10), review of the pending OKF proposal, review of this branch.
+
+---
+
+## 2026-11-23 (later) — Ollama + models, API, web app, `/v1/trace`, live OKF workflow · branch `fix/post-ssd-recovery`
+
+**Done**
+- Ollama **0.35.1** installed (installer sha256 = GitHub's published digest). Its tray app auto-downloaded
+  0.40.17 and its own server would not start, so auto-update is off, the staged update is set aside, and
+  the server runs as `ollama serve` (`scripts/start_eih.ps1`). Models pulled; **all three digests and byte
+  sizes equal the CLAUDE.md pins** (1.5B/3B/7B, Q4_K_M).
+- Compose ports bound to 127.0.0.1 (SRS S5); containers recreated, data unchanged.
+- API: `/okf/*`, `/chat` + `/chat/stream` + `/conversations` (SQLite), `/status`, a `/ready` that really
+  checks, `/results`, and the frozen contract **`/v1/trace` + `/v1/trace/stream`** (built by the research
+  harness's own `M5BenchmarkRunner`; per-attempt data via a new optional `on_attempt` hook in
+  `QualityAwareRAGPipeline.execute`, default None, harness unchanged). Graph router: no silent in-memory
+  fallback. HF offline mode for the app.
+- Web app `web/` (Node 26.13.1): Chat, Knowledge (OKF explorer/editor), Review, Results, Status.
+
+**Measured (live, 7B, all MEASURED unless stated)**
+- First chat after start: 178.5 s, of which 133 s BM25 indexing → background warm-up added (144 s, once).
+  Warm: 17.1 s (5,656 in / 76 out tokens, 268.9 J GPU) and 36.2 s (891.9 J) per answer; 7B 100% in VRAM
+  at num_ctx 12,288; decode 16.5 tok/s, prefill 226 tok/s.
+- Citations: with format rules only in the system prompt the 7B cited nothing (1/1); with the rules after
+  the question, 3/3 answers cited, 0 invalid citations. Gap proposals: 0 when asked in the same call (2/2);
+  with a separate focused call the 7B filed 1 valid proposal (and 2 correctly rejected: concepts it had
+  not read). That proposal is **pending, not approved**: approval is Avaneesh's.
+- Driver 621.01 NVML observer probe (new file, Oct file untouched): idle with CUDA context 5.0 W; power
+  polling +7..+13 W; counter polling every 50 ms 404 W → "never poll" rule holds.
+- Tests: **490 passed, 0 failed, 0 skipped** (Python, incl. live Qdrant/Neo4j/Ollama tests); web 7 passed.
+
+**Next**: Avaneesh reviews the branch (and the pending proposal); finish the driver-621.01 re-check
+(no-context idle baseline, long-context probe to a new file); then WORK_PLAN step 6 review → step 7.
+**Blocked on Avaneesh**: step 6 label review; C29 blind human ratings (M1 key was lost with `C:\EIH_backups`).
+
+---
+
+## 2026-11-22/23 — Post-SSD recovery (C32) and OKF layer, part 1 (C33) · branch `fix/post-ssd-recovery`
+
+**Done (recovery)**
+- Audit: Git 2.56.1, Python 3.11.9 `.venv311` (pip check clean), torch 2.6.0+cu124 CUDA OK, Docker 29.9.3 /
+  Compose v5.7.1 were already reinstalled. NVIDIA driver is now **621.01** (rules were measured on 617.14).
+- Neo4j was "unhealthy": its healthcheck had the compose default password baked in at container creation
+  while the server uses the `.env` one. Volume backed up to `C:\EIH_backups\neo4j_data_2026-11-22_pre-healthcheck-fix.tgz`,
+  container recreated (volume untouched); healthy. Python driver 6.2.0 ↔ server 5.18.1 verified.
+- `qdrant-client` 1.19.0 → **1.15.1** (matches server 1.15.1; the client warned they were incompatible).
+- Corpus re-ingested from `.corpus_cache` (all 6 repos clean at the registry's pinned SHAs):
+  **53,905 chunks = 53,905 points** in `eih_knowledge_v2` (flask 1,615 · fastapi 20,353 · requests 1,036 ·
+  pytest 7,731 · sphinx 10,701 · pylint 12,469). The old local `ingestion_report.json` (gitignored) was
+  overwritten; it had the same totals.
+- Graph rebuilt (`scripts.build_graph --wave 1 --reset` on an empty DB): **37,066 nodes / 58,982 edges**,
+  every label and relationship count identical to the 2026-10-05 build; 0 indexed files without a node.
+  `graph_build_wave1.json` re-written (only provenance + timings differ).
+- Node.js **v26.13.1** LTS + npm 11.20.0 (zip, SHA-256 verified, per-user install).
+- Ollama **0.35.1** (the version the pinned digests were recorded with): GitHub's release CDN gives
+  ~45 KB/s per connection; downloading in 32 verified segments. Models not pulled yet.
+
+**Done (OKF, app feature only — Systems A–E unchanged)**
+- Spec studied at source: Google's OKF is **v0.2** (supersedes v0.1; reads v0.1 via §13 fallbacks).
+- `knowledge/okf/`: `document` (parse/serialize/validate/trust tiers/staleness), `bundle` (discovery, links,
+  conformance, search, index/log), `collaboration` (agent proposals → human approve/reject/edit, optimistic
+  concurrency, audit), `producer` (deterministic bundle from wave-1 code, API contract, docs), `sync`
+  (Qdrant `eih_okf` + Neo4j `:OKFConcept`), `agent` (grounded answers, link following, citation check,
+  gap proposals). `scripts/okf_produce.py`.
+- Isolation fix: `Neo4jGraphStore.count_edges()` counts `(:Entity)-[]->(:Entity)` and `clear()` deletes only
+  `:Entity`; identical numbers on the research graph (58,982 = 58,982), and the OKF projection can no
+  longer change the manifest's graph identity or be wiped by a graph rebuild.
+- Bundle `okf_bundles/eih`: 554 concepts, conformant, 3,194 links; `eih_okf` 2,707 points; 528 OKF→File
+  bridges. Research counts after the projection: 53,905 / 37,066 / 58,982 (unchanged).
+- Google's 4 sample bundles (53 concepts) consume conformant, 0 broken links, round-trip stable.
+
+**Measured / tests**: full suite before OKF tests 467 run → 464 passed, 0 failed, 3 skipped (all "Ollama not
+reachable"). OKF tests: 41 (32 spec + collaboration, 6 producer/sync incl. 1 live Qdrant/Neo4j integration test, 3 agent).
+
+**Next**: install Ollama 0.35.1, pull the 3 models and check digests; OKF + chat API routes; `/v1/trace`;
+frontend; re-check measurement rules on driver 621.01.
+**Blocked**: nothing (download speed only).
+
+---
+
+## 2026-10-06 (evening) — Lock and deadlines removed (C30, C31)
+
+- C30: the 12 Oct hash lock is removed (`lock_sets` and `draft_tasks.py lock` deleted). The seeded
+  split, run-once and no tuning on held-out sets stay.
+- C31: every deadline removed from the plan docs (SCHEDULE is now an order of work; README,
+  ROADMAP, WORK_PLAN, DATASET_PLAN, EXPERIMENT_PLAN, CLAUDE.md, REVIEW_GUIDE). G1 and D3 closed;
+  new questions F2 (Fresh back to ~150) and P2 (Mode P scope) in ASK_ME.
+- Tests: 435 passed.
+
+**Next** — Step 4 (RQ6) after "go".
+
+---
+
+## 2026-10-06 (later) — Step 3: drafting tool, review queue, M1 rating batch, power check
+
+Decisions recorded (ASK_ME Decided; WORK_PLAN C27–C29).
+
+**3a: drafting tool** (`benchmark/drafting.py`, `scripts/draft_tasks.py`)
+- Seeded span sampling; drafts FAIL on missing or out-of-file lines; batches with a rotating requester.
+- 40/20/40 split assigned at first approval (a test slot needs a second reviewer).
+- Task fingerprints. (`lock_sets` was removed afterwards: C30, no hash lock.)
+- Round 1: 70 drafts (6 repos × 6 stages, every claim checked in code, 0 validation failures; 2 spans
+  skipped with reasons). Two drafts expose real pinned-code defects: Requests `multiple_domains`, and
+  Pylint `visit_try` missing `no-else-raise`.
+
+**3b / 3c: queue by priority**
+- calibration (10);
+- L1 labels (36);
+- audit-fix proposals (20; requester excluded);
+- test correctness (24 × 2, rotating pairs);
+- drafts (70);
+- M1 blind rating batch: 40 answers, 2 raters each, key outside git, protocol pre-registered
+  (`docs/M1_PROTOCOL.md`) before any rating.
+
+**3d: power check.** Binary per-stage tests are not detectable at any reachable size; RQ4 energy saving
+below MDE. Routing tier from the classifier = from labels on 16/24 dev, 6/12 val.
+
+**3e:** lock dry run (empty: nothing approved yet); the lock covers the pilot files.
+
+**Fixes found on the way:** reviewer CLI forced to UTF-8 (Windows), GPU-hours field in the daily report.
+
+**Review counts today:** 0 decisions (queue just opened). GPU used: 3.7 h (2c run).
+
+**Next** — Step 4 after "go"; drafting rounds continue daily; the M1 selection runs once ratings are in.
+
+---
+
+## 2026-10-06 — Step 2: preflight, approved decisions, confounds on dev/val, freeze
+
+Branch `master-fix`, fast-forwarded to master `58bf4ab` (PR #18).
+
+**Preflight** — clean.
+- Graph = build record + exactly the 2 test nodes and 1 edge.
+- Working tree: only `docs/SRS.pdf` (untracked).
+- Benchmark files unchanged since v1.1; only test IDs were read.
+
+**Approved decisions applied**
+- A3: graph backed up (`C:/EIH_backups/…`), 2 nodes and 1 edge deleted; the graph equals its build
+  record; the test suite leaves it unchanged.
+- A1 / C23: D = C + graph on every task.
+- A2 / C24: success = correct AND cites labelled evidence.
+- D12: 24 test tasks queued (4 batches, rotating pairs). Found by task ID only: 4 have evidence that
+  cannot be shown.
+- Found: results JSON was git-ignored, so the 5 Oct Mode R/energy JSON was never committed. Now versioned.
+
+**Step 2**
+- 2a / C25: classifier rules from dev only. All four fields right: dev 3 → 12 of 24, val 1 → 2 of 12.
+- 2b / C26: fused-only cut-off at 0.25; zero-evidence tasks 0 for every system.
+- 2c: probes. Variation comes from the cache/load state and `num_predict` (V1). 3-trial run: 648 units,
+  all ok.
+- 2d: `docs/BENCHMARK_AUDIT.md`. 7 of the 20 tasks not yet corrected have answer or question problems;
+  11 of 36 overall.
+- 2e: `docs/FROZEN_CONFIG.md`, manifest `95e5a587c9d60e7a`. The limit is not raised (T1).
+
+**Key measured results (dev/val, descriptive)**
+- Token F1 0.235–0.260 for all systems; 0/648 trials at the threshold (M1).
+- E refuses 21% with the same unsupported rate as D.
+
+**Next** — Step 3 after "go"; decisions M1, T1, V1 first.
+
+---
+
 ## 2026-10-05 (late) — Master prompt Steps 0 + 1: schedule, review queue, measurement validity
 
 Branch `master-fix` (tag `pre-master-fix` = master 68a072d before it).

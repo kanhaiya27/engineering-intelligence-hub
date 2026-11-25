@@ -2,12 +2,12 @@
 
 | | |
 |---|---|
-| **Status** | **FROZEN** at `1.0.0` once this PR is merged with approval from both laptops |
+| **Status** | **FROZEN** at `1.0.0` (approved 2026-10; since C11 one machine and one person own both sides) |
 | **Models** | `apps/api/contract/v1.py` (Pydantic v2) |
 | **Export** | `docs/api/openapi-v1.json` (OpenAPI 3.1, generated, do not hand-edit) |
 | **Example** | `docs/api/examples/trace-v1-system-e.json` (placeholder values, mock source) |
 | **Tests** | `tests/test_api/test_contract_v1.py` |
-| **Owners** | Laptop A produces traces (pipeline). Laptop B consumes them (web platform). |
+| **Owners** | One machine (laptop-a): the pipeline produces traces; the web platform in `web/` consumes them (`/v1/trace`, implemented 2026-11-23). |
 
 This is the only interface between the research pipeline and the web platform.
 The web platform never imports pipeline internals, and the pipeline never shapes

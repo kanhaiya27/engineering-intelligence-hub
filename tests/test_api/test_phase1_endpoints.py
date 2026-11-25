@@ -34,8 +34,16 @@ def test_api_ingest_and_retrieve_file():
     res_ingest = client.post("/ingest/file", json=ingest_payload)
     if res_ingest.status_code == 500 and "connection" in res_ingest.text.lower():
         pytest.skip("Docker Qdrant not running on localhost:6333")
-    assert res_ingest.status_code == 200
-    assert res_ingest.json()["status"] == "completed"
+    try:
+        assert res_ingest.status_code == 200
+        assert res_ingest.json()["status"] == "completed"
+    finally:
+        # The test collection used to be left behind in the live Qdrant after every run.
+        from knowledge.vector.qdrant import QdrantVectorStore
+        store = QdrantVectorStore()
+        store.connect()
+        if store.collection_exists("eih_api_test_coll"):
+            store.delete_collection("eih_api_test_coll")
 
     # 2. Retrieve from collection
     retrieve_payload = {

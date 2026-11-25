@@ -57,10 +57,16 @@ class HybridRetriever(BaseRetriever):
         dense_weight = strategy.dense_weight
         sparse_weight = strategy.sparse_weight
 
+        # The score cut-off applies to the FUSED score only (WORK_PLAN C26, Step 2b). It used to
+        # be applied to the dense cosine, the BM25 score and the fused score alike, so a chunk
+        # found by one retriever only (fused <= its weight) had to clear e.g. 0.60 / 0.7 = 0.86
+        # cosine: 13 of 28 dev/val hybrid tasks lost all labelled evidence.
+        component_strategy = strategy.model_copy(update={"score_threshold": 0.0})
+
         # 1. Execute Dense Retrieval
         dense_result = self.dense_retriever.retrieve(
             query=query,
-            strategy=strategy,
+            strategy=component_strategy,
             classification=classification,
             task_id=task_id,
         )
@@ -68,7 +74,7 @@ class HybridRetriever(BaseRetriever):
         # 2. Execute BM25 Retrieval
         sparse_result = self.sparse_retriever.retrieve(
             query=query,
-            strategy=strategy,
+            strategy=component_strategy,
             classification=classification,
             task_id=task_id,
         )
