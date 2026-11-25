@@ -8,6 +8,7 @@
     "Aryan Gupta"
   ],
   "priority": 12,
+  "reviews_required": 3,
   "items": [
     {
       "item_id": "eih-phase1-code-017",

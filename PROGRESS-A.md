@@ -8,6 +8,35 @@ measured (with numbers only if actually measured), what is blocked.
 
 ---
 
+## 2026-11-25 (later) — Three-reviewer review tooling, old names removed, M1 key recovery attempt · branch `fix/review-three-reviewers`
+
+Branched from `origin/docs/askme-decisions-2026-11-25` (b302aaf, not yet merged); rebase onto `master`
+after that PR merges. WORK_PLAN C42. No experiment, model call, GPU job or ingestion.
+
+**Done**
+- `benchmark/review.py`: optional batch field `reviews_required` (never lowers the split default). Blind
+  batches: served to every assigned reviewer until N decisions are in, one decision per person, a fourth
+  refused; outcome hidden in the CLI and `report` (`in_blind_review`); `kappa` refused until complete.
+  Set to 3 on `calibration-01`, `r5-independent-01`, `test-correctness-01..04` (item hashes unchanged).
+- R5 coverage: 44 of 44 pilot tasks have 3 independent slots (calibration-01 10, r5-independent-01 10,
+  test-correctness-01..04 6 each); none added.
+- `REQUESTERS` / `PAIRS` = Avaneesh Kumar Verma, Sanvi Bhardwaj, Aryan Gupta; test against `reviewers.yaml`.
+  Test fixtures use the three names. No "Bharadwaj" in the branch.
+- `scripts/recover_rating_key.py`: **NO MATCH** for `m1-rating-01` under the recovery rule. A (seeded
+  re-sampling, pool 147) reproduced the stored sha256; B (content) unique on 35 of 40, 5 answers are
+  identical text from two systems; A agrees with B on 35/35 and is among B's candidates on 5/5. Nothing
+  written. Rating guard: `review.py verify-key` stamps `key_verified_at`; rating refused until set.
+- Docs: REVIEW_GUIDE (blind rules, verify-key), M1_PROTOCOL (recovery note), ASK_ME K1/K2, WORK_PLAN C42.
+
+**Tests**: `python -m pytest`: 506 passed, 0 skipped, 0 failed (Qdrant, Neo4j, Ollama up; the 2 `.corpus_cache` tests run with the cache linked).
+
+**Next**: team answers K1 (rebuild `m1-rating-02` or accept A's key) and K2 (key holder, ideally not a
+rater). Then the R1 order of work can start (ratings first).
+
+**Blocked**: blind ratings (K1/K2); D10 branch deletion (waits for approval).
+
+---
+
 ## 2026-11-25 — Team answers to all open ASK_ME items (docs, config, review queue only) · branch `docs/askme-decisions-2026-11-25`
 
 Decided by CODE RAD for the team, with Avaneesh. No experiment, model, GPU job, ingestion or graph build was run.

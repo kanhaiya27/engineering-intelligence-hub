@@ -50,7 +50,7 @@ def _draft(**kw):
 def store(tmp_path):
     (tmp_path / "rev").mkdir()
     (tmp_path / "rev" / "reviewers.yaml").write_text(
-        "reviewers:\n  - Avaneesh Kumar Verma\n  - Sanvi\n  - Aayan\n  - Radhesh\n", encoding="utf-8")
+        "reviewers:\n  - Avaneesh Kumar Verma\n  - Sanvi Bhardwaj\n  - Aryan Gupta\n", encoding="utf-8")
     return ReviewStore(tmp_path / "rev")
 
 
@@ -87,9 +87,9 @@ def test_queue_reports_failures_rotates_requester_and_excludes_them(repo, store)
     out = dr.queue_drafts(good + [bad], "draft-t", store=store)
     assert out["queued"] == 30 and out["failed"][0]["span_id"] == "bad"
     assert [b["items"] for b in out["batches"]] == [25, 5]
-    assert [b["requested_by"] for b in out["batches"]] == ["Avaneesh Kumar Verma", "Sanvi"]
+    assert [b["requested_by"] for b in out["batches"]] == ["Avaneesh Kumar Verma", "Sanvi Bhardwaj"]
     assert "Avaneesh Kumar Verma" not in out["batches"][0]["assigned_to"]
-    assert "Sanvi" not in out["batches"][1]["assigned_to"]
+    assert "Sanvi Bhardwaj" not in out["batches"][1]["assigned_to"]
     item = store.batches()[0].items[0]
     assert item.drafted_by == dr.DRAFTER and item.split == "unassigned" and "not verified" in item.status_note
     again = dr.queue_drafts(good[:1], "draft-u", store=store)
@@ -124,11 +124,11 @@ def test_test_slot_needs_a_second_independent_reviewer(store, monkeypatch, tmp_p
     test_item = items[k]
     assert store.effective_split(test_item) == "test"
     assert store.status(test_item) == "partially_approved"
-    store.decide(test_item.item_id, "Aayan", "approve", minutes=3, now=T0)
+    store.decide(test_item.item_id, "Aryan", "approve", minutes=3, now=T0)
     assert store.status(test_item) == "approved"
     tasks = dr.approved_tasks(store)
     t = next(x for x in tasks if x["task_id"] == test_item.item_id)
-    assert t["split"] == "test" and t["human_approved_by"] == "Aayan; Sanvi" and t["fingerprint"].startswith("sha256:")
+    assert t["split"] == "test" and t["human_approved_by"] == "Aryan Gupta; Sanvi Bhardwaj" and t["fingerprint"].startswith("sha256:")
 
 
 # --- no date lock (C30) -------------------------------------------------------------------------

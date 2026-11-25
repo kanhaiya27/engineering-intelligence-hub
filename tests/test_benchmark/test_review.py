@@ -27,7 +27,7 @@ def _item(item_id="t1", split="dev", drafted_by="claude-opus-5.5", requested_by=
 @pytest.fixture
 def store(tmp_path):
     (tmp_path / "reviewers.yaml").write_text(
-        "reviewers:\n  - Avaneesh Kumar Verma\n  - Sanvi\n  - Aayan\n  - Radhesh\n", encoding="utf-8")
+        "reviewers:\n  - Avaneesh Kumar Verma\n  - Sanvi Bhardwaj\n  - Aryan Gupta\n", encoding="utf-8")
     return ReviewStore(tmp_path)
 
 
@@ -75,14 +75,14 @@ def test_held_out_items_need_two_different_reviewers(store):
     assert store.status(item) == "partially_approved"
     store.decide("t1", "Sanvi", "approve", minutes=1, now=T0)  # same person again does not count twice
     assert store.status(item) == "partially_approved"
-    store.decide("t1", "Aayan", "approve", minutes=5, now=T0)
+    store.decide("t1", "Aryan", "approve", minutes=5, now=T0)
     assert store.status(item) == "approved"
 
 
 def test_dev_item_needs_one_review_and_reject_wins(store):
     _batch(store, [_item(), _item("t2")])
     store.decide("t1", "Sanvi", "approve", minutes=3, now=T0)
-    store.decide("t2", "Aayan", "reject", failed=["answer_correct"], note="wrong line", minutes=3, now=T0)
+    store.decide("t2", "Aryan", "reject", failed=["answer_correct"], note="wrong line", minutes=3, now=T0)
     assert store.status(store.find("t1")[1]) == "approved"
     assert store.status(store.find("t2")[1]) == "rejected"
 
@@ -96,7 +96,7 @@ def test_editing_an_item_voids_old_decisions(store):
 
 
 def test_assignment_enforced(store):
-    _batch(store, [_item()], assigned=["Aayan"])
+    _batch(store, [_item()], assigned=["Aryan Gupta"])
     with pytest.raises(ReviewError, match="assigned"):
         store.decide("t1", "Sanvi", "approve", minutes=2, now=T0)
     assert store.next_item("Sanvi") is None
@@ -112,11 +112,11 @@ def test_item_queued_once_and_batch_size_limit(store):
 
 def test_timer_records_minutes(store):
     _batch(store, [_item()])
-    store.start("Radhesh", "t1", now=T0)
-    rec = store.decide("t1", "Radhesh", "approve", now=T0 + timedelta(minutes=7, seconds=30))
+    store.start("Sanvi", "t1", now=T0)
+    rec = store.decide("t1", "Sanvi", "approve", now=T0 + timedelta(minutes=7, seconds=30))
     assert rec.minutes_spent == 7.5
     with pytest.raises(ReviewError, match="no timer"):
-        store.decide("t1", "Aayan", "approve", now=T0)
+        store.decide("t1", "Aryan", "approve", now=T0)
 
 
 # --- agreement -------------------------------------------------------------------------
@@ -139,19 +139,19 @@ def test_fleiss_kappa_known_value():
     assert fleiss_kappa(r) == pytest.approx(1 / 3)
 
 
-def test_calibration_agreement_over_all_four(store):
+def test_calibration_agreement_over_all_three(store):
     items = [_item(f"c{n}", requested_by=None) for n in range(3)]
     _batch(store, items, batch_id="cal", purpose="calibration", assigned=store.reviewers())
     for rev in store.reviewers():
         for n in range(3):
-            if rev == "Radhesh" and n == 2:
+            if rev == "Aryan Gupta" and n == 2:
                 store.decide(f"c{n}", rev, "fix", failed=["labels_fit"], note="stage", minutes=2, now=T0)
             else:
                 store.decide(f"c{n}", rev, "approve", minutes=2, now=T0)
     # calibration items stay visible until every assigned reviewer has decided
     assert store.next_item("Sanvi") is None
     out = calibration_agreement(store, "cal")
-    assert out["items_rated_by_all"] == 3 and len(out["pairwise_cohen_kappa"]) == 6
+    assert out["items_rated_by_all"] == 3 and len(out["pairwise_cohen_kappa"]) == 3
     assert out["fleiss_kappa"] is not None
 
 
@@ -162,14 +162,14 @@ def test_progress_report_counts_and_reject_alert(store, tmp_path):
     _batch(store, [_item(f"r{n}", requested_by=None) for n in range(4)])
     store.decide("r0", "Sanvi", "approve", minutes=5, now=T0)
     store.decide("r1", "Sanvi", "reject", failed=["question_clear"], note="vague", minutes=5, now=T0)
-    store.decide("r2", "Aayan", "approve", minutes=4, now=T0)
+    store.decide("r2", "Aryan", "approve", minutes=4, now=T0)
     ask = tmp_path / "ASK_ME.md"
     ask.write_text("- [ ] D4 baseline\n- [x] done\n", encoding="utf-8")
     rep = progress_report(store, "2026-10-06", [], ask)
     assert rep["approved_total"] == 2 and rep["approved_per_stage"] == {"testing": 2}
     assert rep["reject_rate"] == 0.333 and rep["reject_alert"] is True
     assert rep["open_blockers"] == ["D4 baseline"]
-    assert rep["minutes_per_reviewer"] == {"Aayan": 4.0, "Sanvi": 10.0}
+    assert rep["minutes_per_reviewer"] == {"Aryan Gupta": 4.0, "Sanvi Bhardwaj": 10.0}
 
 
 def test_cli_refuses_test_tasks_outside_correctness_pass(tmp_path, monkeypatch):
@@ -202,3 +202,108 @@ def test_correctness_pass_queues_tasks_whose_evidence_cannot_be_shown(monkeypatc
     item = rv.item_from_task(task, "test", "lead_researcher", allow_evidence_defects=True)
     assert item.evidence == [] and item.status_note.startswith("EVIDENCE DEFECT")
     assert item.required_reviews == 2
+
+
+# --- three independent reviews (R5 / D12, WORK_PLAN C37, C42) -------------------------------
+
+
+def _blind(store, items, n=3, purpose="test_correctness_pass", batch_id="blind", assigned=None):
+    b = ReviewBatch(batch_id=batch_id, created_at=T0.isoformat(), purpose=purpose,
+                    assigned_to=list(assigned if assigned is not None else store.reviewers()),
+                    reviews_required=n, items=items)
+    store.save_batch(b)
+    return b
+
+
+def test_three_required_reviews_on_a_test_item(store):
+    _blind(store, [_item(split="test", requested_by=None)])
+    _, item = store.find("t1")
+    store.decide("t1", "Sanvi", "approve", minutes=3, now=T0)
+    store.decide("t1", "Aryan", "approve", minutes=3, now=T0)
+    assert store.required_reviews(item) == 3
+    assert store.status(item) == "partially_approved"                   # 2 of 3
+    found = store.next_item("Avaneesh")
+    assert found is not None and found[1].item_id == "t1"               # still offered to the third reviewer
+    store.decide("t1", "Avaneesh", "approve", minutes=3, now=T0)
+    assert store.status(item) == "approved"
+    assert store.next_item("Sanvi") is None and store.next_item("Avaneesh") is None
+
+
+def test_blind_batch_serves_everyone_whatever_the_others_decided(store):
+    _blind(store, [_item(split="test", requested_by=None)])
+    store.decide("t1", "Sanvi", "reject", failed=["answer_correct"], note="wrong", minutes=3, now=T0)
+    assert store.next_item("Aryan")[1].item_id == "t1"                  # a reject does not hide it from others
+    rep = progress_report(store)
+    assert rep["status_counts"] == {"in_blind_review": 1}               # outcome hidden until all 3 are in
+    with pytest.raises(ReviewError, match="blind batch"):
+        calibration_agreement(store, "blind")
+
+
+def test_repeat_and_fourth_decisions_refused(tmp_path):
+    (tmp_path / "reviewers.yaml").write_text(
+        "reviewers:\n  - Avaneesh Kumar Verma\n  - Sanvi Bhardwaj\n  - Aryan Gupta\n  - Extra Fixture\n",
+        encoding="utf-8")
+    store = ReviewStore(tmp_path)
+    _blind(store, [_item(split="test", requested_by=None)])
+    store.decide("t1", "Sanvi", "approve", minutes=3, now=T0)
+    with pytest.raises(ReviewError, match="decides once"):
+        store.decide("t1", "Sanvi", "approve", minutes=3, now=T0)
+    store.decide("t1", "Aryan", "approve", minutes=3, now=T0)
+    store.decide("t1", "Extra", "approve", minutes=3, now=T0)
+    assert store.next_item("Avaneesh") is None
+    with pytest.raises(ReviewError, match="already has its 3"):
+        store.decide("t1", "Avaneesh", "approve", minutes=3, now=T0)
+
+
+def test_self_approval_still_refused_in_a_blind_batch(store):
+    _blind(store, [_item(split="test")])                                  # requested by Avaneesh
+    with pytest.raises(ReviewError, match="no self-approval"):
+        store.decide("t1", "Avaneesh", "approve", minutes=2, now=T0)
+    assert store.next_item("Avaneesh") is None
+
+
+def test_batch_without_the_field_behaves_as_before(store):
+    _batch(store, [_item(split="test", requested_by=None)])
+    _, item = store.find("t1")
+    store.decide("t1", "Sanvi", "approve", minutes=3, now=T0)
+    store.decide("t1", "Sanvi", "approve", minutes=3, now=T0)            # repeat allowed, counts once
+    store.decide("t1", "Aryan", "approve", minutes=3, now=T0)
+    assert store.required_reviews(item) == 2 and store.status(item) == "approved"
+    assert store.next_item("Avaneesh") is None                           # approved: no longer offered
+
+
+def test_reviews_required_never_lowers_the_held_out_default(store):
+    _blind(store, [_item(split="test", requested_by=None)], n=1)
+    assert store.required_reviews(store.find("t1")[1]) == 2
+    with pytest.raises(ValidationError):
+        ReviewBatch(batch_id="x", created_at="t", purpose="review", reviews_required=0, items=[_item("z")])
+
+
+def test_three_rater_fleiss_on_a_blind_batch_hand_computed(store):
+    # decisions (Avaneesh, Sanvi, Aryan): c0 A A A, c1 A A F, c2 F F F, c3 A F F
+    # P_i = [1, 1/3, 1, 1/3] -> P_bar = 2/3; p_approve = 6/12, p_fix = 6/12 -> Pe = 0.5; kappa = 1/3
+    items = [_item(f"c{n}", requested_by=None) for n in range(4)]
+    _blind(store, items, purpose="calibration", batch_id="cal3")
+    votes = {"c0": "AAA", "c1": "AAF", "c2": "FFF", "c3": "AFF"}
+    for n, rev in enumerate(("Avaneesh", "Sanvi", "Aryan")):
+        for cid, v in votes.items():
+            if v[n] == "A":
+                store.decide(cid, rev, "approve", minutes=2, now=T0)
+            else:
+                store.decide(cid, rev, "fix", failed=["labels_fit"], note="stage", minutes=2, now=T0)
+    out = calibration_agreement(store, "cal3")
+    assert out["items_rated_by_all"] == 4 and len(out["raters"]) == 3
+    assert out["fleiss_kappa"] == pytest.approx(1 / 3, abs=1e-3)
+    assert len(out["pairwise_cohen_kappa"]) == 3                          # 2-rater statistic still reported
+
+
+def test_cli_hides_status_in_a_blind_batch(store, capsys):
+    from scripts import review as cli
+
+    _blind(store, [_item(split="test", requested_by=None)])
+    assert cli.main(["--root", str(store.root), "reject", "t1", "--reviewer", "Sanvi", "--failed", "answer_correct",
+                     "--note", "wrong", "--minutes", "2"]) == 0
+    out = capsys.readouterr().out
+    assert "in blind review" in out and "rejected" not in out
+    assert cli.main(["--root", str(store.root), "next", "--reviewer", "Aryan"]) == 0
+    assert "BLIND" in capsys.readouterr().out

@@ -43,7 +43,8 @@ SPLIT_ASSIGNMENTS = DATA_DIR / "review" / "split_assignments.json"
 EIH_SWE_TASKS = DATA_DIR / "eih_swe_tasks.json"
 SEED = 42
 DRAFTER = "Claude Opus 5.5 (EIH drafting tool)"
-REQUESTERS = ("Avaneesh Kumar Verma", "Sanvi", "Aayan", "Radhesh")   # rotate per batch (R2)
+# rotate per batch (R2); the three reviewers (reviewers.yaml, C36/C42). Existing batches keep their history.
+REQUESTERS = ("Avaneesh Kumar Verma", "Sanvi Bhardwaj", "Aryan Gupta")
 STAGES = ("requirements", "architecture", "development", "testing", "code_review", "maintenance")
 SLOT_BLOCK = ("dev", "dev", "val", "test", "test")                   # 40 / 20 / 40
 

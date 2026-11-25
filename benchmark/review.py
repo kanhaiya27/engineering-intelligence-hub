@@ -17,6 +17,10 @@ fix (with a note), reject (with a reason).
 Rules enforced here, not by convention:
   * no self-approval: whoever drafted or requested an item can never decide on it;
   * held-out items (test split, EIH-Fresh, external held-out) need two different reviewers;
+  * a batch may require MORE independent reviews (`reviews_required`, e.g. 3 for the R5 blind
+    re-review, WORK_PLAN C37/C42); never fewer than the default. Such a batch is blind: every
+    assigned reviewer is served each item until the required number of decisions is in, a reviewer
+    decides once per item, and the CLI hides the item's status until all decisions are in;
   * a decision is bound to the sha256 of what was shown, so editing an item voids old decisions;
   * every decision records reviewer, minutes spent and timestamp.
 """
@@ -80,6 +84,7 @@ class ReviewItem(BaseModel):
 
     @property
     def required_reviews(self) -> int:
+        """Default for the item's split; a batch's `reviews_required` can raise it (ReviewStore.required_reviews)."""
         return 2 if self.split in HELD_OUT_SPLITS else 1
 
     def content_sha(self) -> str:
@@ -96,7 +101,15 @@ class ReviewBatch(BaseModel):
     purpose: str = Field(description="calibration | review | test_correctness_pass | label_review | fix_proposal")
     assigned_to: List[str] = Field(default_factory=list)
     priority: int = Field(default=50, description="lower is served first by `review.py next`")
+    reviews_required: Optional[int] = Field(
+        default=None, ge=1,
+        description="Independent reviews each item needs in this batch (blind). None = the split default "
+                    "(2 held-out, 1 otherwise); never lowers that default.")
     items: List[ReviewItem]
+
+    @property
+    def blind(self) -> bool:
+        return self.reviews_required is not None
 
     @field_validator("items")
     @classmethod
@@ -202,6 +215,9 @@ class ReviewStore:
         path.write_text(batch.model_dump_json(indent=2) + "\n", encoding="utf-8")
         return path
 
+    def batch_of(self, item: ReviewItem) -> Optional[ReviewBatch]:
+        return next((b for b in self.batches() if any(i.item_id == item.item_id for i in b.items)), None)
+
     def find(self, item_id: str) -> Tuple[ReviewBatch, ReviewItem]:
         for b in self.batches():
             for i in b.items:
@@ -235,6 +251,14 @@ class ReviewStore:
             raise ReviewError(f"{reviewer} drafted or requested {item_id}; no self-approval")
         if batch.assigned_to and reviewer not in batch.assigned_to:
             raise ReviewError(f"batch {batch.batch_id} is assigned to {batch.assigned_to}, not {reviewer}")
+        if batch.blind:
+            cur = self.current_decisions(item)
+            if reviewer in cur:
+                raise ReviewError(f"{reviewer} already decided on {item_id}; in a blind batch each reviewer "
+                                  "decides once per item")
+            if len(cur) >= self.required_reviews(item, batch):
+                raise ReviewError(f"{item_id} already has its {self.required_reviews(item, batch)} independent "
+                                  "reviews")
         bad = set(failed) - set(CHECKS)
         if bad:
             raise ReviewError(f"unknown checks {sorted(bad)}; use {CHECKS}")
@@ -289,18 +313,26 @@ class ReviewStore:
                 return rec["split"]
         return "unassigned"
 
-    def required_reviews(self, item: ReviewItem) -> int:
-        return 2 if self.effective_split(item) in HELD_OUT_SPLITS else 1
+    def required_reviews(self, item: ReviewItem, batch: Optional[ReviewBatch] = None) -> int:
+        default = 2 if self.effective_split(item) in HELD_OUT_SPLITS else 1
+        batch = batch if batch is not None else self.batch_of(item)
+        if batch is not None and batch.reviews_required is not None:
+            return max(default, batch.reviews_required)
+        return default
+
+    def blind_complete(self, item: ReviewItem, batch: ReviewBatch) -> bool:
+        """True once a blind batch's item has all its decisions (always True outside blind batches)."""
+        return not batch.blind or len(self.current_decisions(item)) >= self.required_reviews(item, batch)
 
     # --- status
-    def status(self, item: ReviewItem) -> str:
+    def status(self, item: ReviewItem, batch: Optional[ReviewBatch] = None) -> str:
         cur = self.current_decisions(item)
         kinds = Counter(d.decision for d in cur.values())
         if kinds["reject"]:
             return "rejected"
         if kinds["fix"]:
             return "needs_fix"
-        if kinds["approve"] >= self.required_reviews(item):
+        if kinds["approve"] >= self.required_reviews(item, batch):
             return "approved"
         return "partially_approved" if kinds["approve"] else "pending"
 
@@ -318,7 +350,11 @@ class ReviewStore:
                 cur = self.current_decisions(i)
                 if reviewer in cur:
                     continue
-                if b.purpose != "calibration" and self.status(i) in ("approved", "rejected", "needs_fix"):
+                if b.blind:
+                    # every assigned reviewer judges independently, whatever the others decided
+                    if len(cur) >= self.required_reviews(i, b):
+                        continue
+                elif b.purpose != "calibration" and self.status(i, b) in ("approved", "rejected", "needs_fix"):
                     continue
                 return b, i
         return None
@@ -366,6 +402,11 @@ def calibration_agreement(store: ReviewStore, batch_id: str) -> Dict[str, object
     batch = next((b for b in store.batches() if b.batch_id == batch_id), None)
     if batch is None:
         raise ReviewError(f"no batch '{batch_id}'")
+    if batch.blind:
+        open_items = sum(1 for i in batch.items if not store.blind_complete(i, batch))
+        if open_items:
+            raise ReviewError(f"{batch_id} is a blind batch and {open_items} item(s) still lack their "
+                              f"{batch.reviews_required} independent reviews; agreement is shown only when all are in")
     by_item = {i.item_id: store.current_decisions(i) for i in batch.items}
     raters = sorted({r for d in by_item.values() for r in d})
     pairs = {}
@@ -395,7 +436,8 @@ def progress_report(store: ReviewStore, day: Optional[str] = None,
                     gpu_ledgers: Iterable[Path] = (), ask_me: Optional[Path] = None) -> Dict[str, object]:
     """Approved per stage / repo / reviewer, reject rate, minutes, GPU hours used, open blockers."""
     items = [(b, i) for b in store.batches() for i in b.items]
-    status = {i.item_id: store.status(i) for _, i in items}
+    # blind batches: an item's outcome stays hidden until all its independent decisions are in
+    status = {i.item_id: (store.status(i, b) if store.blind_complete(i, b) else "in_blind_review") for b, i in items}
     approved = [i for _, i in items if status[i.item_id] == "approved"]
     decisions = store.decisions()
     today = [d for d in decisions if day is None or d.decided_at.startswith(day)]

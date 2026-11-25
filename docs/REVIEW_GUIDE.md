@@ -50,8 +50,9 @@ python scripts/review.py reject  <task_id> --reviewer <name> --failed question_c
 
 - **Never decide on a task you drafted or asked for.** The tool refuses it.
 - Test-split tasks are each checked by **two different people**, independently (D12). Under R5
-  all three of you check each of the 24 pilot test tasks. Don't discuss a test task with anyone
-  before all of you have decided.
+  all three of you check each of the 24 pilot test tasks: those batches require 3 reviews and the
+  tool keeps offering each task until all three are in (WORK_PLAN C42). Don't discuss a test task
+  with anyone before all of you have decided.
 - Work in **batches of 25** with a break between batches.
 - Don't approve to save time. A reject or fix with a clear note is worth as much as an approval.
 - If the reject rate goes above 30%, the drafting is fixed. The bar for approval stays the same.
@@ -82,9 +83,19 @@ The 44 pilot tasks marked `human_approved_by: "lead_researcher"` were approved b
 own: the 10 in `calibration-01`, the 10 in `r5-independent-01` and the 24 test tasks in
 `test-correctness-01..04`. Agreement is Fleiss' kappa over 3 raters.
 
-Stay blind until all three of you have finished a batch: `review.py next` shows only how many
-reviews an item has, never what anyone decided. Do not open `benchmark/data/review/decisions/`,
-and do not run `review.py report` or `review.py kappa` before then. `human_approved_by` on these
+Stay blind until all three of you have finished a batch. The six R5 batches (`calibration-01`,
+`r5-independent-01`, `test-correctness-01..04`) carry `reviews_required: 3`, and for them the tool
+(WORK_PLAN C42):
+
+- offers every task to each of you until all three decisions are in, whatever the others decided;
+- takes **one** decision per person per task (no second decision, no fourth reviewer);
+- after your decision says only "in blind review", never the task's outcome; `review.py next`
+  shows how many reviews a task has, never what anyone decided;
+- shows these tasks as `in_blind_review` in `review.py report`, and refuses `review.py kappa` on a
+  batch until every task in it has its three reviews.
+
+The decisions are still plain files in git, so do not open `benchmark/data/review/decisions/`
+(or anyone's `.jsonl` there) before all three of you have finished. `human_approved_by` on these
 tasks is updated only after the re-review (`docs/benchmark.md` §2).
 
 ## What is in the queue (served in this order)
@@ -125,3 +136,15 @@ python scripts/review.py rate <H0xx> --reviewer <name> --correctness 1-5 --compl
 
 Each answer is rated by two different people. With three raters that is 27, 25 and 28 answers
 (Avaneesh, Sanvi, Aryan), reassigned with seed 42 on 2026-11-25.
+
+**Rating is blocked until the batch's key is verified** (WORK_PLAN C42). The key (which system
+wrote each answer) is kept outside the repository by a key holder, never on a rater's machine.
+The key holder runs, once per batch:
+
+```
+python scripts/review.py verify-key --batch <batch> --key <path to the key file>
+```
+
+This checks the key against the checksum in the batch file and stores only a timestamp
+(`key_verified_at`). Until then `rate-next` shows nothing and `rate` is refused. Raters never need
+the key. For `m1-rating-01` the key is not yet recovered: see `ASK_ME.md` K1/K2.

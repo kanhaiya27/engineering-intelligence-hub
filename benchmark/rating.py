@@ -4,12 +4,16 @@ Blind human rating of answers (M1, Step 3c): the ground truth used to CHOOSE the
   benchmark/data/review/rating/<batch>.json      units shown to raters: blind id, question, reference
                                                  answer, the answer to rate, the evidence lines. No
                                                  system, trial or score is stored here.
-  C:/EIH_backups/<batch>_key.json (outside git)  blind id -> task, system, trial. Only its sha256 is
-                                                 committed, so the mapping is fixed in advance.
+  C:/EIH_keys/<batch>_key.json (outside git)     blind id -> task, system, trial. Only its sha256 is
+                                                 committed, so the mapping is fixed in advance. Held by
+                                                 the key holder, never on a rater's machine. (Until
+                                                 2026-11-25 keys went to C:/EIH_backups, lost with the
+                                                 SSD; WORK_PLAN C42.)
   benchmark/data/review/ratings/<rater>.jsonl    append-only ratings
 
 Each unit is rated by two different reviewers (rotating pairs), so inter-rater agreement is
-measurable. Raters judge:
+measurable. Rating is refused until the key holder has checked the key against `key_sha256`
+(`review.py verify-key`), which stamps `key_verified_at` in the batch file (C42). Raters judge:
   correctness 1-5     does the answer state the reference's key facts without contradicting the code?
   completeness 1-5    does it cover everything the reference needs?
   accept yes/no       would you accept this answer as correct? Extra correct detail is fine.
@@ -30,9 +34,11 @@ from benchmark.review import REVIEW_DIR, ReviewError, ReviewStore
 
 RATING_DIR = REVIEW_DIR / "rating"
 RATINGS_DIR = REVIEW_DIR / "ratings"
-KEY_DIR = Path("C:/EIH_backups")
-PAIRS = (("Avaneesh Kumar Verma", "Sanvi"), ("Aayan", "Radhesh"), ("Avaneesh Kumar Verma", "Aayan"),
-         ("Sanvi", "Radhesh"))
+KEY_DIR = Path("C:/EIH_keys")
+# Every pair of the three reviewers once (reviewers.yaml, ASK_ME R3 / WORK_PLAN C36, C42). Batches built
+# earlier keep the raters they record. tests/test_benchmark/test_rating.py checks this against the roster.
+PAIRS = (("Avaneesh Kumar Verma", "Sanvi Bhardwaj"), ("Avaneesh Kumar Verma", "Aryan Gupta"),
+         ("Sanvi Bhardwaj", "Aryan Gupta"))
 
 
 class RatingUnit(BaseModel):
@@ -49,6 +55,9 @@ class RatingBatch(BaseModel):
     created_at: str
     purpose: str = "M1 correctness-measure selection (dev/val answers; blind)"
     key_sha256: str
+    key_verified_at: Optional[str] = Field(
+        default=None, description="Set by `review.py verify-key` once the key holder's key matches key_sha256; "
+                                  "rating is refused until then")
     excluded_tasks: List[str] = Field(default_factory=list)
     exclusion_reason: str = ""
     units: List[RatingUnit]
@@ -115,10 +124,31 @@ class RatingStore:
         return [Rating.model_validate_json(l) for p in sorted(self.ratings_dir.glob("*.jsonl"))
                 for l in p.read_text(encoding="utf-8").splitlines() if l.strip()]
 
+    def batch_path(self, batch_id: str) -> Path:
+        return self.rating_dir / f"{batch_id}.json"
+
+    def verify_key(self, batch_id: str, key_path: Path, now: Optional[datetime] = None) -> RatingBatch:
+        """Key holder: check the key file against key_sha256 and stamp key_verified_at (nothing else is stored)."""
+        path = self.batch_path(batch_id)
+        if not path.exists():
+            raise ReviewError(f"no rating batch '{batch_id}'")
+        batch = RatingBatch.model_validate_json(path.read_text(encoding="utf-8"))
+        got = "sha256:" + hashlib.sha256(Path(key_path).read_bytes()).hexdigest()
+        if got != batch.key_sha256:
+            raise ReviewError(f"key does not match {batch_id}'s key_sha256; rating stays blocked")
+        batch.key_verified_at = (now or datetime.now(timezone.utc)).isoformat()
+        path.write_text(batch.model_dump_json(indent=2) + "\n", encoding="utf-8")
+        return batch
+
+    def unverified(self) -> List[str]:
+        return [b.batch_id for b in self.batches() if not b.key_verified_at]
+
     def next_unit(self, rater: str) -> Optional[tuple]:
         rater = self.review.resolve_reviewer(rater)
         done = {(r.batch_id, r.blind_id) for r in self.ratings() if r.rater == rater}
         for b in self.batches():
+            if not b.key_verified_at:
+                continue      # key not checked against key_sha256: no ratings yet
             for u in b.units:
                 if rater in u.raters and (b.batch_id, u.blind_id) not in done:
                     return b, u
@@ -130,6 +160,9 @@ class RatingStore:
         for b in self.batches():
             for u in b.units:
                 if u.blind_id == blind_id:
+                    if not b.key_verified_at:
+                        raise ReviewError(f"batch {b.batch_id}'s key is not verified (review.py verify-key); "
+                                          "no ratings until it is")
                     if rater not in u.raters:
                         raise ReviewError(f"{blind_id} is assigned to {u.raters}, not {rater}")
                     if any(r.rater == rater and r.blind_id == blind_id and r.batch_id == b.batch_id

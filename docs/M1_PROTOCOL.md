@@ -26,6 +26,19 @@ human judgement. It is chosen before any system-level comparison.
   They never see the system, trial or any score.
 - **Key.** The blind-id → task/system key is stored outside git (`C:/EIH_backups/`). Its sha256 is in the
   batch file. The selection code reads only task ids from it, never system ids.
+  *Note 2026-11-25 (WORK_PLAN C42): the key was lost with `C:/EIH_backups` in the SSD failure. A recovery
+  was attempted with `scripts/recover_rating_key.py` from the Step 2c dev/val trial results the batch was
+  built from (`modeq-dev-2c-2026-10-06`, `modeq-val-2c-2026-10-06`; pool of 147 trial-0, non-refusal answers
+  after the 9 exclusions). (A) Deterministic re-sampling with seed 42 reproduced the stored checksum
+  `sha256:bde0ce13…3e00` exactly, using val-then-dev input order (the 2nd of the 4 fixed orders tried).
+  (B) The content cross-check found exactly one matching trial for 35 of the 40 answers. Each of the other
+  5 is an answer that two systems produced word for word on the same task, so content alone cannot say
+  which system it was. A agrees with B on all 35 unique matches, and A's choice is one of B's candidates on
+  all 5. Under the recovery rule (every answer must have exactly one content match) this is recorded as
+  **NO MATCH**. No key was written and the checksum was not forced. Rating stays blocked: the batch has no
+  `key_verified_at` and the tool refuses ratings until the key holder runs `review.py verify-key`. Next
+  step: the team's decision in `ASK_ME.md` K1 (rebuild `m1-rating-02` or accept A's key) and K2 (who
+  holds the key). New keys go to `C:/EIH_keys/`, outside the repository.*
 - **Ratings recorded:** correctness 1–5, completeness 1–5, accept yes/no.
 
 ## Human targets

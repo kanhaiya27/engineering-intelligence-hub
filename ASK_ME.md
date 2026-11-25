@@ -12,6 +12,29 @@ until you answer. To answer, reply with the item ID and your choice. Answered it
 
 - None open (L2 answered 2026-11-25; see Decided).
 
+## Blind ratings (M1 key, WORK_PLAN C42)
+
+- [ ] **K1: The lost `m1-rating-01` key.** `scripts/recover_rating_key.py` (2026-11-25) gave **NO MATCH**
+  under the recovery rule. Method A (seeded re-sampling of the same 147-answer pool) reproduced the stored
+  sha256 exactly. Method B (content match) found exactly one source trial for 35 of 40 answers. The other
+  5 answers were each produced word for word by two systems on the same task, so B cannot single one out.
+  A agrees with B on all 35, and A's pick is one of B's candidates on all 5. Nothing was written.
+  Options:
+  (a) **Proposed (the recovery rule):** retire `m1-rating-01` unrated and build a new batch `m1-rating-02`
+      with a fresh key and a new checksum, kept outside git (`C:/EIH_keys/`). It is built from the same
+      Step 2c dev/val answers and exclusions, with a new recorded seed so the sample is not the old one.
+      The batch is not built until you choose this.
+  (b) Accept method A's key. A sha256 match means the bytes are identical to the lost key. B's only gap
+      is the 5 answers that two systems wrote identically, and those get the same rating whichever system
+      it is. The key would be written once to `C:/EIH_keys/` by the key holder (K2) and verified with
+      `review.py verify-key`.
+  Either way, rating stays blocked until a key is verified.
+- [ ] **K2: Who holds the rating key?** Avaneesh, Sanvi and Aryan are all raters, so a rater holding
+  the key could unblind themselves. **Recommended:** one named person who is **not a rater** keeps the
+  key file sealed outside the repository (`C:/EIH_keys/` or a removable drive), runs
+  `review.py verify-key` once, and does not open it or pass it on until all ratings are in. If no
+  non-rater is available, say who holds it and record that as a limitation in `docs/M1_PROTOCOL.md`.
+
 ## Plan decisions still open (WORK_PLAN §4)
 
 - [x] **D3: Closed by C31** (no deadlines).

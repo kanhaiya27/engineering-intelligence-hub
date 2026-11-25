@@ -168,10 +168,12 @@ def main(argv=None) -> int:
     p = argparse.ArgumentParser()
     p.add_argument("--batch", required=True)
     p.add_argument("--with-judge", action="store_true")
+    p.add_argument("--key", default=None, help="key file (default KEY_DIR/<batch>_key.json)")
     args = p.parse_args(argv)
     store = RatingStore()
     batch = next(b for b in store.batches() if b.batch_id == args.batch)
-    key = json.loads((KEY_DIR / f"{args.batch}_key.json").read_text(encoding="utf-8"))
+    key_path = Path(args.key) if args.key else KEY_DIR / f"{args.batch}_key.json"
+    key = json.loads(key_path.read_text(encoding="utf-8"))
     task_of = {b: v["task_id"] for b, v in key.items()}           # system ids are never read
     tasks, _ = load_dev_val_tasks()
     units = [u.model_dump() for u in batch.units]

@@ -27,7 +27,7 @@ def _trials():
 def setup(tmp_path):
     rev = tmp_path / "rev"
     rev.mkdir()
-    (rev / "reviewers.yaml").write_text("reviewers:\n  - Avaneesh Kumar Verma\n  - Sanvi\n  - Aayan\n  - Radhesh\n",
+    (rev / "reviewers.yaml").write_text("reviewers:\n  - Avaneesh Kumar Verma\n  - Sanvi Bhardwaj\n  - Aryan Gupta\n",
                                         encoding="utf-8")
     tasks = {f"{st}-{k}": {"query": "q", "ground_truth": "gt"} for st in
              ("requirements", "architecture", "development", "testing", "code_review", "maintenance") for k in range(2)}
@@ -49,14 +49,60 @@ def test_batch_is_blind_paired_and_excludes(setup):
         build_batch(_trials(), tasks, {}, "m1-test", n=40, key_dir=tmp / "keys", out_dir=rev / "rating")
 
 
+def test_rating_blocked_until_key_verified(setup):
+    tmp, rev, batch = setup
+    rs = RatingStore(rev)
+    assert rs.next_unit("Sanvi") is None and rs.unverified() == ["m1-test"]
+    with pytest.raises(ReviewError, match="not verified"):
+        rs.rate(batch.units[0].blind_id, batch.units[0].raters[0], 4, 3, True)
+    wrong = tmp / "wrong_key.json"
+    wrong.write_bytes(b"{}")
+    with pytest.raises(ReviewError, match="does not match"):
+        rs.verify_key("m1-test", wrong)
+    assert rs.unverified() == ["m1-test"]
+    b = rs.verify_key("m1-test", tmp / "keys" / "m1-test_key.json")
+    assert b.key_verified_at and rs.unverified() == []
+    raw = (rev / "rating" / "m1-test.json").read_text(encoding="utf-8")
+    assert "system_" not in raw and '"task_id"' not in raw        # only the timestamp was added
+    assert rs.next_unit("Sanvi") is not None
+
+
+def test_cli_verify_key_and_rate_next_guard(setup, capsys):
+    from scripts import review as cli
+
+    tmp, rev, batch = setup
+    assert cli.main(["--root", str(rev), "rate-next", "--reviewer", "Sanvi"]) == 0
+    assert "verify-key: m1-test" in capsys.readouterr().out
+    (tmp / "nope.json").write_bytes(b"{}")
+    assert cli.main(["--root", str(rev), "verify-key", "--batch", "m1-test", "--key", str(tmp / "nope.json")]) == 2
+    assert cli.main(["--root", str(rev), "verify-key", "--batch", "m1-test",
+                     "--key", str(tmp / "keys" / "m1-test_key.json")]) == 0
+    assert cli.main(["--root", str(rev), "rate-next", "--reviewer", "Sanvi"]) == 0
+    assert "RATE H" in capsys.readouterr().out
+
+
+def test_constants_match_the_roster():
+    """REQUESTERS and PAIRS must name exactly the reviewers in reviewers.yaml (C42)."""
+    import itertools
+
+    from benchmark.drafting import REQUESTERS
+    from benchmark.review import ReviewStore
+
+    roster = ReviewStore().reviewers()
+    assert sorted(REQUESTERS) == sorted(roster) and len(set(REQUESTERS)) == len(REQUESTERS)
+    assert {frozenset(p) for p in PAIRS} == {frozenset(p) for p in itertools.combinations(roster, 2)}
+    assert len(PAIRS) == len({frozenset(p) for p in PAIRS})
+
+
 def test_rating_rules(setup):
     tmp, rev, batch = setup
     rs = RatingStore(rev)
+    rs.verify_key("m1-test", tmp / "keys" / "m1-test_key.json")
     b, u = rs.next_unit("Sanvi")
     rs.rate(u.blind_id, "Sanvi", 4, 3, True)
     with pytest.raises(ReviewError, match="already rated"):
         rs.rate(u.blind_id, "Sanvi", 4, 3, True)
-    outsider = next(r for r in ("Aayan", "Radhesh", "Avaneesh") if r not in " ".join(u.raters))
+    outsider = next(r for r in ("Aryan", "Sanvi", "Avaneesh") if r not in " ".join(u.raters))
     with pytest.raises(ReviewError, match="assigned"):
         rs.rate(u.blind_id, outsider, 4, 3, True)
     assert rs.next_unit("Sanvi")[1].blind_id != u.blind_id

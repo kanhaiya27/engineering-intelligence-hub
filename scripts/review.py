@@ -10,6 +10,7 @@ Reviewer commands (one command per decision):
 Lead commands:
   python scripts/review.py report  [--day 2026-10-06] [--json]   daily progress report
   python scripts/review.py kappa   <batch_id>                    day-one calibration agreement
+  python scripts/review.py verify-key --batch <id> --key <path>  key holder: unlock blind rating
   python scripts/review.py import-existing --batch <id> --purpose calibration --ids a,b,c
         --drafted-by "<who wrote them>" [--assign all]           queue existing dev/val tasks
 """
@@ -38,7 +39,8 @@ def show(batch, item, store: ReviewStore) -> str:
     out = [
         "=" * 78,
         f"{item.item_id}   batch {batch.batch_id}   split {store.effective_split(item)}   "
-        f"needs {store.required_reviews(item)} review(s), has {len(done)}",
+        f"needs {store.required_reviews(item, batch)} review(s), has {len(done)}"
+        + ("   BLIND: review independently; others' decisions are hidden" if batch.blind else ""),
         f"repository {item.repository} @ {item.commit_sha[:12]}   ({item.status_note})",
         f"labels: stage={item.sdlc_stage}  type={item.task_type}  complexity={item.complexity}  "
         f"criticality={item.criticality}",
@@ -80,6 +82,9 @@ def main(argv=None) -> int:
     rt.add_argument("--completeness", type=int, required=True, choices=range(1, 6))
     rt.add_argument("--accept", required=True, choices=["yes", "no"])
     rt.add_argument("--note", default=None)
+    vk = sub.add_parser("verify-key", help="key holder: check a rating key against the batch's key_sha256")
+    vk.add_argument("--batch", required=True)
+    vk.add_argument("--key", required=True, help="path of the key file (kept outside the repo)")
     r = sub.add_parser("report")
     r.add_argument("--day", default=None)
     r.add_argument("--json", action="store_true")
@@ -111,9 +116,11 @@ def main(argv=None) -> int:
             failed = [c.strip() for c in args.failed.split(",") if c.strip()]
             rec = store.decide(args.item_id, args.reviewer, args.cmd, failed=failed, note=args.note,
                                minutes=args.minutes)
-            _, item = store.find(args.item_id)
+            batch, item = store.find(args.item_id)
+            state = (store.status(item, batch) if store.blind_complete(item, batch)
+                     else "in blind review (outcome hidden until all independent reviews are in)")
             print(f"Recorded: {rec.reviewer} {rec.decision} {rec.item_id} ({rec.minutes_spent} min). "
-                  f"Item is now {store.status(item)}.")
+                  f"Item is now {state}.")
         elif args.cmd in ("rate-next", "rate"):
             from benchmark.rating import RatingStore
 
@@ -121,7 +128,9 @@ def main(argv=None) -> int:
             if args.cmd == "rate-next":
                 found = rs.next_unit(args.reviewer)
                 if not found:
-                    print("No answers left for you to rate.")
+                    blocked = rs.unverified()
+                    print("No answers left for you to rate." + (
+                        f" Blocked until the key holder runs verify-key: {', '.join(blocked)}." if blocked else ""))
                     return 0
                 b, u = found
                 out = ["=" * 78, f"RATE {u.blind_id}   (batch {b.batch_id}; you do not see which system wrote it)",
@@ -139,6 +148,12 @@ def main(argv=None) -> int:
                 rec = rs.rate(args.blind_id, args.reviewer, args.correctness, args.completeness,
                               args.accept == "yes", args.note)
                 print(f"Recorded rating of {rec.blind_id} by {rec.rater}.")
+        elif args.cmd == "verify-key":
+            from benchmark.rating import RatingStore
+
+            rs = RatingStore(Path(args.root)) if args.root else RatingStore()
+            b = rs.verify_key(args.batch, Path(args.key))
+            print(f"Key matches {b.key_sha256}. {b.batch_id} key_verified_at = {b.key_verified_at}; rating is open.")
         elif args.cmd == "report":
             ledgers = sorted((REPO_ROOT / "experiments" / "results" / "queue").glob("*/*/results.jsonl"))
             rep = progress_report(store, args.day, ledgers, REPO_ROOT / "ASK_ME.md")
