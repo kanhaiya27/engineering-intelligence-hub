@@ -1,0 +1,307 @@
+{
+  "batch_id": "r5-independent-01",
+  "created_at": "2026-11-25T06:13:04.990713+00:00",
+  "purpose": "calibration",
+  "assigned_to": [
+    "Avaneesh Kumar Verma",
+    "Sanvi Bhardwaj",
+    "Aryan Gupta"
+  ],
+  "priority": 12,
+  "items": [
+    {
+      "item_id": "eih-phase1-code-017",
+      "kind": "existing_task",
+      "split": "dev",
+      "repository": "pallets/flask",
+      "commit_sha": "c12a5d874c5a014495eb2db8a73f40037bc813ac",
+      "sdlc_stage": "architecture",
+      "task_type": "code_explanation",
+      "complexity": "medium",
+      "criticality": "medium",
+      "query": "Explain how the flash() and get_flashed_messages() mechanism works in Flask.",
+      "proposed_answer": "Flask's `flash(message, category)` appends a tuple of `(category, message)` to `session['_flashes']`. `get_flashed_messages(with_categories=..., category_filter=...)` retrieves and removes `_flashes` from the session cookie, ensuring messages are displayed only once.",
+      "acceptable_alternatives": [
+        "flash() writes message tuples to session['_flashes'] and get_flashed_messages() pops them from the session for rendering."
+      ],
+      "evidence": [
+        {
+          "file": "src/flask/helpers.py",
+          "start_line": 300,
+          "end_line": 370,
+          "text": "    \"\"\"Flashes a message to the next request.  In order to remove the\n    flashed message from the session and to display it to the user,\n    the template has to call :func:`get_flashed_messages`.\n\n    .. versionchanged:: 0.3\n       `category` parameter added.\n\n    :param message: the message to be flashed.\n    :param category: the category for the message.  The following values\n                     are recommended: ``'message'`` for any kind of message,\n                     ``'error'`` for errors, ``'info'`` for information\n                     messages and ``'warning'`` for warnings.  However any\n                     kind of string can be used as category.\n    \"\"\"\n    # Original implementation:\n    #\n    #     session.setdefault('_flashes', []).append((category, message))\n    #\n    # This assumed that changes made to mutable structures in the session are\n    # always in sync with the session object, which is not true for session\n    # implementations that use external storage for keeping their keys/values.\n    flashes = session.get(\"_flashes\", [])\n    flashes.append((category, message))\n    session[\"_flashes\"] = flashes\n    app = current_app._get_current_object()  # type: ignore\n    message_flashed.send(\n        app,\n        _async_wrapper=app.ensure_sync,\n        message=message,\n        category=category,\n    )\n\n\ndef get_flashed_messages(\n    with_categories: bool = False, category_filter: t.Iterable[str] = ()\n) -> list[str] | list[tuple[str, str]]:\n    \"\"\"Pulls all flashed messages from the session and returns them.\n    Further calls in the same request to the function will return\n    the same messages.  By default just the messages are returned,\n    but when `with_categories` is set to ``True``, the return value will\n    be a list of tuples in the form ``(category, message)`` instead.\n\n    Filter the flashed messages to one or more categories by providing those\n    categories in `category_filter`.  This allows rendering categories in\n    separate html blocks.  The `with_categories` and `category_filter`\n    arguments are distinct:\n\n    * `with_categories` controls whether categories are returned with message\n      text (``True`` gives a tuple, where ``False`` gives just the message text).\n    * `category_filter` filters the messages down to only those matching the\n      provided categories.\n\n    See :doc:`/patterns/flashing` for examples.\n\n    .. versionchanged:: 0.3\n       `with_categories` parameter added.\n\n    .. versionchanged:: 0.9\n        `category_filter` parameter added.\n\n    :param with_categories: set to ``True`` to also receive categories.\n    :param category_filter: filter of categories to limit return values.  Only\n                            categories in the list will be returned.\n    \"\"\"\n    flashes = request_ctx.flashes\n    if flashes is None:\n        flashes = session.pop(\"_flashes\") if \"_flashes\" in session else []\n        request_ctx.flashes = flashes\n    if category_filter:\n        flashes = list(filter(lambda f: f[0] in category_filter, flashes))\n    if not with_categories:",
+          "span_sha256": "sha256:e04e847f218d8b297d08dd97852bb419740212be27b6d61db227b2ca09061f60"
+        }
+      ],
+      "drafted_by": "lead_researcher (pilot benchmark, Aug 2026)",
+      "requested_by": null,
+      "status_note": "existing benchmark task"
+    },
+    {
+      "item_id": "eih-phase1-dev-023",
+      "kind": "existing_task",
+      "split": "dev",
+      "repository": "pallets/flask",
+      "commit_sha": "c12a5d874c5a014495eb2db8a73f40037bc813ac",
+      "sdlc_stage": "development",
+      "task_type": "code_generation",
+      "complexity": "medium",
+      "criticality": "medium",
+      "query": "Write a custom Flask CLI command group `db_cli` with a command `init_db` that uses `with_appcontext`.",
+      "proposed_answer": "```python\nimport click\nfrom flask import current_app\nfrom flask.cli import with_appcontext, AppGroup\n\ndb_cli = AppGroup('db', help='Database management commands.')\n\n@db_cli.command('init')\n@with_appcontext\ndef init_db_command():\n    click.echo(f'Initialized database for {current_app.name}')\n```",
+      "acceptable_alternatives": [
+        "Using AppGroup('db') with @db_cli.command('init') and @with_appcontext."
+      ],
+      "evidence": [
+        {
+          "file": "src/flask/cli.py",
+          "start_line": 400,
+          "end_line": 460,
+          "text": "        self, *args: t.Any, **kwargs: t.Any\n    ) -> t.Callable[[t.Callable[..., t.Any]], click.Command]:\n        \"\"\"This works exactly like the method of the same name on a regular\n        :class:`click.Group` but it wraps callbacks in :func:`with_appcontext`\n        unless it's disabled by passing ``with_appcontext=False``.\n        \"\"\"\n        wrap_for_ctx = kwargs.pop(\"with_appcontext\", True)\n\n        def decorator(f: t.Callable[..., t.Any]) -> click.Command:\n            if wrap_for_ctx:\n                f = with_appcontext(f)\n            return super(AppGroup, self).command(*args, **kwargs)(f)  # type: ignore[no-any-return]\n\n        return decorator\n\n    def group(  # type: ignore[override]\n        self, *args: t.Any, **kwargs: t.Any\n    ) -> t.Callable[[t.Callable[..., t.Any]], click.Group]:\n        \"\"\"This works exactly like the method of the same name on a regular\n        :class:`click.Group` but it defaults the group class to\n        :class:`AppGroup`.\n        \"\"\"\n        kwargs.setdefault(\"cls\", AppGroup)\n        return super().group(*args, **kwargs)  # type: ignore[no-any-return]\n\n\ndef _set_app(ctx: click.Context, param: click.Option, value: str | None) -> str | None:\n    if value is None:\n        return None\n\n    info = ctx.ensure_object(ScriptInfo)\n    info.app_import_path = value\n    return value\n\n\n# This option is eager so the app will be available if --help is given.\n# --help is also eager, so --app must be before it in the param list.\n# no_args_is_help bypasses eager processing, so this option must be\n# processed manually in that case to ensure FLASK_APP gets picked up.\n_app_option = click.Option(\n    [\"-A\", \"--app\"],\n    metavar=\"IMPORT\",\n    help=(\n        \"The Flask application or factory function to load, in the form 'module:name'.\"\n        \" Module can be a dotted import or file path. Name is not required if it is\"\n        \" 'app', 'application', 'create_app', or 'make_app', and can be 'name(args)' to\"\n        \" pass arguments.\"\n    ),\n    is_eager=True,\n    expose_value=False,\n    callback=_set_app,\n)\n\n\ndef _set_debug(ctx: click.Context, param: click.Option, value: bool) -> bool | None:\n    # If the flag isn't provided, it will default to False. Don't use\n    # that, let debug be set by env in that case.\n    source = ctx.get_parameter_source(param.name)  # type: ignore[arg-type]\n\n    if source is not None and source in (\n        ParameterSource.DEFAULT,",
+          "span_sha256": "sha256:42db2dfaf68efbf61e614f0c54924f6f0b3ace1863241a99407865be43fc65b2"
+        }
+      ],
+      "drafted_by": "lead_researcher (pilot benchmark, Aug 2026)",
+      "requested_by": null,
+      "status_note": "existing benchmark task"
+    },
+    {
+      "item_id": "eih-phase1-dev-026",
+      "kind": "existing_task",
+      "split": "val",
+      "repository": "fastapi/fastapi",
+      "commit_sha": "1c3e6918750ccb3f20ea260e9a4238ce2c0e5f63",
+      "sdlc_stage": "development",
+      "task_type": "code_generation",
+      "complexity": "medium",
+      "criticality": "medium",
+      "query": "Write a FastAPI endpoint demonstrating `Query` validation with `min_length`, `max_length`, and `regex`.",
+      "proposed_answer": "```python\nfrom fastapi import FastAPI, Query\n\napp = FastAPI()\n\n@app.get('/search/')\nasync def search(\n    q: str = Query(\n        ...,\n        min_length=3,\n        max_length=50,\n        pattern=r'^[a-zA-Z0-9_-]+$',\n        description='Search query term'\n    )\n):\n    return {'q': q}\n```",
+      "acceptable_alternatives": [
+        "Using Query(..., min_length=3, max_length=50, pattern=...) in a path operation function."
+      ],
+      "evidence": [
+        {
+          "file": "fastapi/params.py",
+          "start_line": 20,
+          "end_line": 60,
+          "text": "\nclass Param(FieldInfo):\n    in_: ParamTypes\n\n    def __init__(\n        self,\n        default: Any = Undefined,\n        *,\n        default_factory: Union[Callable[[], Any], None] = _Unset,\n        annotation: Optional[Any] = None,\n        alias: Optional[str] = None,\n        alias_priority: Union[int, None] = _Unset,\n        # TODO: update when deprecating Pydantic v1, import these types\n        # validation_alias: str | AliasPath | AliasChoices | None\n        validation_alias: Union[str, None] = None,\n        serialization_alias: Union[str, None] = None,\n        title: Optional[str] = None,\n        description: Optional[str] = None,\n        gt: Optional[float] = None,\n        ge: Optional[float] = None,\n        lt: Optional[float] = None,\n        le: Optional[float] = None,\n        min_length: Optional[int] = None,\n        max_length: Optional[int] = None,\n        pattern: Optional[str] = None,\n        regex: Annotated[\n            Optional[str],\n            deprecated(\n                \"Deprecated in FastAPI 0.100.0 and Pydantic v2, use `pattern` instead.\"\n            ),\n        ] = None,\n        discriminator: Union[str, None] = None,\n        strict: Union[bool, None] = _Unset,\n        multiple_of: Union[float, None] = _Unset,\n        allow_inf_nan: Union[bool, None] = _Unset,\n        max_digits: Union[int, None] = _Unset,\n        decimal_places: Union[int, None] = _Unset,\n        examples: Optional[List[Any]] = None,\n        example: Annotated[\n            Optional[Any],\n            deprecated(",
+          "span_sha256": "sha256:561e19e594ec7c2abbd49b04a6b1e3cc05d2a0927fc6e77e8da978a9c7f7a034"
+        }
+      ],
+      "drafted_by": "lead_researcher (pilot benchmark, Aug 2026)",
+      "requested_by": null,
+      "status_note": "existing benchmark task"
+    },
+    {
+      "item_id": "eih-phase1-dev-030",
+      "kind": "existing_task",
+      "split": "dev",
+      "repository": "fastapi/fastapi",
+      "commit_sha": "1c3e6918750ccb3f20ea260e9a4238ce2c0e5f63",
+      "sdlc_stage": "development",
+      "task_type": "code_generation",
+      "complexity": "medium",
+      "criticality": "medium",
+      "query": "Write a FastAPI lifespan context manager function for database connection startup and teardown.",
+      "proposed_answer": "```python\nfrom contextlib import asynccontextmanager\nfrom fastapi import FastAPI\n\n@asynccontextmanager\nasync def lifespan(app: FastAPI):\n    # Startup logic\n    print('Connecting to database...')\n    yield\n    # Teardown logic\n    print('Disconnecting from database...')\n\napp = FastAPI(lifespan=lifespan)\n```",
+      "acceptable_alternatives": [
+        "Using @asynccontextmanager async def lifespan(app: FastAPI): yield and passing lifespan to FastAPI(lifespan=lifespan)."
+      ],
+      "evidence": [
+        {
+          "file": "docs/en/docs/advanced/events.md",
+          "start_line": 25,
+          "end_line": 90,
+          "text": "## Lifespan\n\nYou can define this *startup* and *shutdown* logic using the `lifespan` parameter of the `FastAPI` app, and a \"context manager\" (I'll show you what that is in a second).\n\nLet's start with an example and then see it in detail.\n\nWe create an async function `lifespan()` with `yield` like this:\n\n```Python hl_lines=\"16  19\"\n{!../../../docs_src/events/tutorial003.py!}\n```\n\nHere we are simulating the expensive *startup* operation of loading the model by putting the (fake) model function in the dictionary with machine learning models before the `yield`. This code will be executed **before** the application **starts taking requests**, during the *startup*.\n\nAnd then, right after the `yield`, we unload the model. This code will be executed **after** the application **finishes handling requests**, right before the *shutdown*. This could, for example, release resources like memory or a GPU.\n\n!!! tip\n    The `shutdown` would happen when you are **stopping** the application.\n\n    Maybe you need to start a new version, or you just got tired of running it. 🤷\n\n### Lifespan function\n\nThe first thing to notice, is that we are defining an async function with `yield`. This is very similar to Dependencies with `yield`.\n\n```Python hl_lines=\"14-19\"\n{!../../../docs_src/events/tutorial003.py!}\n```\n\nThe first part of the function, before the `yield`, will be executed **before** the application starts.\n\nAnd the part after the `yield` will be executed **after** the application has finished.\n\n### Async Context Manager\n\nIf you check, the function is decorated with an `@asynccontextmanager`.\n\nThat converts the function into something called an \"**async context manager**\".\n\n```Python hl_lines=\"1  13\"\n{!../../../docs_src/events/tutorial003.py!}\n```\n\nA **context manager** in Python is something that you can use in a `with` statement, for example, `open()` can be used as a context manager:\n\n```Python\nwith open(\"file.txt\") as file:\n    file.read()\n```\n\nIn recent versions of Python, there's also an **async context manager**. You would use it with `async with`:\n\n```Python\nasync with lifespan(app):\n    await do_stuff()\n```\n\nWhen you create a context manager or an async context manager like above, what it does is that, before entering the `with` block, it will execute the code before the `yield`, and after exiting the `with` block, it will execute the code after the `yield`.\n\nIn our code example above, we don't use it directly, but we pass it to FastAPI for it to use it.\n\nThe `lifespan` parameter of the `FastAPI` app takes an **async context manager**, so we can pass our new `lifespan` async context manager to it.\n\n```Python hl_lines=\"22\"\n{!../../../docs_src/events/tutorial003.py!}\n```",
+          "span_sha256": "sha256:c7d4d49006dae31f73da0f210af628da974d1ffe29c1eedbf2d7eaeb2daf3297"
+        }
+      ],
+      "drafted_by": "lead_researcher (pilot benchmark, Aug 2026)",
+      "requested_by": null,
+      "status_note": "existing benchmark task; task cites ['docs/en/docs/advanced/events.md'] without lines - lines shown are from its draft retrieval label"
+    },
+    {
+      "item_id": "eih-phase1-ops-058",
+      "kind": "existing_task",
+      "split": "dev",
+      "repository": "fastapi/fastapi",
+      "commit_sha": "1c3e6918750ccb3f20ea260e9a4238ce2c0e5f63",
+      "sdlc_stage": "maintenance",
+      "task_type": "error_analysis",
+      "complexity": "medium",
+      "criticality": "medium",
+      "query": "Diagnose this FastAPI error: `RuntimeError: Form data requires python-multipart to be installed`.",
+      "proposed_answer": "Root cause: An endpoint declared `Form(...)` or `File(...)` parameters, but the optional `python-multipart` parsing library is not installed in the environment. Fix: Install `python-multipart` via `pip install python-multipart`.",
+      "acceptable_alternatives": [
+        "python-multipart is required to parse Form and File payloads; install via pip."
+      ],
+      "evidence": [
+        {
+          "file": "docs/en/docs/tutorial/request-forms.md",
+          "start_line": 5,
+          "end_line": 8,
+          "text": "!!! info\n    To use forms, first install <a href=\"https://github.com/Kludex/python-multipart\" class=\"external-link\" target=\"_blank\">`python-multipart`</a>.\n\n    E.g. `pip install python-multipart`.",
+          "span_sha256": "sha256:7d1db13d7bdbceec84c16ac0f0c2be61f498ef8562c1d16d4fd4c48f5560d28a"
+        }
+      ],
+      "drafted_by": "lead_researcher (pilot benchmark, Aug 2026)",
+      "requested_by": null,
+      "status_note": "existing benchmark task; task cites ['docs/en/docs/tutorial/request-forms.md'] without lines - lines shown are from its draft retrieval label"
+    },
+    {
+      "item_id": "eih-phase1-req-002",
+      "kind": "existing_task",
+      "split": "val",
+      "repository": "fastapi/fastapi",
+      "commit_sha": "1c3e6918750ccb3f20ea260e9a4238ce2c0e5f63",
+      "sdlc_stage": "requirements",
+      "task_type": "requirement_understanding",
+      "complexity": "low",
+      "criticality": "medium",
+      "query": "What are FastAPI's requirements for automatic OpenAPI documentation generation?",
+      "proposed_answer": "FastAPI requires standard Python type hints, Pydantic models for request/response payloads, and route decorators (@app.get, @app.post) to automatically build OpenAPI schemas and interactive Swagger UI/ReDoc endpoints at /docs and /redoc.",
+      "acceptable_alternatives": [
+        "FastAPI leverages Python type hints and Pydantic models with OpenAPI and JSON Schema standards to generate interactive documentation."
+      ],
+      "evidence": [
+        {
+          "file": "docs/en/docs/features.md",
+          "start_line": 12,
+          "end_line": 17,
+          "text": "### Based on open standards\n\n* <a href=\"https://github.com/OAI/OpenAPI-Specification\" class=\"external-link\" target=\"_blank\"><strong>OpenAPI</strong></a> for API creation, including declarations of <abbr title=\"also known as: endpoints, routes\">path</abbr> <abbr title=\"also known as HTTP methods, as POST, GET, PUT, DELETE\">operations</abbr>, parameters, body requests, security, etc.\n* Automatic data model documentation with <a href=\"https://json-schema.org/\" class=\"external-link\" target=\"_blank\"><strong>JSON Schema</strong></a> (as OpenAPI itself is based on JSON Schema).\n* Designed around these standards, after a meticulous study. Instead of an afterthought layer on top.\n* This also allows using automatic **client code generation** in many languages.",
+          "span_sha256": "sha256:08f594bc5c3b0b5bc5686a5de756938fca4d87d6776260ed94092e56e5565234"
+        },
+        {
+          "file": "docs/en/docs/features.md",
+          "start_line": 19,
+          "end_line": 29,
+          "text": "### Automatic docs\n\nInteractive API documentation and exploration web user interfaces. As the framework is based on OpenAPI, there are multiple options, 2 included by default.\n\n* <a href=\"https://github.com/swagger-api/swagger-ui\" class=\"external-link\" target=\"_blank\"><strong>Swagger UI</strong></a>, with interactive exploration, call and test your API directly from the browser.\n\n![Swagger UI interaction](https://fastapi.tiangolo.com/img/index/index-03-swagger-02.png)\n\n* Alternative API documentation with <a href=\"https://github.com/Rebilly/ReDoc\" class=\"external-link\" target=\"_blank\"><strong>ReDoc</strong></a>.\n\n![ReDoc](https://fastapi.tiangolo.com/img/index/index-06-redoc-02.png)",
+          "span_sha256": "sha256:b64e7ebed48aa0ff9c720a9e2a9210e4df6e576febba38996674a47caeecdd76"
+        }
+      ],
+      "drafted_by": "lead_researcher (pilot benchmark, Aug 2026)",
+      "requested_by": null,
+      "status_note": "existing benchmark task; task cites ['docs/en/docs/features.md'] without lines - lines shown are from its draft retrieval label"
+    },
+    {
+      "item_id": "eih-phase1-req-008",
+      "kind": "existing_task",
+      "split": "dev",
+      "repository": "fastapi/fastapi",
+      "commit_sha": "1c3e6918750ccb3f20ea260e9a4238ce2c0e5f63",
+      "sdlc_stage": "requirements",
+      "task_type": "requirement_understanding",
+      "complexity": "low",
+      "criticality": "medium",
+      "query": "What is the requirement for returning background tasks in a FastAPI response?",
+      "proposed_answer": "FastAPI requires declaring a parameter of type `BackgroundTasks` in the route handler function and calling `background_tasks.add_task(task_func, *args, **kwargs)`.",
+      "acceptable_alternatives": [
+        "Define a `BackgroundTasks` parameter and use `background_tasks.add_task(...)`."
+      ],
+      "evidence": [
+        {
+          "file": "docs/en/docs/tutorial/background-tasks.md",
+          "start_line": 14,
+          "end_line": 22,
+          "text": "## Using `BackgroundTasks`\n\nFirst, import `BackgroundTasks` and define a parameter in your *path operation function* with a type declaration of `BackgroundTasks`:\n\n```Python hl_lines=\"1  13\"\n{!../../../docs_src/background_tasks/tutorial001.py!}\n```\n\n**FastAPI** will create the object of type `BackgroundTasks` for you and pass it as that parameter.",
+          "span_sha256": "sha256:610e6ab3e99775dd04f5fade56521bb1dc0fe48a1f754c38ff76f7c6de0f8680"
+        },
+        {
+          "file": "docs/en/docs/tutorial/background-tasks.md",
+          "start_line": 40,
+          "end_line": 52,
+          "text": "## Add the background task\n\nInside of your *path operation function*, pass your task function to the *background tasks* object with the method `.add_task()`:\n\n```Python hl_lines=\"14\"\n{!../../../docs_src/background_tasks/tutorial001.py!}\n```\n\n`.add_task()` receives as arguments:\n\n* A task function to be run in the background (`write_notification`).\n* Any sequence of arguments that should be passed to the task function in order (`email`).\n* Any keyword arguments that should be passed to the task function (`message=\"some notification\"`).",
+          "span_sha256": "sha256:1ef84861410e49c1349f42a50b35d335287eeac849fb8300d821d47b1e531d7d"
+        }
+      ],
+      "drafted_by": "lead_researcher (pilot benchmark, Aug 2026)",
+      "requested_by": null,
+      "status_note": "existing benchmark task; task cites ['docs/en/docs/tutorial/background-tasks.md'] without lines - lines shown are from its draft retrieval label"
+    },
+    {
+      "item_id": "eih-phase1-req-010",
+      "kind": "existing_task",
+      "split": "dev",
+      "repository": "fastapi/fastapi",
+      "commit_sha": "1c3e6918750ccb3f20ea260e9a4238ce2c0e5f63",
+      "sdlc_stage": "requirements",
+      "task_type": "requirement_retrieval",
+      "complexity": "medium",
+      "criticality": "medium",
+      "query": "What OAuth2 password flow security utilities does FastAPI provide in fastapi.security?",
+      "proposed_answer": "FastAPI provides `OAuth2PasswordBearer` and `OAuth2PasswordRequestForm` in `fastapi.security` to extract bearer tokens from the Authorization header and parse standard OAuth2 password request form fields (username, password, scope, grant_type).",
+      "acceptable_alternatives": [
+        "OAuth2PasswordBearer for bearer token extraction and OAuth2PasswordRequestForm for standard login credentials."
+      ],
+      "evidence": [
+        {
+          "file": "fastapi/security/oauth2.py",
+          "start_line": 40,
+          "end_line": 90,
+          "text": "\n    @app.post(\"/login\")\n    def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]):\n        data = {}\n        data[\"scopes\"] = []\n        for scope in form_data.scopes:\n            data[\"scopes\"].append(scope)\n        if form_data.client_id:\n            data[\"client_id\"] = form_data.client_id\n        if form_data.client_secret:\n            data[\"client_secret\"] = form_data.client_secret\n        return data\n    ```\n\n    Note that for OAuth2 the scope `items:read` is a single scope in an opaque string.\n    You could have custom internal logic to separate it by colon caracters (`:`) or\n    similar, and get the two parts `items` and `read`. Many applications do that to\n    group and organize permissions, you could do it as well in your application, just\n    know that that it is application specific, it's not part of the specification.\n    \"\"\"\n\n    def __init__(\n        self,\n        *,\n        grant_type: Annotated[\n            Union[str, None],\n            Form(pattern=\"password\"),\n            Doc(\n                \"\"\"\n                The OAuth2 spec says it is required and MUST be the fixed string\n                \"password\". Nevertheless, this dependency class is permissive and\n                allows not passing it. If you want to enforce it, use instead the\n                `OAuth2PasswordRequestFormStrict` dependency.\n                \"\"\"\n            ),\n        ] = None,\n        username: Annotated[\n            str,\n            Form(),\n            Doc(\n                \"\"\"\n                `username` string. The OAuth2 spec requires the exact field name\n                `username`.\n                \"\"\"\n            ),\n        ],\n        password: Annotated[\n            str,\n            Form(),\n            Doc(\n                \"\"\"",
+          "span_sha256": "sha256:ea5727f15ce0a8c0b2ca3580a7b99378adf9a317c59d9ecc056a1c6f06a8ea2f"
+        }
+      ],
+      "drafted_by": "lead_researcher (pilot benchmark, Aug 2026)",
+      "requested_by": null,
+      "status_note": "existing benchmark task"
+    },
+    {
+      "item_id": "eih-phase1-rev-047",
+      "kind": "existing_task",
+      "split": "val",
+      "repository": "pallets/flask",
+      "commit_sha": "c12a5d874c5a014495eb2db8a73f40037bc813ac",
+      "sdlc_stage": "code_review",
+      "task_type": "risk_identification",
+      "complexity": "medium",
+      "criticality": "high",
+      "query": "What security risk occurs if Flask's `SECRET_KEY` is hardcoded as `'dev'` in production deployments?",
+      "proposed_answer": "Risk: Session forgery and cryptographic tampering. Anyone knowing the `SECRET_KEY` can forge signed session cookies, hijack user sessions, bypass authentication, and tamper with session data.",
+      "acceptable_alternatives": [
+        "Known secret key allows attackers to craft and sign arbitrary session cookies and impersonate users."
+      ],
+      "evidence": [
+        {
+          "file": "src/flask/sessions.py",
+          "start_line": 30,
+          "end_line": 70,
+          "text": "        return self.get(\"_permanent\", False)\n\n    @permanent.setter\n    def permanent(self, value: bool) -> None:\n        self[\"_permanent\"] = bool(value)\n\n    #: Some implementations can detect whether a session is newly\n    #: created, but that is not guaranteed. Use with caution. The mixin\n    # default is hard-coded ``False``.\n    new = False\n\n    #: Some implementations can detect changes to the session and set\n    #: this when that happens. The mixin default is hard coded to\n    #: ``True``.\n    modified = True\n\n    #: Some implementations can detect when session data is read or\n    #: written and set this when that happens. The mixin default is hard\n    #: coded to ``True``.\n    accessed = True\n\n\n# TODO generic when Python > 3.8\nclass SecureCookieSession(CallbackDict, SessionMixin):  # type: ignore[type-arg]\n    \"\"\"Base class for sessions based on signed cookies.\n\n    This session backend will set the :attr:`modified` and\n    :attr:`accessed` attributes. It cannot reliably track whether a\n    session is new (vs. empty), so :attr:`new` remains hard coded to\n    ``False``.\n    \"\"\"\n\n    #: When data is changed, this is set to ``True``. Only the session\n    #: dictionary itself is tracked; if the session contains mutable\n    #: data (for example a nested dict) then this must be set to\n    #: ``True`` manually when modifying that data. The session cookie\n    #: will only be written to the response if this is ``True``.\n    modified = False\n\n    #: When data is read or written, this is set to ``True``. Used by\n    # :class:`.SecureCookieSessionInterface` to add a ``Vary: Cookie``",
+          "span_sha256": "sha256:a45d31117740ffde2619bca5d7919e1215486b5ea0286c3345d19bd5a4d34821"
+        }
+      ],
+      "drafted_by": "lead_researcher (pilot benchmark, Aug 2026)",
+      "requested_by": null,
+      "status_note": "existing benchmark task"
+    },
+    {
+      "item_id": "eih-phase1-test-034",
+      "kind": "existing_task",
+      "split": "dev",
+      "repository": "fastapi/fastapi",
+      "commit_sha": "1c3e6918750ccb3f20ea260e9a4238ce2c0e5f63",
+      "sdlc_stage": "testing",
+      "task_type": "test_generation",
+      "complexity": "medium",
+      "criticality": "medium",
+      "query": "Write a pytest test overriding a FastAPI dependency using `app.dependency_overrides`.",
+      "proposed_answer": "```python\nfrom fastapi import FastAPI, Depends\nfrom fastapi.testclient import TestClient\n\napp = FastAPI()\n\ndef get_db():\n    return 'real_db'\n\n@app.get('/data')\ndef read_data(db=Depends(get_db)):\n    return {'db': db}\n\nclient = TestClient(app)\n\ndef test_override_dependency():\n    def mock_get_db():\n        return 'mock_db'\n    \n    app.dependency_overrides[get_db] = mock_get_db\n    try:\n        response = client.get('/data')\n        assert response.json() == {'db': 'mock_db'}\n    finally:\n        app.dependency_overrides.clear()\n```",
+      "acceptable_alternatives": [
+        "Setting app.dependency_overrides[dep] = mock_dep and resetting with dependency_overrides.clear()."
+      ],
+      "evidence": [
+        {
+          "file": "docs/en/docs/advanced/testing-dependencies.md",
+          "start_line": 23,
+          "end_line": 81,
+          "text": "### Use the `app.dependency_overrides` attribute\n\nFor these cases, your **FastAPI** application has an attribute `app.dependency_overrides`, it is a simple `dict`.\n\nTo override a dependency for testing, you put as a key the original dependency (a function), and as the value, your dependency override (another function).\n\nAnd then **FastAPI** will call that override instead of the original dependency.\n\n=== \"Python 3.10+\"\n\n    ```Python hl_lines=\"26-27  30\"\n    {!> ../../../docs_src/dependency_testing/tutorial001_an_py310.py!}\n    ```\n\n=== \"Python 3.9+\"\n\n    ```Python hl_lines=\"28-29  32\"\n    {!> ../../../docs_src/dependency_testing/tutorial001_an_py39.py!}\n    ```\n\n=== \"Python 3.8+\"\n\n    ```Python hl_lines=\"29-30  33\"\n    {!> ../../../docs_src/dependency_testing/tutorial001_an.py!}\n    ```\n\n=== \"Python 3.10+ non-Annotated\"\n\n    !!! tip\n        Prefer to use the `Annotated` version if possible.\n\n    ```Python hl_lines=\"24-25  28\"\n    {!> ../../../docs_src/dependency_testing/tutorial001_py310.py!}\n    ```\n\n=== \"Python 3.8+ non-Annotated\"\n\n    !!! tip\n        Prefer to use the `Annotated` version if possible.\n\n    ```Python hl_lines=\"28-29  32\"\n    {!> ../../../docs_src/dependency_testing/tutorial001.py!}\n    ```\n\n!!! tip\n    You can set a dependency override for a dependency used anywhere in your **FastAPI** application.\n\n    The original dependency could be used in a *path operation function*, a *path operation decorator* (when you don't use the return value), a `.include_router()` call, etc.\n\n    FastAPI will still be able to override it.\n\nThen you can reset your overrides (remove them) by setting `app.dependency_overrides` to be an empty `dict`:\n\n```Python\napp.dependency_overrides = {}\n```\n\n!!! tip\n    If you want to override a dependency only during some tests, you can set the override at the beginning of the test (inside the test function) and reset it at the end (at the end of the test function).",
+          "span_sha256": "sha256:6a0f236516c92b5cb08386d2275009bf13022df95c15574829e8f91d8e1fc2f8"
+        }
+      ],
+      "drafted_by": "lead_researcher (pilot benchmark, Aug 2026)",
+      "requested_by": null,
+      "status_note": "existing benchmark task; task cites ['docs/en/docs/advanced/testing-dependencies.md'] without lines - lines shown are from its draft retrieval label"
+    }
+  ]
+}

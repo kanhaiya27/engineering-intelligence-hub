@@ -1,7 +1,15 @@
-# Benchmark reviewers (master prompt 2026-10-05). Only these names may record review decisions.
-# Full names to be confirmed (ASK_ME.md); first names are accepted on the command line.
+# Benchmark reviewers. Only these names may record review decisions.
+# Full names confirmed 2026-11-25 by the team (ASK_ME R3, WORK_PLAN C36); first names are accepted
+# on the command line ("Sanvi", "Aryan", "Avaneesh"). Aayan and Radhesh were removed on 2026-11-25.
+# Aryan Gupta is the project guide (Mr. Aryan Gupta, UPES, the supervisor named in README.md),
+# confirmed by the team on 2026-11-25. Avaneesh Kumar Verma is the system's developer.
+# Both facts are disclosed in docs/PROJECT_REPORT.md §12 and docs/REVIEW_GUIDE.md.
 reviewers:
   - Avaneesh Kumar Verma
-  - Sanvi
-  - Aayan
-  - Radhesh
+  - Sanvi Bhardwaj
+  - Aryan Gupta
+# Informational only (the review tools read just `reviewers`).
+roles:
+  Avaneesh Kumar Verma: system developer; reviewer
+  Sanvi Bhardwaj: reviewer
+  Aryan Gupta: project guide (supervisor); reviewer

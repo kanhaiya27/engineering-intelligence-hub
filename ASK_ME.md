@@ -6,43 +6,15 @@ until you answer. To answer, reply with the item ID and your choice. Answered it
 
 ## Capacity (from `docs/SCHEDULE.md`)
 
-- [x] **G1: GPU shortfall. Closed by C31 (no deadlines):** every run keeps its full trials and runs
-  until done (`docs/SCHEDULE.md` §3 gives the expected GPU hours).
-- [ ] **G2: Skip Mode Q on the ~234 newly approved dev/val tasks (35 GPU-h)?** No claim uses
-  dev results; calibration uses val. **Recommended: skip; run only if the GPU is idle.**
-- [ ] **R1: Review pace (updated after C31: no deadlines).** Queue today: 160 items (10 calibration,
-  36 labels, 20 audit fixes, 24 test tasks needing 2 reviews each, 70 drafts), plus 40 blind ratings
-  × 2. At 4 reviewers × ~25 reviews/day, reaching ~450 tasks takes about 10 working days of review.
-  There is no date to hit, but final runs on a set cannot start until its review is finished.
-  **Recommended:** review in queue order (ratings and test-task pass first), and add reviewer hours
-  if you want the final runs sooner. Claude drafts ~80–90 tasks/day so drafting never limits.
-- [ ] **R3: Reviewer full names.** These are recorded in `human_approved_by` and in the paper.
-  `benchmark/data/review/reviewers.yaml` has "Sanvi", "Aayan", "Radhesh". Please give full names.
-- [ ] **R5: Who is "lead_researcher"?** 44 pilot tasks carry `human_approved_by:
-  "lead_researcher"`. If that is Avaneesh, he cannot decide on the calibration batch (drafted by
-  "lead_researcher"), and those tasks have no independent approval.
-  **Recommended: say who it was.** If it was Avaneesh, the 10 calibration tasks are reviewed by
-  the other three, and kappa is computed over three raters.
+- None open (G1, G2, R1, R3, R5 answered 2026-11-25; see Decided).
 
 ## Benchmark and labels
 
-- [ ] **L2: Approval of drafted tasks.** Every LLM-drafted task stays "drafted" until a human
-  approves it in the review queue (`docs/REVIEW_GUIDE.md`). Confirm the four checks and the
-  approve/fix/reject outcomes as written. **Recommended: confirm.**
+- None open (L2 answered 2026-11-25; see Decided).
+
 ## Plan decisions still open (WORK_PLAN §4)
 
 - [x] **D3: Closed by C31** (no deadlines).
-- [ ] **F2: EIH-Fresh back to ~150 tasks?** C27 cut it to 50 only because review hours to 12 Oct
-  did not fit 150. With no deadline that reason is gone. 150 tasks need ~300 reviews (2 each).
-  **Recommended: yes, ~150**, as the dataset spec says; more tasks give RQ7 real power.
-- [ ] **P2: Mode P scope.** D6 chose "Defects4J subset first, rest after" because of 20 Oct. Without
-  a deadline: run all eight Mode P sets in the planned order? They are a guessed ~1,300 GPU-h
-  (weeks of GPU time). **Recommended: Defects4J in full first, measure the real time per attempt,
-  then decide on the rest.**
-- [ ] **D10: Delete old merged branches.** Needs your OK.
-- [ ] **D13: Count mismatches in the original documents** (300–450 vs 400–500 tasks; 28 vs 26
-  repos; 21 vs 22 task types). **Recommended:** the spec's locked 400–500 is binding; correct the
-  two counts in the paper.
 
 - [ ] **T16: Tree-sitter chunking (step 16) and the frozen wave-1 corpus.** Wave 1 already holds 1,869
   chunks of non-Python source code (JS, C, …, `ingestion_report.json` "doc:source_code"), cut by the
@@ -54,9 +26,8 @@ until you answer. To answer, reply with the item ID and your choice. Answered it
 
 ## Citations
 
-- [ ] **C-9, C-10: References [9] and [10]** could not be found (`docs/CITATION_AUDIT.md`).
-  Please supply the exact title, authors, venue and DOI, or tell me to remove them. No
-  replacement will be invented.
+- None open (C-9, C-10 answered 2026-11-25; see Decided). D15 stays open for citation [2]'s DOI.
+
 ## For information (no answer needed)
 
 - No hash lock (C30). **Test-task corrections from the two-reviewer pass must still be applied before
@@ -71,6 +42,45 @@ until you answer. To answer, reply with the item ID and your choice. Answered it
 - Step 1c installs `statsmodels` (mixed-effects models for RQ5) and adds it to the requirements.
 
 ## Decided
+
+- 2026-11-25 (team answers to all open items): decided by CODE RAD for the team, with Avaneesh.
+  - [x] **G1**: closed by C31.
+  - [x] **G2**: skip Mode Q on the ~234 newly approved dev/val tasks. Run them only if the GPU is
+    otherwise idle. No claim may use them (WORK_PLAN C35).
+  - [x] **R1**: review in queue order at the current pace: blind ratings and the test-task
+    correctness pass first. No extra reviewer hours (C36). With 3 reviewers instead of 4 the review
+    takes longer. At 3 × ~25 reviews/day (~75/day), R1's ~1,000 reviews take about 13–14 working
+    days instead of ~10 (ESTIMATED). With R5 and F2 added (~1,250 reviews) it is about 17 working
+    days (ESTIMATED; `docs/REVIEW_GUIDE.md`).
+  - [x] **R3**: the reviewers are **Sanvi Bhardwaj, Aryan Gupta, Avaneesh Kumar Verma**. Aayan and
+    Radhesh are removed (C36). **Disclosure for the paper:** one of the three benchmark reviewers,
+    Aryan Gupta, is the project's supervisor (Mr. Aryan Gupta, UPES, the project guide), and Avaneesh
+    Kumar Verma is the system's developer (`docs/PROJECT_REPORT.md` §12). Every queue and rating slot
+    of Aayan or Radhesh was reassigned (seed 42, load-balanced). No decision or rating had been
+    recorded by anyone, so none was superseded.
+  - [x] **D12 note (2026-11-25)**: the 2026-10-06 D12 entry below is kept as it was. The reviewer
+    pool for the test-task pass is now Sanvi Bhardwaj, Aryan Gupta and Avaneesh Kumar Verma.
+  - [x] **R5**: "lead_researcher" was all three reviewers jointly (Sanvi Bhardwaj, Aryan Gupta,
+    Avaneesh Kumar Verma). A joint approval is not an independent one, so each of the three
+    re-reviews, blind and independently, the 44 pilot tasks with `human_approved_by:
+    "lead_researcher"`, which include the 10 calibration tasks. Agreement on them is Fleiss' kappa
+    over 3 raters. `human_approved_by` is updated only after the re-review (C37). Queue:
+    `calibration-01` (10), `r5-independent-01` (10), `test-correctness-01..04` (24; see C37 for the
+    third test-task review).
+  - [x] **L2**: the drafted-task approval rules in `docs/REVIEW_GUIDE.md` (four checks;
+    approve/fix/reject) are confirmed as written.
+  - [x] **F2**: EIH-Fresh goes back to ~150 tasks (~300 reviews at 2 each). Reverses C27 (C38).
+  - [x] **P2**: Mode P runs a seeded random sample of ~50 bugs per set, across all 8 Mode P sets and
+    all systems (seed 42). Supersedes D6 / C28 "Defects4J first" (C39). The sampling plan is
+    `docs/MODE_P_SAMPLE.md`, fixed before any run. GPU: rough estimate 200–300 GPU-h (ESTIMATED),
+    to be re-measured on the first set.
+  - [x] **D10**: delete merged branches only; keep every unmerged branch. The exact deletion list
+    waits for explicit approval (PR description); nothing has been deleted.
+  - [x] **D13**: the dataset spec is binding: EIH-SWE is 400–500 tasks. The paper text is corrected
+    to the real data: 26 repositories in 8 languages (`datasets/registry.yaml`) and 22 task types plus
+    `unknown` (`knowledge/schemas/tasks.py` `TaskType`, 23 values) (C40).
+  - [x] **C-9, C-10**: references [9] and [10] are removed (C41, `docs/CITATION_AUDIT.md`). The frozen
+    `docs/original_plan.md` still cites them.
 
 - 2026-10-06 (Step 3 "go"):
   - **M1** approved with guardrails: candidate correctness measures are compared against 30–50 blind

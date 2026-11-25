@@ -13,7 +13,11 @@ human judgement. It is chosen before any system-level comparison.
     (seed 42).
   - 9 tasks whose question or reference answer has a proposed fix are excluded, decided from the audit
     alone before any rating.
-- **Raters.** Each answer is rated by 2 of the 4 reviewers (rotating pairs). Raters see:
+- **Raters.** Each answer is rated by 2 of the 4 reviewers (rotating pairs). *Note 2026-11-25 (WORK_PLAN
+  C36): there are now 3 reviewers (Sanvi Bhardwaj, Aryan Gupta, Avaneesh Kumar Verma), so each answer is
+  rated by 2 of the 3 (27 / 25 / 28 answers each, seed 42). Inter-rater agreement here stays pairwise,
+  2 raters per answer. Fleiss' kappa over 3 raters applies to the R5 task re-review (`docs/REVIEW_GUIDE.md`),
+  not to these ratings.* Raters see:
   - the question;
   - the reference answer;
   - the answer;

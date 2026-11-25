@@ -3,9 +3,11 @@
   "created_at": "2026-10-05T19:06:01.733071+00:00",
   "purpose": "test_correctness_pass",
   "assigned_to": [
-    "Sanvi",
-    "Radhesh"
+    "Avaneesh Kumar Verma",
+    "Sanvi Bhardwaj",
+    "Aryan Gupta"
   ],
+  "priority": 15,
   "items": [
     {
       "item_id": "eih-phase1-req-001",
@@ -167,6 +169,5 @@
       "requested_by": null,
       "status_note": "EVIDENCE DEFECT: eih-phase1-rev-042: evidence file has no line numbers and is too long (430 lines) to show whole. Cited: ['docs/en/docs/async.md LNone-LNone']. Open the file at the pinned commit yourself; evidence_correct fails - use fix (name the right lines) or reject."
     }
-  ],
-  "priority": 30
+  ]
 }

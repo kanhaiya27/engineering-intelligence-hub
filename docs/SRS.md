@@ -230,19 +230,17 @@ return on investment, which would require longitudinal production deployment.
 | [6] | "SWE-Bench Pro: Can AI Agents Solve Long-Horizon Software Engineering Tasks?" arXiv:2509.16941 |
 | [7] | "SWE-rebench: An Automated Pipeline for Task Collection and Decontaminated Evaluation of Software Engineering Agents," *NeurIPS* 2025. arXiv:2505.20411 |
 | [8] | D. Zan et al., "Multi-SWE-bench: A Multilingual Benchmark for Issue Resolving," *NeurIPS 2025 Datasets and Benchmarks Track*. arXiv:2504.02605 |
-| [9] | "A Survey of Energy Concerns for Software Engineering," *Journal of Systems and Software*, 2024 |
-| [10] | "Sustainability in the Field of Software Engineering: A Tertiary Study," *ACM Transactions on Software Engineering and Methodology*, 2026 |
-| [11] | "Green Artificial Intelligence: A Comprehensive Review of Metrics, Tools, Challenges, Trends, and Future Prospects," *Archives of Computational Methods in Engineering*, 2026 |
-| [12] | "Efficient and Green Large Language Models for Software Engineering: Literature Review, Vision, and the Road Ahead" |
-| [13] | "AutoRAG: Automated Framework for optimization of Retrieval Augmented Generation Pipeline," arXiv:2410.20878 |
-| [14] | "The ML.ENERGY Benchmark: Toward Automated Inference Energy Measurement and Optimization," arXiv:2505.06371 |
-| [15] | Qdrant Vector Database Documentation. https://qdrant.tech/documentation/ |
-| [16] | Neo4j Graph Database Documentation. https://neo4j.com/docs/ |
-| [17] | National Grid ESO Carbon Intensity API. https://carbonintensity.org.uk |
-| [18] | Patterson et al., "Carbon Emissions and Large Neural Network Training," arXiv:2104.10350 |
-| [19] | Lannelongue et al., "Green Algorithms: Quantifying the Carbon Footprint of Computation," *Advanced Science*, 2021. DOI: 10.1002/advs.202100707 |
+| [9] | "Green Artificial Intelligence: A Comprehensive Review of Metrics, Tools, Challenges, Trends, and Future Prospects," *Archives of Computational Methods in Engineering*, 2026 |
+| [10] | "Efficient and Green Large Language Models for Software Engineering: Literature Review, Vision, and the Road Ahead" |
+| [11] | "AutoRAG: Automated Framework for optimization of Retrieval Augmented Generation Pipeline," arXiv:2410.20878 |
+| [12] | "The ML.ENERGY Benchmark: Toward Automated Inference Energy Measurement and Optimization," arXiv:2505.06371 |
+| [13] | Qdrant Vector Database Documentation. https://qdrant.tech/documentation/ |
+| [14] | Neo4j Graph Database Documentation. https://neo4j.com/docs/ |
+| [15] | National Grid ESO Carbon Intensity API. https://carbonintensity.org.uk |
+| [16] | Patterson et al., "Carbon Emissions and Large Neural Network Training," arXiv:2104.10350 |
+| [17] | Lannelongue et al., "Green Algorithms: Quantifying the Carbon Footprint of Computation," *Advanced Science*, 2021. DOI: 10.1002/advs.202100707 |
 
-*Note: references [9]–[12] require independent bibliographic verification prior to final submission.*
+*Note (2026-11-25, WORK_PLAN C41): the former references [9] and [10] could not be found and were removed; the rest are renumbered. References [9] and [10] (formerly [11] and [12]) were verified in `docs/CITATION_AUDIT.md` on 2026-10-05.*
 
 ---
 

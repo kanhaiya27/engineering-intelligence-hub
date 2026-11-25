@@ -14,9 +14,23 @@ traceable; anything not confirmed is flagged, and **no replacement is invented**
 | [6] SWE-Bench Pro (arXiv:2509.16941) | Verified 2026-08-26 (report) | not re-checked today | — |
 | [7] SWE-rebench (arXiv:2505.20411) | Verified 2026-08-26 (report) | not re-checked today | — |
 | [8] Multi-SWE-bench (arXiv:2504.02605) | Verified 2026-08-26 (report) | not re-checked today | — |
-| [9] "A Survey of Energy Concerns for Software Engineering", JSS 2024 | ❌ **Not found** | No publication with this title found | Team must supply the exact citation (authors, volume, DOI) or remove it |
-| [10] "Sustainability in the Field of Software Engineering: A Tertiary Study", TOSEM 2026 | ❌ **Not found** | No publication with this title found | Team must supply the exact citation or remove it |
+| [9] "A Survey of Energy Concerns for Software Engineering", JSS 2024 | ❌ **Not found** | No publication with this title found | **Removed 2026-11-25 (not found, C-9/C-10; WORK_PLAN C41)** |
+| [10] "Sustainability in the Field of Software Engineering: A Tertiary Study", TOSEM 2026 | ❌ **Not found** | No publication with this title found | **Removed 2026-11-25 (not found, C-9/C-10; WORK_PLAN C41)** |
 | [11] "Green Artificial Intelligence: A Comprehensive Review of Metrics, Tools, Challenges, Trends, and Future Prospects" | ✅ Verified | P. Peykani, A. Emrouznejad, S. Ghanidel, I. Javadi-Sisi, S. Mirjalili; Archives of Computational Methods in Engineering, 2026 — [doi.org/10.1007/s11831-026-10546-2](https://link.springer.com/article/10.1007/s11831-026-10546-2) | Add authors and DOI |
 | [12] "Efficient and Green Large Language Models for Software Engineering: Literature Review, Vision, and the Road Ahead" | ✅ Verified | J. Shi, Z. Yang, D. Lo; ACM TOSEM 34(5); arXiv:2404.04566 — [arxiv.org/abs/2404.04566](https://arxiv.org/pdf/2404.04566) | Add authors and venue |
 | [13] AutoRAG (arXiv:2410.20878) | ✅ Verified | D. Kim, B. Kim, D. Han, M. Eibich — [arxiv.org/abs/2410.20878](https://arxiv.org/abs/2410.20878) | — |
 | [14] The ML.ENERGY Benchmark (arXiv:2505.06371) | ✅ Verified | J.-W. Chung et al. — [arxiv.org/abs/2505.06371](https://arxiv.org/abs/2505.06371) | — |
+
+## 2026-11-25: [9] and [10] removed (ASK_ME C-9, C-10)
+
+- Decided by CODE RAD for the team, with Avaneesh: references [9] and [10] are removed. No
+  replacement was invented.
+- `docs/PROJECT_REPORT.md` §4.3: the sentence "Sustainability concerns in software engineering now
+  span the full lifecycle [9], and have been synthesised across a large body of secondary studies
+  [10]." is removed; the paragraph now starts "Within AI, measurement methodology … [9]" (formerly
+  [11]). No other sentence in the report, `docs/SRS.md` or `docs/WORK_PLAN.md` cited [9] or [10].
+- Renumbered in `docs/PROJECT_REPORT.md` (§14) and `docs/SRS.md` (§ references): [11]→[9],
+  [12]→[10], [13]→[11], [14]→[12]; in `docs/SRS.md` also [15]–[19]→[13]–[17]. The rows above keep
+  the original plan's numbering.
+- **The frozen `docs/original_plan.md` still cites [9] and [10]** (§4.3 and §14); it is not edited.
+- [2]'s DOI is still unconfirmed (WORK_PLAN §4 D15 stays open for it).

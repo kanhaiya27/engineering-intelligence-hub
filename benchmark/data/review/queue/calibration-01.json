@@ -4,10 +4,10 @@
   "purpose": "calibration",
   "assigned_to": [
     "Avaneesh Kumar Verma",
-    "Sanvi",
-    "Aayan",
-    "Radhesh"
+    "Sanvi Bhardwaj",
+    "Aryan Gupta"
   ],
+  "priority": 10,
   "items": [
     {
       "item_id": "eih-phase1-code-015",
@@ -289,6 +289,5 @@
       "requested_by": null,
       "status_note": "existing benchmark task; task cites ['docs/en/docs/advanced/async-tests.md'] without lines - lines shown are from its draft retrieval label"
     }
-  ],
-  "priority": 10
+  ]
 }

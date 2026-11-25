@@ -42,6 +42,12 @@ Every benchmark task follows a strict validation lifecycle:
 - **`CANDIDATE`**: Automatically extracted or drafted tasks.
 - **`APPROVED`**: Formally validated tasks with verified `source_evidence` and `human_approved_by` reviewer attribution. Only `APPROVED` tasks are evaluated in official research reporting.
 
+**Note 2026-11-25 (ASK_ME R5, WORK_PLAN C37).** The 44 pilot tasks with `human_approved_by: "lead_researcher"`
+were approved jointly by the three reviewers (Sanvi Bhardwaj, Aryan Gupta, Avaneesh Kumar Verma). Their
+`human_approved_by` is **not** edited now. It is updated after the blind, independent re-review by all three
+(`docs/REVIEW_GUIDE.md`, batches `calibration-01`, `r5-independent-01`, `test-correctness-01..04`), to the
+names of the reviewers who approved each task in that re-review.
+
 ---
 
 ## 3. Dataset File Location

@@ -8,6 +8,33 @@ measured (with numbers only if actually measured), what is blocked.
 
 ---
 
+## 2026-11-25 — Team answers to all open ASK_ME items (docs, config, review queue only) · branch `docs/askme-decisions-2026-11-25`
+
+Decided by CODE RAD for the team, with Avaneesh. No experiment, model, GPU job, ingestion or graph build was run.
+
+**Done**
+- ASK_ME: G1, G2, R1, R3, R5, L2, F2, P2, D10, D13, C-9/C-10 moved to Decided (2026-11-25); old Decided entries
+  unchanged; T16 left as it is here (decided on `feat/tree-sitter-chunking`).
+- Change register C35–C41 (C34 is used on `feat/tree-sitter-chunking`): G2 skip, reviewers (R1/R3), R5 re-review,
+  Fresh ~150 (reverses C27), Mode P sample (supersedes D6/C28), D13 counts, [9]/[10] removed.
+- Reviewers = Sanvi Bhardwaj, Aryan Gupta, Avaneesh Kumar Verma; every queue/rating slot of Aayan or Radhesh reassigned
+  (seed 42). No decision or rating existed yet, so nothing was superseded. Disclosure (supervisor reviewer, developer
+  reviewer, jointly drafted pilot tasks) in `docs/PROJECT_REPORT.md` §12 and `docs/REVIEW_GUIDE.md`.
+- New queue batch `r5-independent-01` (10 pilot dev/val tasks, all three reviewers); `calibration-01` and
+  `test-correctness-01..04` assigned to all three; test pass priority 30 → 15.
+- `docs/MODE_P_SAMPLE.md` (seed 42, 50 per set; no official list in the repo, so nothing sampled yet).
+- Paper text: 26 repositories / 8 languages, 22 task types + `unknown`; [9]/[10] removed, references renumbered.
+
+**Tests**: `python -m pytest` 490 passed, 0 failed, 0 skipped (Qdrant, Neo4j and Ollama running; live collections unchanged).
+
+**Next**: R5 re-review batch (`calibration-01`, `r5-independent-01`, test pass), after the small `next_item` change
+that lets a third reviewer get test-split items (C37); approval of the D10 branch-deletion list.
+**Blocked**: D10 deletion (waits for approval); blind ratings need the `m1-rating-01` key, which was in
+`C:/EIH_backups` and lost with the SSD (C32): recover it (seeded rebuild, checked against `key_sha256`) or rebuild the batch;
+`benchmark/drafting.py` `REQUESTERS` and `benchmark/rating.py` `PAIRS` still list the removed names (code follow-up).
+
+---
+
 ## 2026-11-23 (night) — Driver 621.01 re-check finished, Pipeline page, end-to-end tests · branch `fix/post-ssd-recovery`
 
 **Done**

@@ -52,43 +52,47 @@ final held-out test** (plan Phase 10).
 | Calibration on val, ~3 candidate configs (2b, 2e) | 12 | 6 | 3 | 648 | 5.4 |
 | Run-to-run variance (2c) | 24 | 6 | 3 | 432 | 3.6 |
 | Mode Q dev/val, frozen config (7a) | 36 | 6 | 3 | 648 | 5.4 |
-| Mode Q on newly approved dev/val tasks (not needed for any claim) | ~234 | 6 | 3 | 4,212 | 35 |
+| Mode Q on newly approved dev/val tasks: **skipped (C35, 2026-11-25)**; runs only if the GPU is otherwise idle, no claim may use it | ~234 | 6 | 3 | 4,212 | (35, not counted) |
 | **EIH-SWE test, final** (≈40% of ~450) | ~180 | 6 | 5 | 5,400 | 45 |
 | Large-LLM baseline (D4; 7B at full context) | ~180 | 1 | 5 | 900 | 7.5 (×5 if a CPU-offloaded 14B) |
 | RQ6 multi-language tasks (Step 4) | ~60 | 6 | 5 | 1,800 | 15 |
-| EIH-Fresh (Step 5): 50 tasks / the spec's ~150 | 50 / 150 | 6 | 5 | 1,500 / 4,500 | 12.5 / 37.5 |
+| EIH-Fresh (Step 5): ~150 tasks (C38, 2026-11-25, reverses C27's 50) | ~150 | 6 | 5 | 4,500 | 37.5 |
 | CodeRepoQA, Mode Q (spec: 1,000 stratified) | 1,000 | 6 | 3 | 18,000 | 150 |
 | StackRepoQA, Mode Q (spec: 1,318) | 1,318 | 6 | 3 | 23,724 | 198 |
 | RepoBench + CrossCodeEval, Mode R | 2,000 | 4 retrieval configs | 1 | — | ~2 |
 | Big-Vul + PrimeVul, criticality slice (RQ4) | 1,000 | E, E + routing | 3 | 6,000 | 50 |
 | Ingestion: RQ6 repos + external corpora (incl. 134 StackRepoQA repos) | — | — | — | — | ~10–20 |
-| **Subtotal (Mode R/Q, classification)** | | | | | **≈ 550** |
-| Mode P: Defects4J 835, BugsInPy 493, CodeFlaws 500, SWE-bench Lite 300, Pro 731, SWE-rebench 500, Multi-SWE-bench flash 300, SWE-bench Multilingual 300 | 3,959 | ≥ 2 | 1 | ~7,900 | **unmeasured; ~1,300 at a guessed 10 min per attempt** |
+| **Subtotal (Mode R/Q, classification)** | | | | | **≈ 540** (was ≈ 550; −35 C35, +25 C38) |
+| Mode P: Defects4J 835, BugsInPy 493, CodeFlaws 500, SWE-bench Lite 300, Pro 731, SWE-rebench 500, Multi-SWE-bench flash 300, SWE-bench Multilingual 300 | 3,959 | ≥ 2 | 1 | ~7,900 | **C39 (2026-11-25): seeded sample of ~50 per set (~400 bugs, `docs/MODE_P_SAMPLE.md`); rough estimate 200–300 GPU-h (ESTIMATED), re-measured on the first set.** All 3,959 would have been ~1,300 at a guessed 10 min per attempt |
 
-**Duration, not a deadline:** the R/Q subtotal is ≈ 550 GPU-h at the 30 s planning rate. The
+**Duration, not a deadline:** the R/Q subtotal is ≈ 540 GPU-h (ESTIMATED) at the 30 s planning rate. The
 measured rate in Step 2c was 20.6 s per unit (648 units in 3.7 h of wall time), so it is likely
-nearer 380 GPU-h, i.e. roughly two to three weeks of the GPU running around the clock with cooling. Mode P comes on top. Without a
+nearer 370 GPU-h (ESTIMATED: 540 × 20.6 / 30), i.e. roughly two to three weeks of the GPU running around the clock with cooling. Mode P comes on top. Without a
 deadline every run keeps its full trials.
 
 ## 4. Review budget and quotas
 
-**Pace:** 4 reviewers × ~3 h a day, plus any extra hours the lead researcher gives.
+**Pace (C36, 2026-11-25):** 3 reviewers (Sanvi Bhardwaj, Aryan Gupta, Avaneesh Kumar Verma) × ~3 h a
+day at the current pace; no extra reviewer hours (ASK_ME R1).
 
 **Needed (planning figure ~8 min per review; replaced by the day-one measured mean):**
 
 | Work | Reviews |
 |---|---|
-| Day-one calibration (10 × 4) | 40 |
-| Existing 24 test tasks, two reviewers each | 48 |
+| Day-one calibration (10 × 3; also R5) | 30 |
+| Existing 24 test tasks: two reviewers each (D12), and all three under R5 (C37) | 72 |
+| R5 re-review of the other 10 pilot dev/val tasks (`r5-independent-01`, 10 × 3) | 30 |
 | New EIH-SWE tasks to reach ~450: ~390 approved; ~520 drafts at a 25% reject rate; 40% are test tasks needing two reviews | ~730 |
 | RQ6 tasks (~60, 40% two reviews) | ~85 |
-| EIH-Fresh (50, all held out, two reviews) | 100 (300 at ~150 tasks) |
-| **Total** | **~1,000 reviews ≈ 135 h** |
+| EIH-Fresh (~150, all held out, two reviews; C38) | 300 |
+| **Total** | **~1,250 reviews ≈ 165 h** (was ~1,000 ≈ 135 h) |
 
-At ~100 reviews a day this is about 10 working days of review (more if Fresh is ~150).
+At 3 reviewers × ~25 a day (~75 reviews a day) this is about 17 working days of review (ESTIMATED,
+2026-11-25). The old figure (~1,000 reviews at 4 × 25 = 100 a day, about 10 days) becomes about
+13–14 days with three reviewers alone; R5 and F2 add the rest. The 40 blind ratings × 2 (80) come on top.
 
-**Daily quota per reviewer:** one batch of 25 (≈ 3 h at 7–8 min). With four reviewers that is
-100 reviews a day. It is re-set after day one from the measured minutes per review
+**Daily quota per reviewer:** one batch of 25 (≈ 3 h at 7–8 min). With three reviewers that is
+~75 reviews a day. It is re-set after day one from the measured minutes per review
 (`python scripts/review.py report`).
 
 **Rotation:**

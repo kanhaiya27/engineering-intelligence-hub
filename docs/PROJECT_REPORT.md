@@ -159,13 +159,11 @@ expert-annotated instances [8].
 
 ### 4.3 Green AI and energy-aware software engineering
 
-Sustainability concerns in software engineering now span the full lifecycle [9],
-and have been synthesised across a large body of secondary studies [10]. Within AI
-specifically, measurement methodology — which tools, which system boundary, which
-carbon intensity — has become the central rigour question [11]. Work on efficient
+Within AI, measurement methodology — which tools, which system boundary, which
+carbon intensity — has become the central rigour question [9]. Work on efficient
 and green LLMs for software engineering argues that the field must weigh compute,
 time, memory, energy and carbon alongside accuracy rather than optimising accuracy
-alone [12].
+alone [10].
 
 Most directly related to this project, a controlled ICSE experiment evaluated five
 practical RAG energy-reduction techniques on a production system, reporting up to
@@ -323,7 +321,7 @@ lookup mechanisms:
 | Graph | Neo4j; entities and edges extracted from AST and history | Structural reasoning (dependencies, change impact, test coverage) |
 
 **Task intelligence.** A transparent rule-based classifier maps a query to SDLC
-stage and one of 21 task types, then heuristic analysers estimate complexity and
+stage and one of 22 task types (plus `unknown` when no rule matches), then heuristic analysers estimate complexity and
 criticality and derive the per-task quality threshold. Transparency is deliberate:
 a rule-based classifier is auditable and its decisions are explainable, which
 matters for a system whose central claim concerns *why* resources were allocated.
@@ -437,7 +435,7 @@ retrieval-enabled systems degrade to the no-retrieval baseline, and the comparis
 becomes meaningless. The corpus is therefore the union of repositories the chosen
 benchmarks touch, plus those used for our own benchmark.
 
-The registry currently defines **28 repositories across 8 languages** in four
+The registry currently defines **26 repositories across 8 languages** in four
 ingestion waves, each entry recording licence, pinned tag, resolved commit SHA,
 benchmark alignment, SDLC coverage and a written selection rationale.
 
@@ -725,6 +723,14 @@ relative comparisons between systems on identical hardware remain valid.
 is the specific motivation for EIH-Fresh and the contamination audit, and results on
 public tiers are reported separately from results on the fresh set.
 
+**Benchmark review (disclosed 2026-11-25, WORK_PLAN C36, C37).** The benchmark is reviewed by
+three people: Sanvi Bhardwaj, Aryan Gupta and Avaneesh Kumar Verma. One of the three reviewers,
+Aryan Gupta, is the project's supervisor, and Avaneesh Kumar Verma is the system's developer, so
+neither is independent of the project. The 44 pilot tasks recorded as approved by
+"lead_researcher" were drafted and approved jointly by these three reviewers; their independence
+comes only from a later blind re-review in which each of the three decides on every task alone
+(agreement reported as Fleiss' kappa over 3 raters).
+
 **Scale.** The pilot benchmark of 60 tasks is a controlled engineering benchmark, not
 a large statistical corpus. Statistical claims are made only where the sample size
 supports them, and the expanded EIH-SWE benchmark is sized to give a defensible
@@ -779,22 +785,18 @@ Verified against the cited source on 26 August 2026 unless marked otherwise.
 
 [8] D. Zan et al., "Multi-SWE-bench: A Multilingual Benchmark for Issue Resolving," *NeurIPS 2025 Datasets and Benchmarks Track*. arXiv:2504.02605. — 1,632 instances from 2,456 candidates, 68 expert annotators, seven languages.
 
-[9] "A Survey of Energy Concerns for Software Engineering," *Journal of Systems and Software*, 2024. *(supplied by project team — verify bibliographic details before submission)*
+[9] "Green Artificial Intelligence: A Comprehensive Review of Metrics, Tools, Challenges, Trends, and Future Prospects," *Archives of Computational Methods in Engineering*, 2026. *(supplied by project team — verify before submission)*
 
-[10] "Sustainability in the Field of Software Engineering: A Tertiary Study," *ACM Transactions on Software Engineering and Methodology*, 2026. *(supplied by project team — verify before submission)*
+[10] "Efficient and Green Large Language Models for Software Engineering: Literature Review, Vision, and the Road Ahead." *(supplied by project team — verify before submission)*
 
-[11] "Green Artificial Intelligence: A Comprehensive Review of Metrics, Tools, Challenges, Trends, and Future Prospects," *Archives of Computational Methods in Engineering*, 2026. *(supplied by project team — verify before submission)*
+[11] "AutoRAG: Automated Framework for optimization of Retrieval Augmented Generation Pipeline," arXiv:2410.20878.
 
-[12] "Efficient and Green Large Language Models for Software Engineering: Literature Review, Vision, and the Road Ahead." *(supplied by project team — verify before submission)*
+[12] "The ML.ENERGY Benchmark: Toward Automated Inference Energy Measurement and Optimization," arXiv:2505.06371.
 
-[13] "AutoRAG: Automated Framework for optimization of Retrieval Augmented Generation Pipeline," arXiv:2410.20878.
+**Reference coverage against requirement:** conference papers — [2] ICSE 2026, [3] SIGIR 2025, [7] NeurIPS 2025, [8] NeurIPS 2025, [1] OpenReview, [11] AutoRAG (six). Journal — [9] and [10] (ACM TOSEM). Survey/review — [9] (a review of green-AI metrics and tools) and [10] (a literature review and vision paper). The former journal and tertiary-study references [9] and [10] were removed on 2026-11-25 because they could not be found (WORK_PLAN C41); no tertiary study is cited now.
 
-[14] "The ML.ENERGY Benchmark: Toward Automated Inference Energy Measurement and Optimization," arXiv:2505.06371.
-
-**Reference coverage against requirement:** conference papers — [2] ICSE 2026, [3] SIGIR 2025, [7] NeurIPS 2025, [8] NeurIPS 2025, [1] OpenReview, [13] AutoRAG (six). Journal — [9] and [11]. Survey/tertiary study — [10], with [12] as a vision/review paper.
-
-**Verification status.** References [1]–[8], [13] and [14] were verified against their
-published source during preparation of this document. References [9]–[12] were
-supplied by the project team and must be independently verified before final
-submission, in line with the project's requirement that every citation be real and
-traceable.
+**Verification status.** References [1]–[8], [11] and [12] were verified against their
+published source during preparation of this document. References [9] and [10] were
+supplied by the project team and were verified in `docs/CITATION_AUDIT.md` (2026-10-05):
+[9] P. Peykani et al., DOI 10.1007/s11831-026-10546-2; [10] J. Shi, Z. Yang, D. Lo, ACM TOSEM 34(5),
+arXiv:2404.04566. Every citation must be real and traceable.
